@@ -206,3 +206,7 @@ To quickly create a new `Clause` class in `Queries/Clause` run:
 ```
 > php artisan make:clause $name
 ```
+
+## License
+
+The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
