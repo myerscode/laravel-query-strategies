@@ -1,0 +1,56 @@
+{
+  "name": "myerscode/laravel-query-strategies",
+  "homepage": "https://github.com/myerscode/laravel-query-strategies",
+  "description": "A package for applying filters, ordering, eager loads, result limiting and pagination to Eloquent queries",
+  "keywords": [
+    "laravel",
+    "query",
+    "filter",
+    "ordering",
+    "limiting",
+    "pagination",
+    "request",
+    "eloquent"
+  ],
+  "type": "package",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "myerscode",
+      "email": "team@myerscode.com",
+      "homepage": "https://myerscode.com"
+    },
+    {
+      "name": "Fred Myerscough",
+      "email": "fred@myerscough.co.uk",
+      "homepage": "https://fredmyerscough.co.uk"
+    }
+  ],
+  "require": {
+    "php": "^7.1"
+  },
+  "require-dev": {
+    "orchestra/testbench": "~3.6.0",
+    "phpunit/phpunit": "^7.3"
+  },
+  "autoload": {
+    "psr-4": {
+      "Myerscode\\Laravel\\QueryStrategies\\": "src"
+    },
+    "files": [
+      "src/helpers.php"
+    ]
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Myerscode\\Laravel\\QueryStrategies\\ServiceProvider"
+      ]
+    }
+  }
+}
