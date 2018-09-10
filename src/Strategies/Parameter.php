@@ -5,20 +5,10 @@ namespace Myerscode\Laravel\QueryStrategies\Strategies;
 class Parameter
 {
 
-    const COLUMN_KEY = 'column';
-
-    const DEFAULT_KEY = 'default';
-
-    const METHODS_KEY = 'methods';
-
-    const DISABLED_KEY = 'disabled';
-
-    const MASS_KEY = 'mass';
-
     /**
-     * @var string
+     * Default value use for creating the override parameter
      */
-    protected $massFilterSuffix = '--filter';
+    const DEFAULT_OVERRIDE_SUFFIX = '--operator';
 
     /**
      * @var string|null
@@ -48,7 +38,7 @@ class Parameter
     /**
      * @var string
      */
-    private $massFilter;
+    private $override;
 
     public function __construct(string $name, array $configuration)
     {
@@ -65,7 +55,7 @@ class Parameter
         $this->setDefault($configuration['default'] ?? null);
         $this->setMethods($configuration['methods'] ?? []);
         $this->setDisabled($configuration['disabled'] ?? []);
-        $this->setMassFilter($configuration['mass'] ?? $this->name . ($configuration['massSuffix'] ?? $this->massFilterSuffix));
+        $this->setOverride($configuration['override'] ?? $this->name . ($configuration['overrideSuffix'] ?? Parameter::DEFAULT_OVERRIDE_SUFFIX));
     }
 
     /**
@@ -161,18 +151,18 @@ class Parameter
     /**
      * @return string
      */
-    public function getMassFilter()
+    public function getOverride()
     {
-        return $this->massFilter;
+        return $this->override;
     }
 
     /**
-     * @param string $massFilter
+     * @param string $override
      * @return Parameter
      */
-    public function setMassFilter(string $massFilter): Parameter
+    public function setOverride(string $override): Parameter
     {
-        $this->massFilter = $massFilter;
+        $this->override = $override;
         return $this;
     }
 }

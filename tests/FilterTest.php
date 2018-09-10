@@ -42,7 +42,7 @@ class FilterTest extends TestCase
             'use override parameter to set filter' => [
                 'select * from "items" where "foo" like \'bar%\' limit 50',
                 ComplexConfigQueryStrategy::class,
-                ['foo' => 'bar', 'foo--filter' => 'begins']
+                ['foo' => 'bar', 'foo--operator' => 'begins']
             ],
             'parameter with overridden default filter' => [
                 'select * from "items" where "hello" != \'bar\' limit 50',

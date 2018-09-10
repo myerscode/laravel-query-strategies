@@ -174,6 +174,35 @@ You can create custom a `Clause` to do more complex or domain specific actions a
 | or | `or` <code>&#124;&#124;</code>  | `?name[is]=Fred&name[or]=Tor` | Record::where('name', '=', 'Fred')->orWhere('name', '=', 'Tor') |
 
 
+### Overriding the clause
+
+You can use a special parameter to set a clause to all properties with that name in a query.
+
+The following example would apply the `not` clause to the `name` properties.
+
+```php
+?name[]=Fred&name[]=Tor&name[]=Chris&name--operator=not
+```
+
+By default the special parameter is `$paramName` with a default suffix of `--operator`. e.g. `name--operator`
+
+The parameter can be either fully renamed or the suffix changed in the strategy config.
+
+```php
+// a strategy config with operator override properties
+$config = [
+    'name' => [
+        'override' => 'name_override',
+    ],
+    'date' => [
+        'overrideSuffix' => '--filter',
+    ],
+];
+// name=Fred&name_override=like
+// date=31/12/1987&date--filter=before
+```
+
+
 ### Ordering and Sorting
 Sorting is ascending by default. The only available options for sorting is `asc` and `desc` - if a value other than those is past, it will resort to the default.
 `?order=name&sort=desc`

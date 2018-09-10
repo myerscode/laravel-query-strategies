@@ -7,6 +7,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Myerscode\Laravel\QueryStrategies\Clause\ClauseInterface;
 use Myerscode\Laravel\QueryStrategies\Clause\EqualsClause;
 use Myerscode\Laravel\QueryStrategies\Clause\IsInClause;
+use Myerscode\Laravel\QueryStrategies\Strategies\Parameter;
 use Myerscode\Laravel\QueryStrategies\Strategies\StrategyInterface;
 
 class Filter
@@ -125,11 +126,7 @@ class Filter
         // get parameters that can be used to filter this query from the current request
         $parameters = collect($this->query)->only($filterKeys)->toArray();
 
-        $massFilterKeys = collect($filterKeys)->map(function ($item) {
-            return $item . '--filter';
-        });
-
-        $massFilters = collect($this->query)->only($massFilterKeys)->toArray();
+        $overrideFilters = $this->parameterOverrides();
 
         foreach ($parameters as $parameter => $values) {
             $parameterConf = $this->strategy->parameter($parameter);
@@ -152,10 +149,10 @@ class Filter
                 $defaultFilter = $this->multiFilter;
             }
 
-            $massFilterKey = $parameterConf->getMassFilter();
+            $overrideKey = $parameterConf->getOverride();
 
-            if ((isset($massFilters[$massFilterKey]) && isset($methods[$massFilters[$massFilterKey]]))) {
-                $defaultFilter = $methods[$massFilters[$massFilterKey]];
+            if ((isset($overrideFilters[$overrideKey]) && isset($methods[$overrideFilters[$overrideKey]]))) {
+                $defaultFilter = $methods[$overrideFilters[$overrideKey]];
             }
 
             $filtersToApply = [];
@@ -386,5 +383,17 @@ class Filter
         $filters = $this->strategy->parameter($parameter)->getMethods();
         $except = $this->strategy->parameter($parameter)->getDisabled();
         return array_diff_assoc(array_merge($this->strategy->defaultMethods(), $filters), array_keys($except));
+    }
+
+    /**
+     * @return array
+     */
+    private function parameterOverrides()
+    {
+        $overrideKeys = collect($this->strategy->parameters())->map(function (Parameter $parameter) {
+            return $parameter->getOverride();
+        });
+
+        return collect($this->query)->only($overrideKeys)->toArray();
     }
 }
