@@ -131,7 +131,7 @@ class Filter
         foreach ($parameters as $parameter => $values) {
             $parameterConf = $this->strategy->parameter($parameter);
 
-            $filterValues = $this->prepareValues($values, $parameterConf->getDisabled());
+            $filterValues = $this->prepareValues($values, $parameterConf);
 
             $methods = $this->getParameterMethods($parameter);
 
@@ -344,21 +344,28 @@ class Filter
     }
 
     /**
-     * @param $values
-     * @param $disabled
+     * @param mixed $values
+     * @param Parameter $parameter
      * @return array
      */
-    private function prepareValues($values, array $disabled): array
+    private function prepareValues($values, Parameter $parameter): array
     {
         $filterValues = is_array($values) ? $values : [$values];
 
+        if ($parameter->shouldExplode()) {
+            $delimiter = $parameter->explodeDelimiter();
+            $filterValues = collect($filterValues)->flatMap(function ($value) use ($delimiter) {
+                return array_filter(explode($delimiter, implode($delimiter, is_array($value) ? $value : [$value])));
+            })->toArray();
+        }
+
         // if there are any disabled filter clauses remove them
-        if (!empty($disabled)) {
+        if (!empty($disabled = $parameter->getDisabled())) {
             // TODO remove need for collect
             $filterValues = collect($filterValues)->except($disabled)->all();
         }
 
-        return $filterValues;
+        return array_filter($filterValues);
     }
 
     /**

@@ -74,6 +74,26 @@ class FilterTest extends TestCase
                 ComplexConfigQueryStrategy::class,
                 ['bf' => 'hello']
             ],
+            'multiple parameters are found by exploding' => [
+                'select * from "items" where "explodable" in (\'foo\', \'bar\') limit 50',
+                ComplexConfigQueryStrategy::class,
+                ['explodable' => 'foo,bar']
+            ],
+            'multiple parameters are found by exploding array of values' => [
+                'select * from "items" where "explodable" in (\'foo\', \'bar\', \'hello\', \'world\') limit 50',
+                ComplexConfigQueryStrategy::class,
+                ['explodable' => ['foo,bar', 'hello,world']]
+            ],
+            'multiple parameters are found by exploding with custom delimiter' => [
+                'select * from "items" where "exploding" in (\'foo\', \'bar\') limit 50',
+                ComplexConfigQueryStrategy::class,
+                ['exploding' => 'foo||bar']
+            ],
+            'parameter is not exploded if not enabled' => [
+                'select * from "items" where "foo" = \'foo,bar\' limit 50',
+                ComplexConfigQueryStrategy::class,
+                ['foo' => 'foo,bar']
+            ],
         ];
     }
 

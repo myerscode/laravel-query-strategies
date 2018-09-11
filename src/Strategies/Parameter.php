@@ -11,6 +11,11 @@ class Parameter
     const DEFAULT_OVERRIDE_SUFFIX = '--operator';
 
     /**
+     * Default value use for exploding query parameters
+     */
+    const DEFAULT_EXPLODE_DELIMITER = ',';
+
+    /**
      * @var string|null
      */
     private $name;
@@ -36,9 +41,19 @@ class Parameter
     private $disabled = [];
 
     /**
+     * @var bool
+     */
+    private $explode = false;
+
+    /**
      * @var string
      */
     private $override;
+
+    /**
+     * @var string
+     */
+    private $explodeDelimiter;
 
     public function __construct(string $name, array $configuration)
     {
@@ -56,6 +71,8 @@ class Parameter
         $this->setMethods($configuration['methods'] ?? []);
         $this->setDisabled($configuration['disabled'] ?? []);
         $this->setOverride($configuration['override'] ?? $this->name . ($configuration['overrideSuffix'] ?? Parameter::DEFAULT_OVERRIDE_SUFFIX));
+        $this->explode = isset($configuration['explode']) ? filter_var($configuration['explode'], FILTER_VALIDATE_BOOLEAN) : false;
+        $this->explodeDelimiter = $configuration['delimiter'] ?? Parameter::DEFAULT_EXPLODE_DELIMITER;
     }
 
     /**
@@ -146,6 +163,22 @@ class Parameter
     {
         $this->disabled = $disabled;
         return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function shouldExplode(): bool
+    {
+        return $this->explode;
+    }
+
+    /**
+     * @return string
+     */
+    public function explodeDelimiter(): string
+    {
+        return $this->explodeDelimiter;
     }
 
     /**

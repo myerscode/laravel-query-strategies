@@ -209,6 +209,29 @@ $config = [
 // date=31/12/1987&date--filter=before
 ```
 
+### Properties with multiple values
+
+If a property passed is found to be an array e.g. `name[]=Fred&name[]=Tor&name[]=Chris` then by default the `IsInClause` is used.
+
+A property can be set to explode its values on a delimiter, so multiple values can be passed at once to a single parameter e.g. `name=Fred,Tor,Chris`.
+By default this is disabled and will need to be set on a property-by-property basis and is enabled by setting `explode` to true in the property config. 
+The delimiter can be changed from the default `,` character using the `delimiter` config option.
+
+```php
+// a strategy config with operator override properties
+$config = [
+    'name' => [
+        'explode' => true,
+    ],
+    'date' => [
+        'explode' => true,
+        'delimiter' => '||',
+    ],
+];
+// name=Fred,Tor
+// date=31/12/1987||12/07/1989
+```
+
 
 ### Ordering and Sorting
 Sorting is ascending by default. The only available options for sorting is `asc` and `desc` - if a value other than those is past, it will resort to the default.
