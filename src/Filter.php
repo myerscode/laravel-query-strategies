@@ -139,7 +139,7 @@ class Filter
 
             $defaultFilters = collect($filterValues)->except(array_keys($namedFilters))->toArray();
 
-            $defaultFilter = $parameterConf->getDefault();
+            $defaultFilter = $parameterConf->defaultMethod();
 
             if (empty($defaultFilter)) {
                 $defaultFilter = $this->defaultFilter;
@@ -149,7 +149,7 @@ class Filter
                 $defaultFilter = $this->multiFilter;
             }
 
-            $overrideKey = $parameterConf->getOverride();
+            $overrideKey = $parameterConf->overrideParameter();
 
             if ((isset($overrideFilters[$overrideKey]) && isset($methods[$overrideFilters[$overrideKey]]))) {
                 $defaultFilter = $methods[$overrideFilters[$overrideKey]];
@@ -162,7 +162,7 @@ class Filter
                 $filtersToApply[$filterClass][] = $value;
             }
 
-            $columnName = $parameterConf->getColumn() ?? null;
+            $columnName = $parameterConf->column() ?? null;
 
             $this->applyFilters($columnName, $filtersToApply);
         }
@@ -360,7 +360,7 @@ class Filter
         }
 
         // if there are any disabled filter clauses remove them
-        if (!empty($disabled = $parameter->getDisabled())) {
+        if (!empty($disabled = $parameter->disabled())) {
             // TODO remove need for collect
             $filterValues = collect($filterValues)->except($disabled)->all();
         }
@@ -387,8 +387,8 @@ class Filter
      */
     public function getParameterMethods($parameter): array
     {
-        $filters = $this->strategy->parameter($parameter)->getMethods();
-        $except = $this->strategy->parameter($parameter)->getDisabled();
+        $filters = $this->strategy->parameter($parameter)->methods();
+        $except = $this->strategy->parameter($parameter)->disabled();
         return array_diff_assoc(array_merge($this->strategy->defaultMethods(), $filters), array_keys($except));
     }
 
@@ -398,7 +398,7 @@ class Filter
     private function parameterOverrides()
     {
         $overrideKeys = collect($this->strategy->parameters())->map(function (Parameter $parameter) {
-            return $parameter->getOverride();
+            return $parameter->overrideParameter();
         });
 
         return collect($this->query)->only($overrideKeys)->toArray();
