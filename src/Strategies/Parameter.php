@@ -5,20 +5,15 @@ namespace Myerscode\Laravel\QueryStrategies\Strategies;
 class Parameter
 {
 
-    const COLUMN_KEY = 'column';
-
-    const DEFAULT_KEY = 'default';
-
-    const METHODS_KEY = 'methods';
-
-    const DISABLED_KEY = 'disabled';
-
-    const MASS_KEY = 'mass';
+    /**
+     * Default value use for creating the override parameter
+     */
+    const DEFAULT_OVERRIDE_SUFFIX = '--operator';
 
     /**
-     * @var string
+     * Default value use for exploding query parameters
      */
-    protected $massFilterSuffix = '--filter';
+    const DEFAULT_EXPLODE_DELIMITER = ',';
 
     /**
      * @var string|null
@@ -46,13 +41,24 @@ class Parameter
     private $disabled = [];
 
     /**
+     * @var bool
+     */
+    private $explode = false;
+
+    /**
      * @var string
      */
-    private $massFilter;
+    private $overrideParameter;
 
+    /**
+     * @var string
+     */
+    private $explodeDelimiter;
+
+    
     public function __construct(string $name, array $configuration)
     {
-        $this->setName($name);
+        $this->name = $name;
         $this->bindConfig($configuration);
     }
 
@@ -61,118 +67,93 @@ class Parameter
      */
     private function bindConfig(array $configuration)
     {
-        $this->setColumn($configuration['column'] ?? $this->name);
-        $this->setDefault($configuration['default'] ?? null);
-        $this->setMethods($configuration['methods'] ?? []);
-        $this->setDisabled($configuration['disabled'] ?? []);
-        $this->setMassFilter($configuration['mass'] ?? $this->name . ($configuration['massSuffix'] ?? $this->massFilterSuffix));
+        $this->column = $configuration['column'] ?? $this->name;
+        $this->default = $configuration['default'] ?? null;
+        $this->methods = $configuration['methods'] ?? [];
+        $this->disabled = isset($configuration['disabled']) ? array_filter(is_array($configuration['disabled']) ? $configuration['disabled'] : [$configuration['disabled']]) : [];
+        $this->overrideParameter = $configuration['override'] ?? $this->name . ($configuration['overrideSuffix'] ?? Parameter::DEFAULT_OVERRIDE_SUFFIX);
+        $this->explode = isset($configuration['explode']) ? filter_var($configuration['explode'], FILTER_VALIDATE_BOOLEAN) : false;
+        $this->explodeDelimiter = $configuration['delimiter'] ?? Parameter::DEFAULT_EXPLODE_DELIMITER;
     }
 
     /**
-     * @return null|string
+     * The name of this parameter
+     *
+     * @return string
      */
-    public function getName(): string
+    public function name(): string
     {
         return $this->name;
     }
 
     /**
-     * @param null|string $name
-     * @return Parameter
-     */
-    public function setName(string $name): Parameter
-    {
-        $this->name = $name;
-        return $this;
-    }
-
-    /**
+     * The column to use when interacting with this parameter
+     *
      * @return null|string
      */
-    public function getColumn()
+    public function column()
     {
         return $this->column;
     }
 
     /**
-     * @param null|string $column
-     * @return Parameter
-     */
-    public function setColumn($column): Parameter
-    {
-        $this->column = $column;
-        return $this;
-    }
-
-    /**
+     * Default method class to use instead of Filter default
+     *
      * @return string|null
      */
-    public function getDefault()
+    public function defaultMethod()
     {
         return $this->default;
     }
 
     /**
-     * @param null|string $default
-     * @return Parameter
-     */
-    public function setDefault($default): Parameter
-    {
-        $this->default = $default;
-        return $this;
-    }
-
-    /**
+     * What custom methods can this parameter use
+     *
      * @return array
      */
-    public function getMethods(): array
+    public function methods(): array
     {
         return $this->methods;
     }
 
     /**
-     * @param array $methods
-     * @return Parameter
-     */
-    public function setMethods(array $methods): Parameter
-    {
-        $this->methods = $methods;
-        return $this;
-    }
-
-    /**
+     * What parameters are disabled
+     *
      * @return array
      */
-    public function getDisabled(): array
+    public function disabled(): array
     {
         return $this->disabled;
     }
 
     /**
-     * @param array $disabled
-     * @return Parameter
+     * Should this parameter explode its value to find multiple values
+     *
+     * @return bool
      */
-    public function setDisabled(array $disabled): Parameter
+    public function shouldExplode(): bool
     {
-        $this->disabled = $disabled;
-        return $this;
+        return $this->explode;
     }
 
     /**
+     * Delimiter used for exploding values
+     *
      * @return string
      */
-    public function getMassFilter()
+    public function explodeDelimiter(): string
     {
-        return $this->massFilter;
+        return $this->explodeDelimiter;
     }
 
     /**
-     * @param string $massFilter
-     * @return Parameter
+     * The override parameter key to set the filter clause
+     *
+     * @return string
      */
-    public function setMassFilter(string $massFilter): Parameter
+    public function overrideParameter()
     {
-        $this->massFilter = $massFilter;
-        return $this;
+        return $this->overrideParameter;
     }
+
 }

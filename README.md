@@ -6,19 +6,25 @@ a package to help build queries with Eloquent Builder from URL parameters in a r
 [![License](https://poser.pugx.org/myerscode/laravel-query-strategies/license)](https://packagist.org/packages/myerscode/laravel-query-strategies)
 
 ## Why this package is helpful?
-If you want to apply query clauses to Eloquent Models using parameters passed by the user, then this package will 
-allow you to create policies that will enable them to be applied automatically.
+If you want to apply query clauses to Eloquent Models using parameters passed by the user, then this package will  allow you to create strategies that will enable them to be applied automatically.
 
-Using query policies you can define what properties a user can have access to offering a safer way for them interact with your data schemas. 
+Using query strategies you can define what properties a user can have access to offering a safer way for them interact with your data schemas. 
 
 Strategies can obfuscate the real column names, add aliases to them and enable/disable the query clauses that can be applied to the model.
 
+You can work the builder before and after applying a strategy, so it can be easily integrated with existing code and queries.
+
+## Installation
+
+You can install the package via composer:
+
+```bash
+composer require myerscode/laravel-query-strategies
+```
+
 ## Strategies
 
-Unlike other packages which often do a like for like in parameter to column name or require you to still manually apply setup the builder with
-this package you can create an a `QueryStrategy` will manage all this in for you, so you can refactor and reuse at ease.
-
-With policies you can:
+With strategies you can:
 * Have a set disable "default" clauses parameters can use
 * Set what query clauses a parameter can do
     * You can create custom clauses
@@ -40,7 +46,7 @@ Fill in the `$config` property with the query parameters that you want use on th
 `$config` should contain the allowed queries keys and the values `aliases` `column` `default` `disabled` `methods`
 
 ```php
-// basic implamention, that will just enable all default clauses for the strategy and will not mask the column name
+// basic implamentation, that will just enable all default clauses for the strategy and will not mask the column name
 $config = [
   'foo',
   'bar'  
@@ -50,29 +56,29 @@ $config = [
 ```php
 // advance with custom methods, disabling clauses and changing the default clause
 $config = [
-    'foo' => [
-        'column' => 'foo_bar',
+    'name' => [
+        'column' => 'first_name',
         'methods' => [
             'hello' => HelloClause::class,
             'world' => WorldClause::class,
         ]
     ],
-    'bar' => [
-        'column' => 'bar_foo',
+    'surname' => [
+        'column' => 'last_name',
         'disabled' => [
             'equals' => EqualsClause::class,
         ],
     ],
-    'foobar' => [
+    'dob' => [
         'aliases' => [
-            'fb',
-            'fbar',
+            'date_of_birth',
+            'birthday',
         ]
         'default' => FooBarClause::class,
     ],
-    'hello-world' => [
+    'address' => [
         'methods' => [
-            'somthingdifferent' => EqualsClause::class,
+            'distance' => DistanceClause::class,
         ],
     ],
 ];
@@ -142,12 +148,13 @@ new Filter(Item::query(), new MyStrategy, $request->query->all());
 You can apply query filters, ordering, limits, includes, pagination.
 
 ```php
-$filter->apply(); //applys filter, order, limit, with and returns the paginated query
-$filter->filter(); // only applys filters and returns the Filter class
-$filter->order(); // only applys ordering and returns the Filter class
-$filter->limit(); // only applys limiting and returns the Filter class
-$filter->with(); // only applys includes and returns the Filter class
-$filter->paginate(); // applys pagination and returns a LengthAwarePaginator class
+$filter->apply(); // Applies filter, order, limit, with methods and returns the paginated query
+$filter->filter(); // Only applies filters and returns the Filter class
+$filter->order(); // Only applies ordering and returns the Filter class
+$filter->limit(); // Only applies limiting and returns the Filter class
+$filter->with(); // Only applies includes and returns the Filter class
+$filter->paginate(); // Applies pagination and returns a LengthAwarePaginator class
+$filter->builder(); // Return the builder
 ```
 
 
@@ -172,6 +179,58 @@ You can create custom a `Clause` to do more complex or domain specific actions a
 | is in | `isIn` `in` | `?name[isIn]=Fred,Tor` `?name[in]=Fred,Tor` `?name[]=Fred&name[]=Tor` | Record::whereIn('name', ['Fred', 'Tor']) |
 | is not in | `notIn` `!in` | `?name[notIn]=Fred,Tor` `?name[!in]=Fred,Tor`  | Record::whereNotIn('name', ['Fred', 'Tor']) |
 | or | `or` <code>&#124;&#124;</code>  | `?name[is]=Fred&name[or]=Tor` | Record::where('name', '=', 'Fred')->orWhere('name', '=', 'Tor') |
+
+
+### Overriding the clause
+
+You can use a special parameter to set a clause to all properties with that name in a query.
+
+The following example would apply the `not` clause to the `name` properties.
+
+```php
+?name[]=Fred&name[]=Tor&name[]=Chris&name--operator=not
+```
+
+By default the special parameter is `$paramName` with a default suffix of `--operator`. e.g. `name--operator`
+
+The parameter can be either fully renamed or the suffix changed in the strategy config.
+
+```php
+// a strategy config with operator override properties
+$config = [
+    'name' => [
+        'override' => 'name_override',
+    ],
+    'date' => [
+        'overrideSuffix' => '--filter',
+    ],
+];
+// name=Fred&name_override=like
+// date=31/12/1987&date--filter=before
+```
+
+### Properties with multiple values
+
+If a property passed is found to be an array e.g. `name[]=Fred&name[]=Tor&name[]=Chris` then by default the `IsInClause` is used.
+
+A property can be set to explode its values on a delimiter, so multiple values can be passed at once to a single parameter e.g. `name=Fred,Tor,Chris`.
+By default this is disabled and will need to be set on a property-by-property basis and is enabled by setting `explode` to true in the property config. 
+The delimiter can be changed from the default `,` character using the `delimiter` config option.
+
+```php
+// a strategy config with operator override properties
+$config = [
+    'name' => [
+        'explode' => true,
+    ],
+    'date' => [
+        'explode' => true,
+        'delimiter' => '||',
+    ],
+];
+// name=Fred,Tor
+// date=31/12/1987||12/07/1989
+```
 
 
 ### Ordering and Sorting
@@ -206,3 +265,7 @@ To quickly create a new `Clause` class in `Queries/Clause` run:
 ```
 > php artisan make:clause $name
 ```
+
+## License
+
+The MIT License (MIT). Please see [License File](LICENSE.md) for more information.

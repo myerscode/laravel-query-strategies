@@ -7,6 +7,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Myerscode\Laravel\QueryStrategies\Clause\ClauseInterface;
 use Myerscode\Laravel\QueryStrategies\Clause\EqualsClause;
 use Myerscode\Laravel\QueryStrategies\Clause\IsInClause;
+use Myerscode\Laravel\QueryStrategies\Strategies\Parameter;
 use Myerscode\Laravel\QueryStrategies\Strategies\StrategyInterface;
 
 class Filter
@@ -125,16 +126,12 @@ class Filter
         // get parameters that can be used to filter this query from the current request
         $parameters = collect($this->query)->only($filterKeys)->toArray();
 
-        $massFilterKeys = collect($filterKeys)->map(function ($item) {
-            return $item . '--filter';
-        });
-
-        $massFilters = collect($this->query)->only($massFilterKeys)->toArray();
+        $overrideFilters = $this->parameterOverrides();
 
         foreach ($parameters as $parameter => $values) {
             $parameterConf = $this->strategy->parameter($parameter);
 
-            $filterValues = $this->prepareValues($values, $parameterConf->getDisabled());
+            $filterValues = $this->prepareValues($values, $parameterConf);
 
             $methods = $this->getParameterMethods($parameter);
 
@@ -142,7 +139,7 @@ class Filter
 
             $defaultFilters = collect($filterValues)->except(array_keys($namedFilters))->toArray();
 
-            $defaultFilter = $parameterConf->getDefault();
+            $defaultFilter = $parameterConf->defaultMethod();
 
             if (empty($defaultFilter)) {
                 $defaultFilter = $this->defaultFilter;
@@ -152,10 +149,10 @@ class Filter
                 $defaultFilter = $this->multiFilter;
             }
 
-            $massFilterKey = $parameterConf->getMassFilter();
+            $overrideKey = $parameterConf->overrideParameter();
 
-            if ((isset($massFilters[$massFilterKey]) && isset($methods[$massFilters[$massFilterKey]]))) {
-                $defaultFilter = $methods[$massFilters[$massFilterKey]];
+            if ((isset($overrideFilters[$overrideKey]) && isset($methods[$overrideFilters[$overrideKey]]))) {
+                $defaultFilter = $methods[$overrideFilters[$overrideKey]];
             }
 
             $filtersToApply = [];
@@ -165,7 +162,7 @@ class Filter
                 $filtersToApply[$filterClass][] = $value;
             }
 
-            $columnName = $parameterConf->getColumn() ?? null;
+            $columnName = $parameterConf->column() ?? null;
 
             $this->applyFilters($columnName, $filtersToApply);
         }
@@ -347,21 +344,28 @@ class Filter
     }
 
     /**
-     * @param $values
-     * @param $disabled
+     * @param mixed $values
+     * @param Parameter $parameter
      * @return array
      */
-    private function prepareValues($values, array $disabled): array
+    private function prepareValues($values, Parameter $parameter): array
     {
         $filterValues = is_array($values) ? $values : [$values];
 
+        if ($parameter->shouldExplode()) {
+            $delimiter = $parameter->explodeDelimiter();
+            $filterValues = collect($filterValues)->flatMap(function ($value) use ($delimiter) {
+                return array_filter(explode($delimiter, implode($delimiter, is_array($value) ? $value : [$value])));
+            })->toArray();
+        }
+
         // if there are any disabled filter clauses remove them
-        if (!empty($disabled)) {
+        if (!empty($disabled = $parameter->disabled())) {
             // TODO remove need for collect
             $filterValues = collect($filterValues)->except($disabled)->all();
         }
 
-        return $filterValues;
+        return array_filter($filterValues);
     }
 
     /**
@@ -383,8 +387,20 @@ class Filter
      */
     public function getParameterMethods($parameter): array
     {
-        $filters = $this->strategy->parameter($parameter)->getMethods();
-        $except = $this->strategy->parameter($parameter)->getDisabled();
+        $filters = $this->strategy->parameter($parameter)->methods();
+        $except = $this->strategy->parameter($parameter)->disabled();
         return array_diff_assoc(array_merge($this->strategy->defaultMethods(), $filters), array_keys($except));
+    }
+
+    /**
+     * @return array
+     */
+    private function parameterOverrides()
+    {
+        $overrideKeys = collect($this->strategy->parameters())->map(function (Parameter $parameter) {
+            return $parameter->overrideParameter();
+        });
+
+        return collect($this->query)->only($overrideKeys)->toArray();
     }
 }

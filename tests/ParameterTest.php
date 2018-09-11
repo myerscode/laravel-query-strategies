@@ -34,6 +34,16 @@ class ParameterTest extends TestCase
             ],
             [
                 [
+                    'override' => 'different-mass-name'
+                ]
+            ],
+            [
+                [
+                    'overrideSuffix' => '--mass-filter'
+                ]
+            ],
+            [
+                [
                 ]
             ],
         ];
@@ -45,11 +55,11 @@ class ParameterTest extends TestCase
     public function testInstanceCreation($config)
     {
         $parameter = new Parameter('foobar', $config);
-        $this->assertEquals('foobar', $parameter->getName());
-        $this->assertEquals('foobar--filter', $parameter->getMassFilter());
-        $this->assertEquals($config[Parameter::COLUMN_KEY] ?? 'foobar', $parameter->getColumn());
-        $this->assertEquals($config[Parameter::DEFAULT_KEY] ?? null, $parameter->getDefault());
-        $this->assertEquals($config[Parameter::METHODS_KEY] ?? [], $parameter->getMethods());
-        $this->assertEquals($config[Parameter::DISABLED_KEY] ?? [], $parameter->getDisabled());
+        $this->assertEquals('foobar', $parameter->name());
+        $this->assertEquals($config['override'] ?? ('foobar' . ($config['overrideSuffix'] ?? Parameter::DEFAULT_OVERRIDE_SUFFIX)), $parameter->overrideParameter());
+        $this->assertEquals($config['column'] ?? 'foobar', $parameter->column());
+        $this->assertEquals($config['default'] ?? null, $parameter->defaultMethod());
+        $this->assertEquals($config['methods'] ?? [], $parameter->methods());
+        $this->assertEquals($config['disabled'] ?? [], $parameter->disabled());
     }
 }

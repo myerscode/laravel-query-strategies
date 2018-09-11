@@ -39,6 +39,13 @@ class ComplexConfigQueryStrategy extends Strategy
                 'barf',
             ],
         ],
+        'explodable' => [
+            'explode' => true,
+        ],
+        'exploding' => [
+            'explode' => true,
+            'delimiter' => '||',
+        ],
     ];
 
     /**
