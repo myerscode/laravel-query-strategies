@@ -22,6 +22,55 @@ You can install the package via composer:
 composer require myerscode/laravel-query-strategies
 ```
 
+## Applying strategies
+
+Getting a filter instance by using one of the following methods:
+
+
+Using the global helper
+```php
+filter(Item::class)->with(MyStrategy::class);
+```
+
+Use the facade
+```php
+Query::filter(Item::class)->with(MyStrategy::class);
+```
+
+Building it yourself
+```php
+new Filter(Item::query(), new MyStrategy, $request->query->all());
+```
+
+Using the `IsFilterable` trait
+
+```php
+class Foo extends Model
+{
+    use IsFilterableTrait;
+
+    public $strategy = BarStrategy::class;
+}
+
+```
+You can then use the model itself to apply the filter
+
+```php
+$filter = (new Foo)->filter();
+```
+
+You can apply query filters, ordering, limits, includes, pagination.
+
+```php
+$filter->apply(); // Applies filter, order, limit, with methods and returns the paginated query
+$filter->filter(); // Only applies filters and returns the Filter class
+$filter->order(); // Only applies ordering and returns the Filter class
+$filter->limit(); // Only applies limiting and returns the Filter class
+$filter->with(); // Only applies includes and returns the Filter class
+$filter->paginate(); // Applies pagination and returns a LengthAwarePaginator class
+$filter->builder(); // Return the builder
+```
+
 ## Strategies
 
 With strategies you can:
@@ -124,41 +173,7 @@ protected $canOrderBy = [
 ];
 ```
 
-
-### Applying strategies
-
-Getting a filter instance by using one of the following methods:
-
-
-Using the global helper
-```
-filter(Item::class)->with(MyStrategy::class);
-```
-
-Use the facade
-```
-Query::filter(Item::class)->with(MyStrategy::class);
-```
-
-Building it yourself
-```
-new Filter(Item::query(), new MyStrategy, $request->query->all());
-```
-
-You can apply query filters, ordering, limits, includes, pagination.
-
-```php
-$filter->apply(); // Applies filter, order, limit, with methods and returns the paginated query
-$filter->filter(); // Only applies filters and returns the Filter class
-$filter->order(); // Only applies ordering and returns the Filter class
-$filter->limit(); // Only applies limiting and returns the Filter class
-$filter->with(); // Only applies includes and returns the Filter class
-$filter->paginate(); // Applies pagination and returns a LengthAwarePaginator class
-$filter->builder(); // Return the builder
-```
-
-
-### Filters
+## Filters
 
 By default parameters will have access to all the query filters in the `$defaultMethods`. 
 You can create custom a `Clause` to do more complex or domain specific actions and add them to `$defaultMethods` or a single parameter.
@@ -179,7 +194,6 @@ You can create custom a `Clause` to do more complex or domain specific actions a
 | is in | `isIn` `in` | `?name[isIn]=Fred,Tor` `?name[in]=Fred,Tor` `?name[]=Fred&name[]=Tor` | Record::whereIn('name', ['Fred', 'Tor']) |
 | is not in | `notIn` `!in` | `?name[notIn]=Fred,Tor` `?name[!in]=Fred,Tor`  | Record::whereNotIn('name', ['Fred', 'Tor']) |
 | or | `or` <code>&#124;&#124;</code>  | `?name[is]=Fred&name[or]=Tor` | Record::where('name', '=', 'Fred')->orWhere('name', '=', 'Tor') |
-
 
 ### Overriding the clause
 
@@ -232,7 +246,6 @@ $config = [
 // date=31/12/1987||12/07/1989
 ```
 
-
 ### Ordering and Sorting
 Sorting is ascending by default. The only available options for sorting is `asc` and `desc` - if a value other than those is past, it will resort to the default.
 `?order=name&sort=desc`
@@ -245,7 +258,6 @@ Sorting is ascending by default. The only available options for sorting is `asc`
 
 `?order[asc]=name&order[desc]=id`
 
-
 ### Using the config
 Run the publish command, to create the config file in `/config`
 ```
@@ -254,13 +266,14 @@ Run the publish command, to create the config file in `/config`
 This will create `config/query-strategies.php` which contains the default settings for things such as reserved parameter keys (limit, page, with etc.)
 
 
-### Creating a new strategy
+## Creating a new strategy
 To quickly create a new `Strategy` class in `Queries/Strategies` run:
 ```
 > php artisan make:strategy $name
 ```
 
-### Creating a new query clause
+
+## Creating a new query clause
 To quickly create a new `Clause` class in `Queries/Clause` run:
 ```
 > php artisan make:clause $name
@@ -268,4 +281,4 @@ To quickly create a new `Clause` class in `Queries/Clause` run:
 
 ## License
 
-The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
+The MIT License (MIT). Please see [License File](LICENSE) for more information.
