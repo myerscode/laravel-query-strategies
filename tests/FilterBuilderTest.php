@@ -11,6 +11,8 @@ use Myerscode\Laravel\QueryStrategies\Facades\Query;
 use Myerscode\Laravel\QueryStrategies\FilterBuilder;
 use Myerscode\Laravel\QueryStrategies\StrategyManager;
 use Tests\Support\Models\Item;
+use Tests\Support\Models\Register;
+use Tests\Support\Models\TodoList;
 use Tests\Support\Strategies\ComplexConfigQueryStrategy;
 
 /**
@@ -104,5 +106,18 @@ class FilterBuilderTest extends TestCase
         $this->expectException(BuilderNotSetException::class);
         $filterBuilder = new FilterBuilder( new Request(), new StrategyManager());
         $filterBuilder->filter('');
+    }
+
+    public function testIsFilterableTrait()
+    {
+        $model = new Register();
+        $this->assertInstanceOf(Filter::class, $model->filter());
+    }
+
+    public function testIsFilterableTraitThrowsExceptionIfStrategyNotPresent()
+    {
+        $this->expectException(BuilderNotSetException::class);
+        $model = new TodoList();
+        $this->assertInstanceOf(Filter::class, $model->filter());
     }
 }

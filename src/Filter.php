@@ -4,6 +4,7 @@ namespace Myerscode\Laravel\QueryStrategies;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 use Myerscode\Laravel\QueryStrategies\Clause\ClauseInterface;
 use Myerscode\Laravel\QueryStrategies\Clause\EqualsClause;
 use Myerscode\Laravel\QueryStrategies\Clause\IsInClause;
@@ -247,9 +248,9 @@ class Filter
     /**
      * Paginate the query using the strategy rules
      *
-     * @return LengthAwarePaginator
+     * @return Paginated
      */
-    public function paginate(): LengthAwarePaginator
+    public function paginate(): Paginated
     {
         /**
          * Get the current key value pairs currently used in the paginated query
@@ -267,7 +268,15 @@ class Filter
 
         $pagination->appends($appends);
 
-        return $pagination;
+        return new Paginated(
+            $pagination->items(),
+            $pagination->total(),
+            $pagination->perPage(),
+            $pagination->currentPage(), [
+                'path' => Paginator::resolveCurrentPath(),
+                'pageName' => $pagination->getPageName(),
+            ]
+        );
     }
 
     /**
