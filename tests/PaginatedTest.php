@@ -22,7 +22,7 @@ class PaginatedTest extends TestCase
         'perPage',
     ];
 
-    protected function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
         $this->simpleDatabase($this->app);
