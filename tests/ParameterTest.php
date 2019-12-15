@@ -56,7 +56,7 @@ class ParameterTest extends TestCase
     {
         $parameter = new Parameter('foobar', $config);
         $this->assertEquals('foobar', $parameter->name());
-        $this->assertEquals($config['override'] ?? ('foobar' . ($config['overrideSuffix'] ?? Parameter::DEFAULT_OVERRIDE_SUFFIX)), $parameter->overrideParameter());
+        $this->assertEquals($config['override'] ?? ('foobar' . ($config['overrideSuffix'] ?? Parameter::DEFAULT_OPERATOR_OVERRIDE_SUFFIX)), $parameter->operatorOverride());
         $this->assertEquals($config['column'] ?? 'foobar', $parameter->column());
         $this->assertEquals($config['default'] ?? null, $parameter->defaultMethod());
         $this->assertEquals($config['methods'] ?? [], $parameter->methods());

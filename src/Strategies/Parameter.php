@@ -6,9 +6,9 @@ class Parameter
 {
 
     /**
-     * Default value use for creating the override parameter
+     * Default value use for creating the operator override parameter
      */
-    const DEFAULT_OVERRIDE_SUFFIX = '--operator';
+    const DEFAULT_OPERATOR_OVERRIDE_SUFFIX = '--operator';
 
     /**
      * Default value use for exploding query parameters
@@ -55,7 +55,7 @@ class Parameter
      */
     private $explodeDelimiter;
 
-    
+
     public function __construct(string $name, array $configuration)
     {
         $this->name = $name;
@@ -71,7 +71,7 @@ class Parameter
         $this->default = $configuration['default'] ?? null;
         $this->methods = $configuration['methods'] ?? [];
         $this->disabled = isset($configuration['disabled']) ? array_filter(is_array($configuration['disabled']) ? $configuration['disabled'] : [$configuration['disabled']]) : [];
-        $this->overrideParameter = $configuration['override'] ?? $this->name . ($configuration['overrideSuffix'] ?? Parameter::DEFAULT_OVERRIDE_SUFFIX);
+        $this->overrideParameter = $configuration['override'] ?? $this->name . ($configuration['overrideSuffix'] ?? Parameter::DEFAULT_OPERATOR_OVERRIDE_SUFFIX);
         $this->explode = isset($configuration['explode']) ? filter_var($configuration['explode'], FILTER_VALIDATE_BOOLEAN) : false;
         $this->explodeDelimiter = $configuration['delimiter'] ?? Parameter::DEFAULT_EXPLODE_DELIMITER;
     }
@@ -147,11 +147,11 @@ class Parameter
     }
 
     /**
-     * The override parameter key to set the filter clause
+     * The operator override key
      *
      * @return string
      */
-    public function overrideParameter()
+    public function operatorOverride()
     {
         return $this->overrideParameter;
     }

@@ -127,6 +127,19 @@ class Filter
         // get parameters that can be used to filter this query from the current request
         $parameters = collect($this->query)->only($filterKeys)->toArray();
 
+        // find fields that have the operator attached as a suffix
+        $otherParameters = collect($this->query)->except($filterKeys)
+            ->flatMap(function ($value, $key) {
+                $parts = explode('--', $key);
+                if (count($parts) === 2) {
+                    return [$parts[0] => [$parts[1] => $value]];
+                }
+            })
+            ->only($filterKeys)
+            ->toArray();
+
+        $parameters = collect($parameters)->mergeRecursive($otherParameters)->toArray();
+
         $overrideFilters = $this->parameterOverrides();
 
         foreach ($parameters as $parameter => $values) {
@@ -150,7 +163,7 @@ class Filter
                 $defaultFilter = $this->multiFilter;
             }
 
-            $overrideKey = $parameterConf->overrideParameter();
+            $overrideKey = $parameterConf->operatorOverride();
 
             if ((isset($overrideFilters[$overrideKey]) && isset($methods[$overrideFilters[$overrideKey]]))) {
                 $defaultFilter = $methods[$overrideFilters[$overrideKey]];
@@ -407,7 +420,7 @@ class Filter
     private function parameterOverrides()
     {
         $overrideKeys = collect($this->strategy->parameters())->map(function (Parameter $parameter) {
-            return $parameter->overrideParameter();
+            return $parameter->operatorOverride();
         });
 
         return collect($this->query)->only($overrideKeys)->toArray();
