@@ -150,7 +150,7 @@ class Filter
                 $defaultFilter = $this->multiFilter;
             }
 
-            $overrideKey = $parameterConf->overrideParameter();
+            $overrideKey = $parameterConf->operatorOverride();
 
             if ((isset($overrideFilters[$overrideKey]) && isset($methods[$overrideFilters[$overrideKey]]))) {
                 $defaultFilter = $methods[$overrideFilters[$overrideKey]];
@@ -407,7 +407,7 @@ class Filter
     private function parameterOverrides()
     {
         $overrideKeys = collect($this->strategy->parameters())->map(function (Parameter $parameter) {
-            return $parameter->overrideParameter();
+            return $parameter->operatorOverride();
         });
 
         return collect($this->query)->only($overrideKeys)->toArray();
