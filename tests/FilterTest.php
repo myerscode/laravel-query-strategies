@@ -217,7 +217,7 @@ class FilterTest extends TestCase
         ];
     }
 
-    protected function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
         $this->simpleDatabase($this->app);
