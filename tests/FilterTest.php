@@ -217,7 +217,23 @@ class FilterTest extends TestCase
         ];
     }
 
-    protected function setUp()
+    public function providerForFieldOperatorApply()
+    {
+        return [
+            'single field--operator' => [
+                'select * from "items" where "foo" like \'%bar%\' limit 50',
+                ComplexConfigQueryStrategy::class,
+                ['foo--contains' => 'bar']
+            ],
+            'merge fields with same name' => [
+                'select * from "items" where "foo" = \'bar\' and "foo" like \'%bar%\' limit 50',
+                ComplexConfigQueryStrategy::class,
+                ['foo--contains' => 'bar', 'foo' => 'bar']
+            ],
+        ];
+    }
+
+    protected function setUp(): void
     {
         parent::setUp();
         $this->simpleDatabase($this->app);
@@ -241,6 +257,18 @@ class FilterTest extends TestCase
      * @dataProvider providerForApplyStrategy
      */
     public function testApplyTheStrategy($expectedSql, $strategyClass, $requestParams)
+    {
+        $strategy = $this->strategyManager()->findStrategy($strategyClass);
+        $distill = $this->filter(Item::query(), $strategy, $requestParams);
+        $distill->apply();
+        $builder = $distill->builder();
+        $this->assertEquals($expectedSql, $this->getRawSqlFromBuilder($builder));
+    }
+
+    /**
+     * @dataProvider providerForFieldOperatorApply
+     */
+    public function testFieldOperatorPropertiesFoundAndApplied($expectedSql, $strategyClass, $requestParams)
     {
         $strategy = $this->strategyManager()->findStrategy($strategyClass);
         $distill = $this->filter(Item::query(), $strategy, $requestParams);

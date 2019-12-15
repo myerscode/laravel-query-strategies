@@ -17,25 +17,22 @@ class StrategyTest extends TestCase
     public function providerOfStrategies()
     {
         return [
-            [ComplexConfigQueryStrategy::class],
-            [OverrideQueryStrategy::class],
-            [BasicConfigQueryStrategy::class],
+            [new ComplexConfigQueryStrategy],
+            [new OverrideQueryStrategy],
+            [new BasicConfigQueryStrategy],
         ];
     }
 
     /**
      * @dataProvider providerOfStrategies
      */
-    public function testReturnsProperties($strategy)
+    public function testReturnsProperties(StrategyInterface $strategy)
     {
-        /**
-         * @var $strategy StrategyInterface
-         */
         $strategy = new $strategy;
-        $this->assertInternalType('array', $strategy->defaultMethods());
-        $this->assertInternalType('array', $strategy->parameters());
-        $this->assertInternalType('int', $strategy->limit());
-        $this->assertInternalType('int', $strategy->maxLimit());
-        $this->assertInternalType('array', $strategy->canOrderBy());
+        $this->assertIsArray($strategy->defaultMethods());
+        $this->assertIsArray($strategy->parameters());
+        $this->assertIsInt($strategy->limit());
+        $this->assertIsInt($strategy->maxLimit());
+        $this->assertIsArray($strategy->canOrderBy());
     }
 }
