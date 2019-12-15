@@ -97,4 +97,14 @@ class QueryTest extends TestCase
         $builder = $this->filter(Item::query(), $strategy, $requestParams)->filter()->builder();
         $this->assertEquals($expectedSql, $this->getRawSqlFromBuilder($builder));
     }
+
+    public function testParameterOperator()
+    {
+        $requestParams = [];
+        parse_str('foo--contains=bar', $requestParams);
+        $expectedSql = 'select * from "items" where "foo" like \'%bar%\'';
+        $strategy = $this->strategyManager()->findStrategy(BasicConfigQueryStrategy::class);
+        $builder = $this->filter(Item::query(), $strategy, $requestParams)->filter()->builder();
+        $this->assertEquals($expectedSql, $this->getRawSqlFromBuilder($builder));
+    }
 }
