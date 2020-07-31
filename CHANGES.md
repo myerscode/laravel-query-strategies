@@ -9,3 +9,13 @@
 
 ## 0.1.0
 Created package
+
+
+## 6.0.0
+* Updated dependencies
+* Version now follows Laravel
+
+
+## 7.0.0
+* Updated dependencies
+* Fixed bug where default filter override got applied as filter
