@@ -246,6 +246,12 @@ $config = [
 // date=31/12/1987||12/07/1989
 ```
 
+### Properties with clause in name
+
+A property can be passed with its clause appended in the field name with `--` as a separator.
+
+`?name--contains=ed`
+
 ### Ordering and Sorting
 Sorting is ascending by default. The only available options for sorting is `asc` and `desc` - if a value other than those is past, it will resort to the default.
 `?order=name&sort=desc`
