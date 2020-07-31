@@ -11,7 +11,7 @@ use Tests\Support\Strategies\BasicConfigQueryStrategy;
 /**
  * @coversDefaultClass \Myerscode\Laravel\QueryStrategies\Strategies\AbstractStrategy
  */
-class StrategyTest extends TestCase
+class StrategyConfigTest extends TestCase
 {
 
     public function providerOfStrategies()

@@ -131,10 +131,15 @@ class Filter
         $otherParameters = collect($this->query)->except($filterKeys)
             ->flatMap(function ($value, $key) {
                 $parts = explode('--', $key);
+                // skip if there is no operator or is overriding default
+                if (count($parts) <= 1 || $this->strategy->parameter($parts[0])->operatorOverride() === $key) {
+                    return null;
+                }
                 if (count($parts) === 2) {
                     return [$parts[0] => [$parts[1] => $value]];
                 }
             })
+            ->filter()
             ->only($filterKeys)
             ->toArray();
 
