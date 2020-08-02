@@ -348,4 +348,14 @@ class FilterTest extends TestCase
         $builder = $distill->with()->builder();
         $this->assertEquals(['owner'], array_keys($builder->getEagerLoads()));
     }
+
+    public function testConfigCanOverrideDefaultMultiClause()
+    {
+        $strategy = $this->strategyManager()->findStrategy(ComplexConfigQueryStrategy::class);
+        $distill = $this->filter(Item::query(), $strategy, ['multi_override' => [1,2,3,4]]);
+        $distill->apply();
+        $builder = $distill->builder();
+        $expectedSql = 'select * from "items" where "multi_override" = \'1+2+3+4\' limit 50';
+        $this->assertEquals($expectedSql, $this->getRawSqlFromBuilder($builder));
+    }
 }

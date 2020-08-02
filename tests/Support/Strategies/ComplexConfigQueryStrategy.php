@@ -6,6 +6,7 @@ use Myerscode\Laravel\QueryStrategies\Clause\BeginsWithClause;
 use Myerscode\Laravel\QueryStrategies\Clause\DoesNotEqualClause;
 use Myerscode\Laravel\QueryStrategies\Clause\EndsWithClause;
 use Myerscode\Laravel\QueryStrategies\Strategies\Strategy;
+use Tests\Support\Clause\CustomMultiClause;
 
 class ComplexConfigQueryStrategy extends Strategy
 {
@@ -45,6 +46,10 @@ class ComplexConfigQueryStrategy extends Strategy
         'exploding' => [
             'explode' => true,
             'delimiter' => '||',
+        ],
+        'multi_override' => [
+            'multi' => CustomMultiClause::class,
+            'explode' => true,
         ],
     ];
 

@@ -41,7 +41,7 @@ class Filter
      *
      * @var string
      */
-    private $multiFilter = IsInClause::class;
+    private $defaultMultiFilter = IsInClause::class;
 
     /**
      * @var string
@@ -165,7 +165,10 @@ class Filter
             }
 
             if (count($defaultFilters) > 1) {
-                $defaultFilter = $this->multiFilter;
+                $defaultFilter = $parameterConf->multiMethod();
+                if (empty($defaultFilter)) {
+                    $defaultFilter = $this->defaultMultiFilter;
+                }
             }
 
             $overrideKey = $parameterConf->operatorOverride();
