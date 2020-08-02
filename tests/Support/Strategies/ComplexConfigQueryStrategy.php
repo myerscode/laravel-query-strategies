@@ -6,6 +6,7 @@ use Myerscode\Laravel\QueryStrategies\Clause\BeginsWithClause;
 use Myerscode\Laravel\QueryStrategies\Clause\DoesNotEqualClause;
 use Myerscode\Laravel\QueryStrategies\Clause\EndsWithClause;
 use Myerscode\Laravel\QueryStrategies\Strategies\Strategy;
+use Myerscode\Laravel\QueryStrategies\Transmute\BoolTransmute;
 use Tests\Support\Clause\CustomMultiClause;
 
 class ComplexConfigQueryStrategy extends Strategy
@@ -50,6 +51,9 @@ class ComplexConfigQueryStrategy extends Strategy
         'multi_override' => [
             'multi' => CustomMultiClause::class,
             'explode' => true,
+        ],
+        'transmute_me' => [
+            'transmute' => BoolTransmute::class,
         ],
     ];
 

@@ -36,6 +36,11 @@ class Parameter
     private $multi;
 
     /**
+     * @var string|null
+     */
+    private $transmute;
+
+    /**
      * @var array
      */
     private $methods = [];
@@ -75,6 +80,7 @@ class Parameter
         $this->column = $configuration['column'] ?? $this->name;
         $this->default = $configuration['default'] ?? null;
         $this->multi = $configuration['multi'] ?? null;
+        $this->transmute = $configuration['transmute'] ?? null;
         $this->methods = $configuration['methods'] ?? [];
         $this->disabled = isset($configuration['disabled']) ? array_filter(is_array($configuration['disabled']) ? $configuration['disabled'] : [$configuration['disabled']]) : [];
         $this->overrideParameter = $configuration['override'] ?? $this->name . ($configuration['overrideSuffix'] ?? Parameter::DEFAULT_OPERATOR_OVERRIDE_SUFFIX);
@@ -120,6 +126,16 @@ class Parameter
     public function multiMethod()
     {
         return $this->multi;
+    }
+
+    /**
+     * Default multi method class to use instead of Filter default
+     *
+     * @return string|null
+     */
+    public function transmuteWith()
+    {
+        return $this->transmute;
     }
 
     /**

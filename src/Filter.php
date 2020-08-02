@@ -9,7 +9,9 @@ use Myerscode\Laravel\QueryStrategies\Clause\ClauseInterface;
 use Myerscode\Laravel\QueryStrategies\Clause\EqualsClause;
 use Myerscode\Laravel\QueryStrategies\Clause\IsInClause;
 use Myerscode\Laravel\QueryStrategies\Strategies\Parameter;
+use Myerscode\Laravel\QueryStrategies\Strategies\Property;
 use Myerscode\Laravel\QueryStrategies\Strategies\StrategyInterface;
+use Myerscode\Laravel\QueryStrategies\Transmute\TransmuteInterface;
 
 class Filter
 {
@@ -380,7 +382,15 @@ class Filter
      */
     private function prepareValues($values, Parameter $parameter): array
     {
-        $filterValues = is_array($values) ? $values : [$values];
+        $property = new Property($values);
+
+        if ($transmuteClass = $parameter->transmuteWith()) {
+            if (class_exists($transmuteClass) && ($transmute = app($transmuteClass)) instanceof TransmuteInterface) {
+                $property = $transmute->transmute($property);
+            }
+        }
+
+        $filterValues = is_array($property->getValue()) ? $property->getValue() : [$property->getValue()];
 
         if ($parameter->shouldExplode()) {
             $delimiter = $parameter->explodeDelimiter();
@@ -394,6 +404,10 @@ class Filter
             // TODO remove need for collect
             $filterValues = collect($filterValues)->except($disabled)->all();
         }
+
+
+
+        return $filterValues;
 
         return array_filter($filterValues);
     }
