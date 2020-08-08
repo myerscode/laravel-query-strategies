@@ -181,9 +181,11 @@ class Filter
 
             $filtersToApply = [];
 
-            foreach ($filterValues as $filterMethod => $value) {
+            foreach ($filterValues as $filterMethod => $filterValue) {
                 $filterClass = (isset($methods[$filterMethod])) ? $methods[$filterMethod] : $defaultFilter;
-                $filtersToApply[$filterClass][] = $value;
+                $filtersToApply[$filterClass] = isset($filtersToApply[$filterClass]) ? $filtersToApply[$filterClass] : [];
+                $filterValue = is_array($filterValue) ? $filterValue : [$filterValue];
+                $filtersToApply[$filterClass] = array_merge($filtersToApply[$filterClass], $filterValue);
             }
 
             $columnName = $parameterConf->column() ?? null;
@@ -382,22 +384,19 @@ class Filter
      */
     private function prepareValues($values, Parameter $parameter): array
     {
-        $property = new Property($values);
+        $filterValues = is_array($values) ? $values : [$values];
 
-        if ($transmuteClass = $parameter->transmuteWith()) {
-            if (class_exists($transmuteClass) && ($transmute = app($transmuteClass)) instanceof TransmuteInterface) {
-                $property = $transmute->transmute($property);
-            }
-        }
+        $indexedValues = collect($filterValues)->only(range(0, count($filterValues) - 1))->toArray();
 
-        $filterValues = is_array($property->getValue()) ? $property->getValue() : [$property->getValue()];
+        $namedValues = collect($filterValues)->except(range(0, count($filterValues) - 1))->toArray();
 
-        if ($parameter->shouldExplode()) {
-            $delimiter = $parameter->explodeDelimiter();
-            $filterValues = collect($filterValues)->flatMap(function ($value) use ($delimiter) {
-                return array_filter(explode($delimiter, implode($delimiter, is_array($value) ? $value : [$value])));
-            })->toArray();
-        }
+        $indexedValues = $this->transmuteValues($indexedValues, $parameter);
+        $namedValues = $this->transmuteValues($namedValues, $parameter);
+
+        $indexedValues = $this->explodeValues($indexedValues, $parameter);
+        $namedValues = $this->explodeValues($namedValues, $parameter);
+
+        $filterValues = array_merge($indexedValues, $namedValues);
 
         // if there are any disabled filter clauses remove them
         if (!empty($disabled = $parameter->disabled())) {
@@ -405,11 +404,38 @@ class Filter
             $filterValues = collect($filterValues)->except($disabled)->all();
         }
 
-
-
         return $filterValues;
+    }
 
-        return array_filter($filterValues);
+    protected function transmuteValues(array $values, Parameter $parameter)
+    {
+        if ($transmuteClass = $parameter->transmuteWith()) {
+            if (class_exists($transmuteClass) && ($transmute = app($transmuteClass)) instanceof TransmuteInterface) {
+                $values = array_map(function ($filerValue) use ($transmute) {
+                    $property = new Property($filerValue);
+                    $transmute->transmute($property);
+
+                    return $property->getValue();
+                }, $values);
+            }
+        }
+
+        return $values;
+    }
+
+    protected function explodeValues(array $values, Parameter $parameter)
+    {
+        if ($parameter->shouldExplode()) {
+            $delimiter = $parameter->explodeDelimiter();
+            $values = collect($values)->flatMap(function ($value) use ($delimiter) {
+                return array_filter(explode($delimiter, implode($delimiter, is_array($value) ? $value : [$value])));
+            })->toArray();
+//            $values = array_map(function ($filerValue) use ($delimiter) {
+//                return array_filter(explode($delimiter, implode($delimiter, is_array($filerValue) ? $filerValue : [$filerValue])));
+//            }, $values);
+        }
+
+        return $values;
     }
 
     /**

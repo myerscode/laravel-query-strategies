@@ -3,7 +3,6 @@
 namespace Tests;
 
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\Request;
 use Myerscode\Laravel\QueryStrategies\Clause\EqualsClause;
 use Myerscode\Laravel\QueryStrategies\Filter;
 use Tests\Support\Models\Item;
@@ -93,6 +92,11 @@ class FilterTest extends TestCase
                 'select * from "items" where "foo" = \'foo,bar\' limit 50',
                 ComplexConfigQueryStrategy::class,
                 ['foo' => 'foo,bar']
+            ],
+            'named overrides can be exploded' => [
+                'select * from "items" where "can_split" in (\'hello\', \'world\') limit 50',
+                ComplexConfigQueryStrategy::class,
+                ['can_split' => ['or' => 'hello,world']]
             ],
         ];
     }

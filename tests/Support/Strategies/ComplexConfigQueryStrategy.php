@@ -55,6 +55,9 @@ class ComplexConfigQueryStrategy extends Strategy
         'transmute_me' => [
             'transmute' => BoolTransmute::class,
         ],
+        'can_split' => [
+            'explode' => true,
+        ],
     ];
 
     /**
