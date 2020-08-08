@@ -393,8 +393,8 @@ class Filter
         $indexedValues = $this->transmuteValues($indexedValues, $parameter);
         $namedValues = $this->transmuteValues($namedValues, $parameter);
 
-        $indexedValues = $this->explodeValues($indexedValues, $parameter);
-        $namedValues = $this->explodeValues($namedValues, $parameter);
+        $indexedValues = $this->explodeIndexedValues($indexedValues, $parameter);
+        $namedValues = $this->explodeNamedValues($namedValues, $parameter);
 
         $filterValues = array_merge($indexedValues, $namedValues);
 
@@ -423,16 +423,25 @@ class Filter
         return $values;
     }
 
-    protected function explodeValues(array $values, Parameter $parameter)
+    protected function explodeIndexedValues(array $values, Parameter $parameter)
     {
         if ($parameter->shouldExplode()) {
             $delimiter = $parameter->explodeDelimiter();
             $values = collect($values)->flatMap(function ($value) use ($delimiter) {
                 return array_filter(explode($delimiter, implode($delimiter, is_array($value) ? $value : [$value])));
             })->toArray();
-//            $values = array_map(function ($filerValue) use ($delimiter) {
-//                return array_filter(explode($delimiter, implode($delimiter, is_array($filerValue) ? $filerValue : [$filerValue])));
-//            }, $values);
+        }
+
+        return $values;
+    }
+
+    protected function explodeNamedValues(array $values, Parameter $parameter)
+    {
+        if ($parameter->shouldExplode()) {
+            $delimiter = $parameter->explodeDelimiter();
+            $values = collect($values)->map(function ($value) use ($delimiter) {
+                return array_filter(explode($delimiter, implode($delimiter, is_array($value) ? $value : [$value])));
+            })->toArray();
         }
 
         return $values;

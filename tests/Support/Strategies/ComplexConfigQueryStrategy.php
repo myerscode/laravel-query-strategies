@@ -8,6 +8,7 @@ use Myerscode\Laravel\QueryStrategies\Clause\EndsWithClause;
 use Myerscode\Laravel\QueryStrategies\Strategies\Strategy;
 use Myerscode\Laravel\QueryStrategies\Transmute\BoolTransmute;
 use Tests\Support\Clause\CustomMultiClause;
+use Tests\Support\Clause\LookupClause;
 
 class ComplexConfigQueryStrategy extends Strategy
 {
@@ -57,6 +58,13 @@ class ComplexConfigQueryStrategy extends Strategy
         ],
         'can_split' => [
             'explode' => true,
+        ],
+        'override_this' => [
+            'multi' => CustomMultiClause::class,
+            'explode' => true,
+            'methods' => [
+                'lookup' => LookupClause::class,
+            ]
         ],
     ];
 

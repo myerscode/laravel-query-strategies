@@ -94,7 +94,7 @@ class FilterTest extends TestCase
                 ['foo' => 'foo,bar']
             ],
             'named overrides can be exploded' => [
-                'select * from "items" where "can_split" in (\'hello\', \'world\') limit 50',
+                'select * from "items" where "can_split" = \'hello\' or "can_split" = \'world\' limit 50',
                 ComplexConfigQueryStrategy::class,
                 ['can_split' => ['or' => 'hello,world']]
             ],
@@ -360,6 +360,16 @@ class FilterTest extends TestCase
         $distill->apply();
         $builder = $distill->builder();
         $expectedSql = 'select * from "items" where "multi_override" = \'1+2+3+4\' limit 50';
+        $this->assertEquals($expectedSql, $this->getRawSqlFromBuilder($builder));
+    }
+
+    public function testMultiOverrideShouldNotHavePrioritiesOnOverrides()
+    {
+        $strategy = $this->strategyManager()->findStrategy(ComplexConfigQueryStrategy::class);
+        $distill = $this->filter(Item::query(), $strategy, ['override_this' => ['lookup' => [1,2,3,4]]]);
+        $distill->apply();
+        $builder = $distill->builder();
+        $expectedSql = 'select * from "items" where "override_this" = \'1&2&3&4\' limit 50';
         $this->assertEquals($expectedSql, $this->getRawSqlFromBuilder($builder));
     }
 }
