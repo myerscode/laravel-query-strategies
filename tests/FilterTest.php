@@ -237,6 +237,32 @@ class FilterTest extends TestCase
         ];
     }
 
+    public function providerForGetQueryValues()
+    {
+        return [
+            'example 1' => [
+                ComplexConfigQueryStrategy::class,
+                ['foo' =>  [1,2,3,4], 'bar' => 'test'],
+                ['foo' =>  [1,2,3,4], 'bar' => ['test']],
+            ],
+            'ignore none applicable values' => [
+                ComplexConfigQueryStrategy::class,
+                ['foo' =>  [1,2,3,4], 'foo-bar' =>  'should not appear'],
+                ['foo' =>  [1,2,3,4]],
+            ],
+            'get split values' => [
+                ComplexConfigQueryStrategy::class,
+                ['explodable' => 'foo,bar'],
+                ['explodable' => ['foo', 'bar']],
+            ],
+            'get field alias values' => [
+                ComplexConfigQueryStrategy::class,
+                ['bf' => 'test'],
+                ['bf' => ['test']],
+            ],
+        ];
+    }
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -371,5 +397,16 @@ class FilterTest extends TestCase
         $builder = $distill->builder();
         $expectedSql = 'select * from "items" where "override_this" = \'1&2&3&4\' limit 50';
         $this->assertEquals($expectedSql, $this->getRawSqlFromBuilder($builder));
+    }
+
+    /**
+     * @dataProvider providerForGetQueryValues
+     */
+    public function testCanGetGetQueryValuesThatWillBeApplied($stategy, $query, $expect)
+    {
+        $strategy = $this->strategyManager()->findStrategy($stategy);
+        $distill = $this->filter(Item::query(), $strategy, $query);
+
+        $this->assertEquals($expect, $distill->filterValues());
     }
 }

@@ -124,28 +124,8 @@ class Filter
      */
     public function filter(): Filter
     {
-        $filterKeys = array_keys($this->strategy->parameters());
 
-        // get parameters that can be used to filter this query from the current request
-        $parameters = collect($this->query)->only($filterKeys)->toArray();
-
-        // find fields that have the operator attached as a suffix
-        $otherParameters = collect($this->query)->except($filterKeys)
-            ->flatMap(function ($value, $key) {
-                $parts = explode('--', $key);
-                // skip if there is no operator or is overriding default
-                if (count($parts) <= 1 || $this->strategy->parameter($parts[0])->operatorOverride() === $key) {
-                    return null;
-                }
-                if (count($parts) === 2) {
-                    return [$parts[0] => [$parts[1] => $value]];
-                }
-            })
-            ->filter()
-            ->only($filterKeys)
-            ->toArray();
-
-        $parameters = collect($parameters)->mergeRecursive($otherParameters)->toArray();
+        $parameters = $this->filterParameters();
 
         $overrideFilters = $this->parameterOverrides();
 
@@ -194,6 +174,49 @@ class Filter
         }
 
         return $this;
+    }
+
+    /**
+     * Get array of query parameters that can be used
+     *
+     * @return array
+     */
+    protected function filterParameters()
+    {
+        $filterKeys = array_keys($this->strategy->parameters());
+
+        // get parameters that can be used to filter this query from the current request
+        $parameters = collect($this->query)->only($filterKeys)->toArray();
+
+        // find fields that have the operator attached as a suffix
+        $otherParameters = collect($this->query)->except($filterKeys)
+            ->flatMap(function ($value, $key) {
+                $parts = explode('--', $key);
+                // skip if there is no operator or is overriding default
+                if (count($parts) <= 1 || $this->strategy->parameter($parts[0])->operatorOverride() === $key) {
+                    return null;
+                }
+                if (count($parts) === 2) {
+                    return [$parts[0] => [$parts[1] => $value]];
+                }
+            })
+            ->filter()
+            ->only($filterKeys)
+            ->toArray();
+
+        return collect($parameters)->mergeRecursive($otherParameters)->toArray();
+    }
+
+    public function filterValues()
+    {
+        $parameters = $this->filterParameters();
+        $filterValues = [];
+        foreach ($parameters as $parameter => $values) {
+            $parameterConf = $this->strategy->parameter($parameter);
+            $filterValues[$parameter] = $this->prepareValues($values, $parameterConf);
+        }
+
+        return $filterValues;
     }
 
     /**
