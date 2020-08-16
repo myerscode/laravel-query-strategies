@@ -323,6 +323,7 @@ class Filter
             $pagination->currentPage(), [
                 'path' => Paginator::resolveCurrentPath(),
                 'pageName' => $pagination->getPageName(),
+                'appliedFilters' => $this->filterValues(),
             ]
         );
     }

@@ -408,5 +408,6 @@ class FilterTest extends TestCase
         $distill = $this->filter(Item::query(), $strategy, $query);
 
         $this->assertEquals($expect, $distill->filterValues());
+        $this->assertEquals($expect, $distill->paginate()->getAppliedFilters());
     }
 }

@@ -26,7 +26,18 @@ class Paginated extends LengthAwarePaginator
             'currentPage' => $this->currentPage(),
             'lastPage' => $this->lastPage(),
             'perPage' => $this->perPage(),
+            'appliedFilters' => $this->getAppliedFilters(),
         ];
+    }
+
+    /**
+     * Get query filters applied to the query
+     *
+     * @return array|null
+     */
+    public function getAppliedFilters(): ?array
+    {
+        return $this->appliedFilters;
     }
 
     /**
