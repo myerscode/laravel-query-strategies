@@ -3,7 +3,6 @@
 namespace Tests;
 
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\Request;
 use Myerscode\Laravel\QueryStrategies\Clause\EqualsClause;
 use Myerscode\Laravel\QueryStrategies\Filter;
 use Tests\Support\Models\Item;
@@ -93,6 +92,11 @@ class FilterTest extends TestCase
                 'select * from "items" where "foo" = \'foo,bar\' limit 50',
                 ComplexConfigQueryStrategy::class,
                 ['foo' => 'foo,bar']
+            ],
+            'named overrides can be exploded' => [
+                'select * from "items" where "can_split" = \'hello\' or "can_split" = \'world\' limit 50',
+                ComplexConfigQueryStrategy::class,
+                ['can_split' => ['or' => 'hello,world']]
             ],
         ];
     }
@@ -233,6 +237,32 @@ class FilterTest extends TestCase
         ];
     }
 
+    public function providerForGetQueryValues()
+    {
+        return [
+            'example 1' => [
+                ComplexConfigQueryStrategy::class,
+                ['foo' =>  [1,2,3,4], 'bar' => 'test'],
+                ['foo' =>  [1,2,3,4], 'bar' => ['test']],
+            ],
+            'ignore none applicable values' => [
+                ComplexConfigQueryStrategy::class,
+                ['foo' =>  [1,2,3,4], 'foo-bar' =>  'should not appear'],
+                ['foo' =>  [1,2,3,4]],
+            ],
+            'get split values' => [
+                ComplexConfigQueryStrategy::class,
+                ['explodable' => 'foo,bar'],
+                ['explodable' => ['foo', 'bar']],
+            ],
+            'get field alias values' => [
+                ComplexConfigQueryStrategy::class,
+                ['bf' => 'test'],
+                ['bf' => ['test']],
+            ],
+        ];
+    }
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -347,5 +377,37 @@ class FilterTest extends TestCase
         $distill = $this->filter(Item::query(), new ComplexConfigQueryStrategy, ['with' => ['owner', 'categories'] , 'w' => 'owner'], ['with' => 'w']);
         $builder = $distill->with()->builder();
         $this->assertEquals(['owner'], array_keys($builder->getEagerLoads()));
+    }
+
+    public function testConfigCanOverrideDefaultMultiClause()
+    {
+        $strategy = $this->strategyManager()->findStrategy(ComplexConfigQueryStrategy::class);
+        $distill = $this->filter(Item::query(), $strategy, ['multi_override' => [1,2,3,4]]);
+        $distill->apply();
+        $builder = $distill->builder();
+        $expectedSql = 'select * from "items" where "multi_override" = \'1+2+3+4\' limit 50';
+        $this->assertEquals($expectedSql, $this->getRawSqlFromBuilder($builder));
+    }
+
+    public function testMultiOverrideShouldNotHavePrioritiesOnOverrides()
+    {
+        $strategy = $this->strategyManager()->findStrategy(ComplexConfigQueryStrategy::class);
+        $distill = $this->filter(Item::query(), $strategy, ['override_this' => ['lookup' => [1,2,3,4]]]);
+        $distill->apply();
+        $builder = $distill->builder();
+        $expectedSql = 'select * from "items" where "override_this" = \'1&2&3&4\' limit 50';
+        $this->assertEquals($expectedSql, $this->getRawSqlFromBuilder($builder));
+    }
+
+    /**
+     * @dataProvider providerForGetQueryValues
+     */
+    public function testCanGetGetQueryValuesThatWillBeApplied($stategy, $query, $expect)
+    {
+        $strategy = $this->strategyManager()->findStrategy($stategy);
+        $distill = $this->filter(Item::query(), $strategy, $query);
+
+        $this->assertEquals($expect, $distill->filterValues());
+        $this->assertEquals($expect, $distill->paginate()->getAppliedFilters());
     }
 }

@@ -5,6 +5,7 @@ namespace Myerscode\Laravel\QueryStrategies;
 use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
 use Myerscode\Laravel\QueryStrategies\Commands\MakeClauseCommand;
 use Myerscode\Laravel\QueryStrategies\Commands\MakeStrategyCommand;
+use Myerscode\Laravel\QueryStrategies\Commands\MakeTransmuteCommand;
 
 class ServiceProvider extends LaravelServiceProvider
 {
@@ -20,6 +21,7 @@ class ServiceProvider extends LaravelServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands(MakeClauseCommand::class);
             $this->commands(MakeStrategyCommand::class);
+            $this->commands(MakeTransmuteCommand::class);
         }
     }
 

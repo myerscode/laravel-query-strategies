@@ -20,6 +20,7 @@ class PaginatedTest extends TestCase
         'currentPage',
         'lastPage',
         'perPage',
+        'appliedFilters',
     ];
 
     protected function setUp(): void

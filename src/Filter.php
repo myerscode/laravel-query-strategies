@@ -9,7 +9,9 @@ use Myerscode\Laravel\QueryStrategies\Clause\ClauseInterface;
 use Myerscode\Laravel\QueryStrategies\Clause\EqualsClause;
 use Myerscode\Laravel\QueryStrategies\Clause\IsInClause;
 use Myerscode\Laravel\QueryStrategies\Strategies\Parameter;
+use Myerscode\Laravel\QueryStrategies\Strategies\Property;
 use Myerscode\Laravel\QueryStrategies\Strategies\StrategyInterface;
+use Myerscode\Laravel\QueryStrategies\Transmute\TransmuteInterface;
 
 class Filter
 {
@@ -41,7 +43,7 @@ class Filter
      *
      * @var string
      */
-    private $multiFilter = IsInClause::class;
+    private $defaultMultiFilter = IsInClause::class;
 
     /**
      * @var string
@@ -122,28 +124,8 @@ class Filter
      */
     public function filter(): Filter
     {
-        $filterKeys = array_keys($this->strategy->parameters());
 
-        // get parameters that can be used to filter this query from the current request
-        $parameters = collect($this->query)->only($filterKeys)->toArray();
-
-        // find fields that have the operator attached as a suffix
-        $otherParameters = collect($this->query)->except($filterKeys)
-            ->flatMap(function ($value, $key) {
-                $parts = explode('--', $key);
-                // skip if there is no operator or is overriding default
-                if (count($parts) <= 1 || $this->strategy->parameter($parts[0])->operatorOverride() === $key) {
-                    return null;
-                }
-                if (count($parts) === 2) {
-                    return [$parts[0] => [$parts[1] => $value]];
-                }
-            })
-            ->filter()
-            ->only($filterKeys)
-            ->toArray();
-
-        $parameters = collect($parameters)->mergeRecursive($otherParameters)->toArray();
+        $parameters = $this->filterParameters();
 
         $overrideFilters = $this->parameterOverrides();
 
@@ -165,7 +147,10 @@ class Filter
             }
 
             if (count($defaultFilters) > 1) {
-                $defaultFilter = $this->multiFilter;
+                $defaultFilter = $parameterConf->multiMethod();
+                if (empty($defaultFilter)) {
+                    $defaultFilter = $this->defaultMultiFilter;
+                }
             }
 
             $overrideKey = $parameterConf->operatorOverride();
@@ -176,9 +161,11 @@ class Filter
 
             $filtersToApply = [];
 
-            foreach ($filterValues as $filterMethod => $value) {
+            foreach ($filterValues as $filterMethod => $filterValue) {
                 $filterClass = (isset($methods[$filterMethod])) ? $methods[$filterMethod] : $defaultFilter;
-                $filtersToApply[$filterClass][] = $value;
+                $filtersToApply[$filterClass] = isset($filtersToApply[$filterClass]) ? $filtersToApply[$filterClass] : [];
+                $filterValue = is_array($filterValue) ? $filterValue : [$filterValue];
+                $filtersToApply[$filterClass] = array_merge($filtersToApply[$filterClass], $filterValue);
             }
 
             $columnName = $parameterConf->column() ?? null;
@@ -187,6 +174,49 @@ class Filter
         }
 
         return $this;
+    }
+
+    /**
+     * Get array of query parameters that can be used
+     *
+     * @return array
+     */
+    protected function filterParameters()
+    {
+        $filterKeys = array_keys($this->strategy->parameters());
+
+        // get parameters that can be used to filter this query from the current request
+        $parameters = collect($this->query)->only($filterKeys)->toArray();
+
+        // find fields that have the operator attached as a suffix
+        $otherParameters = collect($this->query)->except($filterKeys)
+            ->flatMap(function ($value, $key) {
+                $parts = explode('--', $key);
+                // skip if there is no operator or is overriding default
+                if (count($parts) <= 1 || $this->strategy->parameter($parts[0])->operatorOverride() === $key) {
+                    return null;
+                }
+                if (count($parts) === 2) {
+                    return [$parts[0] => [$parts[1] => $value]];
+                }
+            })
+            ->filter()
+            ->only($filterKeys)
+            ->toArray();
+
+        return collect($parameters)->mergeRecursive($otherParameters)->toArray();
+    }
+
+    public function filterValues()
+    {
+        $parameters = $this->filterParameters();
+        $filterValues = [];
+        foreach ($parameters as $parameter => $values) {
+            $parameterConf = $this->strategy->parameter($parameter);
+            $filterValues[$parameter] = $this->prepareValues($values, $parameterConf);
+        }
+
+        return $filterValues;
     }
 
     /**
@@ -293,6 +323,7 @@ class Filter
             $pagination->currentPage(), [
                 'path' => Paginator::resolveCurrentPath(),
                 'pageName' => $pagination->getPageName(),
+                'appliedFilters' => $this->filterValues(),
             ]
         );
     }
@@ -379,12 +410,17 @@ class Filter
     {
         $filterValues = is_array($values) ? $values : [$values];
 
-        if ($parameter->shouldExplode()) {
-            $delimiter = $parameter->explodeDelimiter();
-            $filterValues = collect($filterValues)->flatMap(function ($value) use ($delimiter) {
-                return array_filter(explode($delimiter, implode($delimiter, is_array($value) ? $value : [$value])));
-            })->toArray();
-        }
+        $indexedValues = collect($filterValues)->only(range(0, count($filterValues) - 1))->toArray();
+
+        $namedValues = collect($filterValues)->except(range(0, count($filterValues) - 1))->toArray();
+
+        $indexedValues = $this->transmuteValues($indexedValues, $parameter);
+        $namedValues = $this->transmuteValues($namedValues, $parameter);
+
+        $indexedValues = $this->explodeIndexedValues($indexedValues, $parameter);
+        $namedValues = $this->explodeNamedValues($namedValues, $parameter);
+
+        $filterValues = array_merge($indexedValues, $namedValues);
 
         // if there are any disabled filter clauses remove them
         if (!empty($disabled = $parameter->disabled())) {
@@ -392,7 +428,47 @@ class Filter
             $filterValues = collect($filterValues)->except($disabled)->all();
         }
 
-        return array_filter($filterValues);
+        return $filterValues;
+    }
+
+    protected function transmuteValues(array $values, Parameter $parameter)
+    {
+        if ($transmuteClass = $parameter->transmuteWith()) {
+            if (class_exists($transmuteClass) && ($transmute = app($transmuteClass)) instanceof TransmuteInterface) {
+                $values = array_map(function ($filerValue) use ($transmute) {
+                    $property = new Property($filerValue);
+                    $transmute->transmute($property);
+
+                    return $property->getValue();
+                }, $values);
+            }
+        }
+
+        return $values;
+    }
+
+    protected function explodeIndexedValues(array $values, Parameter $parameter)
+    {
+        if ($parameter->shouldExplode()) {
+            $delimiter = $parameter->explodeDelimiter();
+            $values = collect($values)->flatMap(function ($value) use ($delimiter) {
+                return array_filter(explode($delimiter, implode($delimiter, is_array($value) ? $value : [$value])));
+            })->toArray();
+        }
+
+        return $values;
+    }
+
+    protected function explodeNamedValues(array $values, Parameter $parameter)
+    {
+        if ($parameter->shouldExplode()) {
+            $delimiter = $parameter->explodeDelimiter();
+            $values = collect($values)->map(function ($value) use ($delimiter) {
+                return array_filter(explode($delimiter, implode($delimiter, is_array($value) ? $value : [$value])));
+            })->toArray();
+        }
+
+        return $values;
     }
 
     /**
