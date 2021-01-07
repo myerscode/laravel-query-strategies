@@ -19,3 +19,21 @@ Created package
 ## 7.0.0
 * Updated dependencies
 * Fixed bug where default filter override got applied as filter
+
+
+# 8.0.0
+
+### Refactor 
+* Updated dependencies for PHP 8 compatibility
+    * Min requirement reverted to PHP 7.3 as per Laravel
+
+### Fix
+* Ensure named queries can be exploded
+* Ensure that custom multi overrides do not have priority over named overrides
+
+### Feat    
+* Added ability to get the list of prepared query values that will be used in the builder
+* Added ability to transmute query properties
+* Added ability to override the default multi filter
+
+

@@ -1,34 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit backupGlobals="false"
-         backupStaticAttributes="false"
-         bootstrap="vendor/autoload.php"
-         colors="true"
-         convertErrorsToExceptions="true"
-         convertNoticesToExceptions="true"
-         convertWarningsToExceptions="true"
-         processIsolation="false"
-         cacheResult="false"
-         stopOnFailure="false">
-    <testsuites>
-        <testsuite name="Unit">
-            <directory suffix="Test.php">./tests/</directory>
-        </testsuite>
-    </testsuites>
-    <logging>
-        <log type="coverage-html" target="./coverage/coverage"/>
-        <log type="testdox-html" target="./coverage/tests.html"/>
-        <log type="coverage-clover" target="./coverage/coverage.xml"/>
-    </logging>
-    <filter>
-        <whitelist processUncoveredFilesFromWhitelist="true">
-            <directory suffix=".php">./src/</directory>
-            <exclude>
-                <file>./src/ServiceProvider.php</file>
-                <directory>./src/Stubs/</directory>
-            </exclude>
-        </whitelist>
-    </filter>
-    <php>
-        <env name="DB_CONNECTION" value="testing"/>
-    </php>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" backupGlobals="false" backupStaticAttributes="false" bootstrap="vendor/autoload.php" colors="true" convertErrorsToExceptions="true" convertNoticesToExceptions="true" convertWarningsToExceptions="true" processIsolation="false" cacheResult="false" stopOnFailure="false" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd">
+  <coverage processUncoveredFiles="true">
+    <include>
+      <directory suffix=".php">./src/</directory>
+    </include>
+    <exclude>
+      <file>./src/ServiceProvider.php</file>
+      <directory>./src/Stubs/</directory>
+    </exclude>
+    <report>
+      <clover outputFile="./coverage/coverage.xml"/>
+      <html outputDirectory="./coverage/coverage"/>
+    </report>
+  </coverage>
+  <testsuites>
+    <testsuite name="Unit">
+      <directory suffix="Test.php">./tests/</directory>
+    </testsuite>
+  </testsuites>
+  <logging>
+    <testdoxHtml outputFile="./coverage/tests.html"/>
+  </logging>
+  <php>
+    <env name="DB_CONNECTION" value="testing"/>
+  </php>
 </phpunit>
