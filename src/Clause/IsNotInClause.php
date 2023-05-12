@@ -15,8 +15,8 @@ class IsNotInClause extends AbstractClause
         if (!empty($value)) {
             $values = is_array($value) ? $value : [$value];
             $notIn = [];
-            array_walk($values, function ($value) use (&$notIn) {
-                $notIn = array_merge($notIn, array_filter(explode(',', $value)));
+            array_walk($values, static function ($value) use (&$notIn) : void {
+                $notIn = [...$notIn, ...array_filter(explode(',', (string) $value))];
             });
             $builder->whereNotIn($column, $notIn);
         }

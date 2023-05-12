@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use Iterator;
 use Myerscode\Laravel\QueryStrategies\Strategies\Parameter;
 
 /**
@@ -10,52 +11,50 @@ use Myerscode\Laravel\QueryStrategies\Strategies\Parameter;
 class ParameterTest extends TestCase
 {
 
-    public function dataProvider()
+    public static function dataProvider(): Iterator
     {
-        return [
+        yield [
             [
-                [
-                    'column' => 'foobar',
-                    'default' => 'FooBar::class',
-                    'filters' => [
-                        'does-not-equal' => 'HelloWorld::class',
-                    ],
-                ]
-            ],
+                'column' => 'foobar',
+                'default' => 'FooBar::class',
+                'filters' => [
+                    'does-not-equal' => 'HelloWorld::class',
+                ],
+            ]
+        ];
+        yield [
             [
-                [
-                    'filters' => [
-                        'does-not-equal' => 'DoesNotEqualClause::class',
-                    ],
-                    'disabled' => [
-                        'contains',
-                    ],
-                ]
-            ],
+                'filters' => [
+                    'does-not-equal' => 'DoesNotEqualClause::class',
+                ],
+                'disabled' => [
+                    'contains',
+                ],
+            ]
+        ];
+        yield [
             [
-                [
-                    'override' => 'different-mass-name'
-                ]
-            ],
+                'override' => 'different-mass-name'
+            ]
+        ];
+        yield [
             [
-                [
-                    'overrideSuffix' => '--mass-filter'
-                ]
-            ],
+                'overrideSuffix' => '--mass-filter'
+            ]
+        ];
+        yield [
             [
-                [
-                ]
-            ],
+            ]
         ];
     }
 
     /**
      * @dataProvider dataProvider
      */
-    public function testInstanceCreation($config)
+    public function testInstanceCreation(array $config): void
     {
         $parameter = new Parameter('foobar', $config);
-        $this->assertEquals('foobar', $parameter->name());
+        $this->assertSame('foobar', $parameter->name());
         $this->assertEquals($config['override'] ?? ('foobar' . ($config['overrideSuffix'] ?? Parameter::DEFAULT_OPERATOR_OVERRIDE_SUFFIX)), $parameter->operatorOverride());
         $this->assertEquals($config['column'] ?? 'foobar', $parameter->column());
         $this->assertEquals($config['default'] ?? null, $parameter->defaultMethod());

@@ -1,6 +1,6 @@
 <?php
 
-namespace DummyNamespace;
+namespace Myerscode\Laravel\QueryStrategies\Stubs;
 
 use Myerscode\Laravel\QueryStrategies\Strategies\Property;
 use Myerscode\Laravel\QueryStrategies\Transmute\TransmuteInterface;
@@ -8,8 +8,8 @@ use Myerscode\Laravel\QueryStrategies\Transmute\TransmuteInterface;
 class DummyClass implements TransmuteInterface
 {
 
-    public function transmute(Property $value): Property
+    public function transmute(Property $property): Property
     {
-        return $value;
+        return $property;
     }
 }

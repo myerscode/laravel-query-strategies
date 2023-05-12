@@ -87,13 +87,13 @@ class Strategy implements StrategyInterface
     /**
      * Compile the policy config into parameters
      */
-    private function compile()
+    private function compile(): void
     {
         $parameters = $this->config() ?? [];
 
-        foreach ($parameters as $parameter => $config) {
+        foreach ($parameters as $config) {
             if (isset($config['aliases']) && is_array($config['aliases'])) {
-                array_walk($config['aliases'], function ($alias) use (&$parameters, $config) {
+                array_walk($config['aliases'], static function ($alias) use (&$parameters, $config) {
                     $parameters[$alias] = $config;
                 });
             }
@@ -107,16 +107,13 @@ class Strategy implements StrategyInterface
                 $name = $parameter;
                 $parameter = new Parameter($parameter, $config);
             }
+
             $this->setParameter($name, $parameter);
         }
     }
 
     /**
      * Set a compiled filter parameter config
-     *
-     * @param string $name
-     * @param Parameter $parameter
-     * @return self
      */
     private function setParameter(string $name, Parameter $parameter): self
     {
@@ -128,7 +125,6 @@ class Strategy implements StrategyInterface
     /**
      * Get the compiled filter parameter config
      *
-     * @param string $parameter
      * @return Parameter
      */
     public function parameter(string $parameter): ?Parameter
@@ -149,6 +145,7 @@ class Strategy implements StrategyInterface
                 $defaultMethods[$alias] = $class;
             }
         }
+
         return $defaultMethods;
     }
 

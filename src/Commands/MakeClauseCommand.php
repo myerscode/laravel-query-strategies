@@ -44,6 +44,7 @@ class MakeClauseCommand extends GeneratorCommand
         if (!Str::endsWith($name, 'Clause')) {
             $name .= 'Clause';
         }
+
         return parent::qualifyClass($name);
     }
 

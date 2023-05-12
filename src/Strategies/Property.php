@@ -5,14 +5,11 @@ namespace Myerscode\Laravel\QueryStrategies\Strategies;
 class Property
 {
 
-    private $originalValue;
-
     private $value;
 
-    public function __construct($value)
+    public function __construct(private $originalValue)
     {
-        $this->originalValue = $value;
-        $this->value = $value;
+        $this->value = $originalValue;
     }
 
     /**
@@ -32,11 +29,9 @@ class Property
     }
 
     /**
-     * @param  mixed  $value
-     *
      * @return Property
      */
-    public function setValue($value)
+    public function setValue(mixed $value)
     {
         $this->value = $value;
 

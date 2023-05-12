@@ -1,6 +1,6 @@
 <?php
 
-namespace DummyNamespace;
+namespace Myerscode\Laravel\QueryStrategies\Stubs;
 
 use Illuminate\Database\Eloquent\Builder;
 use Myerscode\Laravel\QueryStrategies\Clause\AbstractClause;

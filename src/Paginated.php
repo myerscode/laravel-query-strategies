@@ -10,9 +10,9 @@ class Paginated extends LengthAwarePaginator
     /**
      * Get the meta data of the paginated query
      *
-     * @return array
+     * @return array{count: int, firstItem: int, lastItem: int, total: int, hasMorePage: bool, currentPageUrl: string, previousPageUrl: string, nextPageUrl: string, currentPage: int, lastPage: int, perPage: int, appliedFilters: mixed[]|null}
      */
-    public function getMeta()
+    public function getMeta(): array
     {
         return [
             'count' => $this->count(),
@@ -32,8 +32,6 @@ class Paginated extends LengthAwarePaginator
 
     /**
      * Get query filters applied to the query
-     *
-     * @return array|null
      */
     public function getAppliedFilters(): ?array
     {

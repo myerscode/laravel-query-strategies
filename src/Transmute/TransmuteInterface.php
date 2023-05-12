@@ -6,5 +6,5 @@ use Myerscode\Laravel\QueryStrategies\Strategies\Property;
 
 interface TransmuteInterface
 {
-    public function transmute(Property $value): Property;
+    public function transmute(Property $property): Property;
 }

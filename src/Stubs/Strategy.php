@@ -1,6 +1,6 @@
 <?php
 
-namespace DummyNamespace;
+namespace Myerscode\Laravel\QueryStrategies\Stubs;
 
 use Myerscode\Laravel\QueryStrategies\Strategies\Strategy;
 

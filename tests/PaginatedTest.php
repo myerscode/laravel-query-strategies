@@ -29,11 +29,11 @@ class PaginatedTest extends TestCase
         $this->simpleDatabase($this->app);
     }
 
-    public function testGetMeta()
+    public function testGetMeta(): void
     {
-        $distill = $this->filter(Item::query(), BasicConfigQueryStrategy::class, []);
+        $filter = $this->filter(Item::query(), BasicConfigQueryStrategy::class, []);
 
-        $paginated = $distill->paginate();
+        $paginated = $filter->paginate();
 
         $this->assertEquals($this->metaShape, array_keys($paginated->getMeta()));
     }

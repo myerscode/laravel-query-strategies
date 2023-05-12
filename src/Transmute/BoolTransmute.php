@@ -7,19 +7,19 @@ use Myerscode\Laravel\QueryStrategies\Strategies\Property;
 class BoolTransmute implements TransmuteInterface
 {
 
-    public function transmute(Property $value): Property
+    public function transmute(Property $property): Property
     {
-        if ($this->isTrue($value->getOriginalValue())) {
-            $value->setValue(1);
+        if ($this->isTrue($property->getOriginalValue())) {
+            $property->setValue(1);
         } else {
-            $value->setValue(0);
+            $property->setValue(0);
         }
 
-        return $value;
+        return $property;
     }
 
     protected function isTrue($value): bool
     {
-        return in_array($value, ['ok']) || (true === filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE));
+        return $value == 'ok' || (true === filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE));
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Application;
@@ -19,13 +20,13 @@ class TestCase extends Orchestra
         ];
     }
 
-    public function simpleDatabase(Application $app)
+    public function simpleDatabase(Application $application): void
     {
-        $app['db']->connection()->getSchemaBuilder()->create('items', function (Blueprint $table) {
-            $table->increments('id');
-            $table->string('name');
-            $table->string('likes');
-            $table->timestamps();
+        $application['db']->connection()->getSchemaBuilder()->create('items', static function (Blueprint $blueprint) : void {
+            $blueprint->increments('id');
+            $blueprint->string('name');
+            $blueprint->string('likes');
+            $blueprint->timestamps();
         });
     }
 
@@ -37,7 +38,7 @@ class TestCase extends Orchestra
 
     public function request($replace = [])
     {
-        $request = $this->app->make('Illuminate\Http\Request');
+        $request = $this->app->make(Request::class);
         $request->replace($replace);
         return $request;
     }
@@ -49,8 +50,7 @@ class TestCase extends Orchestra
 
     public function getRawSqlFromBuilder(Builder $builder)
     {
-        $query = str_replace(['?'], ['\'%s\''], $builder->toSql());
-        $rawSql = vsprintf($query, $builder->getBindings());
-        return $rawSql;
+        $query = str_replace(['?'], ["'%s'"], $builder->toSql());
+        return vsprintf($query, $builder->getBindings());
     }
 }

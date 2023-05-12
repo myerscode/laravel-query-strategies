@@ -14,7 +14,7 @@ class GreaterThanClause extends AbstractClause
     {
         if (!empty($value)) {
             $values = is_array($value) ? $value : [$value];
-            collect($values)->each(function ($value) use ($column, $builder) {
+            collect($values)->each(static function ($value) use ($column, $builder) : void {
                 $builder->where($column, '>', $value);
             });
         }

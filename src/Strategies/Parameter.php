@@ -7,75 +7,47 @@ class Parameter
 
     /**
      * Default value use for creating the operator override parameter
+     * @var string
      */
-    const DEFAULT_OPERATOR_OVERRIDE_SUFFIX = '--operator';
+    final public const DEFAULT_OPERATOR_OVERRIDE_SUFFIX = '--operator';
 
     /**
      * Default value use for exploding query parameters
+     * @var string
      */
-    const DEFAULT_EXPLODE_DELIMITER = ',';
+    final public const DEFAULT_EXPLODE_DELIMITER = ',';
 
-    /**
-     * @var string|null
-     */
-    private $name;
+    private ?string $column = null;
 
-    /**
-     * @var string|null
-     */
-    private $column;
+    private ?string $default = null;
 
-    /**
-     * @var string|null
-     */
-    private $default;
+    private ?string $multi = null;
 
-    /**
-     * @var string|null
-     */
-    private $multi;
-
-    /**
-     * @var string|null
-     */
-    private $transmute;
+    private ?string $transmute = null;
 
     /**
      * @var array
      */
     private $methods = [];
 
-    /**
-     * @var array
-     */
-    private $disabled = [];
+    private array $disabled = [];
 
-    /**
-     * @var bool
-     */
-    private $explode = false;
+    private bool $explode = false;
 
     /**
      * @var string
      */
     private $overrideParameter;
 
-    /**
-     * @var string
-     */
-    private $explodeDelimiter;
+    private string $explodeDelimiter;
 
 
-    public function __construct(string $name, array $configuration)
+    public function __construct(private readonly ?string $name, array $configuration)
     {
-        $this->name = $name;
         $this->bindConfig($configuration);
     }
 
-    /**
-     * @param array $configuration
-     */
-    private function bindConfig(array $configuration)
+    private function bindConfig(array $configuration): void
     {
         $this->column = $configuration['column'] ?? $this->name;
         $this->default = $configuration['default'] ?? null;
@@ -84,14 +56,12 @@ class Parameter
         $this->methods = $configuration['methods'] ?? [];
         $this->disabled = isset($configuration['disabled']) ? array_filter(is_array($configuration['disabled']) ? $configuration['disabled'] : [$configuration['disabled']]) : [];
         $this->overrideParameter = $configuration['override'] ?? $this->name . ($configuration['overrideSuffix'] ?? Parameter::DEFAULT_OPERATOR_OVERRIDE_SUFFIX);
-        $this->explode = isset($configuration['explode']) ? filter_var($configuration['explode'], FILTER_VALIDATE_BOOLEAN) : false;
+        $this->explode = isset($configuration['explode']) && filter_var($configuration['explode'], FILTER_VALIDATE_BOOLEAN);
         $this->explodeDelimiter = $configuration['delimiter'] ?? Parameter::DEFAULT_EXPLODE_DELIMITER;
     }
 
     /**
      * The name of this parameter
-     *
-     * @return string
      */
     public function name(): string
     {
@@ -100,48 +70,38 @@ class Parameter
 
     /**
      * The column to use when interacting with this parameter
-     *
-     * @return null|string
      */
-    public function column()
+    public function column(): ?string
     {
         return $this->column;
     }
 
     /**
      * Default method class to use instead of Filter default
-     *
-     * @return string|null
      */
-    public function defaultMethod()
+    public function defaultMethod(): ?string
     {
         return $this->default;
     }
 
     /**
      * Default multi method class to use instead of Filter default
-     *
-     * @return string|null
      */
-    public function multiMethod()
+    public function multiMethod(): ?string
     {
         return $this->multi;
     }
 
     /**
      * Default multi method class to use instead of Filter default
-     *
-     * @return string|null
      */
-    public function transmuteWith()
+    public function transmuteWith(): ?string
     {
         return $this->transmute;
     }
 
     /**
      * What custom methods can this parameter use
-     *
-     * @return array
      */
     public function methods(): array
     {
@@ -150,8 +110,6 @@ class Parameter
 
     /**
      * What parameters are disabled
-     *
-     * @return array
      */
     public function disabled(): array
     {
@@ -160,8 +118,6 @@ class Parameter
 
     /**
      * Should this parameter explode its value to find multiple values
-     *
-     * @return bool
      */
     public function shouldExplode(): bool
     {
@@ -170,8 +126,6 @@ class Parameter
 
     /**
      * Delimiter used for exploding values
-     *
-     * @return string
      */
     public function explodeDelimiter(): string
     {
