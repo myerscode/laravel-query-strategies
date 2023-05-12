@@ -1,5 +1,7 @@
 <?php
 
+namespace Myerscode\Laravel\QueryStrategies\Stubs;
+
 return [
     'parameters' => [
         'order' => 'order',

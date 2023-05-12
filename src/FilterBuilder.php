@@ -13,27 +13,11 @@ use Myerscode\Laravel\QueryStrategies\Exceptions\InvalidStrategyException;
 class FilterBuilder
 {
 
-    /**
-     * @var StrategyManager
-     */
-    private $strategyManager;
-
-    /**
-     *
-     * @var Request
-     */
-    private $request;
-
-    /**
-     * @var Builder
-     */
-    private $builder;
+    private ?Builder $builder = null;
 
 
-    public function __construct(Request $request, StrategyManager $policyManager)
+    public function __construct(private readonly Request $request, private readonly StrategyManager $strategyManager)
     {
-        $this->request = $request;
-        $this->strategyManager = $policyManager;
     }
 
     /**
@@ -60,10 +44,7 @@ class FilterBuilder
         }
     }
 
-    /**
-     * @return Builder
-     */
-    public function builder()
+    public function builder(): ?Builder
     {
         return $this->builder;
     }
@@ -72,7 +53,6 @@ class FilterBuilder
      * Set the builder which we will be used for querying
      *
      * @param $builderOrModel
-     * @return FilterBuilder
      * @throws BuilderNotFoundException
      * @throws BuilderNotSetException
      */
@@ -87,25 +67,25 @@ class FilterBuilder
      * Apply a possible strategy by name or a given class
      *
      * @param  $possibleStrategy
-     * @return Filter
      * @throws FilterStrategyNotFoundException
      * @throws InvalidStrategyException
      * @throws BuilderNotSetException
      */
     public function with($possibleStrategy): Filter
     {
-        if (empty($this->builder)) {
+        if (!$this->builder instanceof Builder) {
             throw new BuilderNotSetException();
         }
+
         $strategy = $this->strategyManager->findStrategy($possibleStrategy);
         return new Filter($this->builder, $strategy, $this->request->query->all(), $this->config());
     }
 
     /**
      * The config the will be built eiyh
-     * @return array
+     * @return array{order: mixed, sort: mixed, limit: mixed, page: mixed, with: mixed}
      */
-    public function config()
+    public function config(): array
     {
         return [
             'order' => config('query-strategies.parameters.order', 'order'),

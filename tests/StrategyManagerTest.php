@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use stdClass;
 use Myerscode\Laravel\QueryStrategies\Exceptions\FilterStrategyNotFoundException;
 use Myerscode\Laravel\QueryStrategies\Exceptions\InvalidStrategyException;
 use Myerscode\Laravel\QueryStrategies\Strategies\Strategy;
@@ -16,16 +17,16 @@ use Tests\Support\Strategies\InvalidStrategy;
 class StrategyManagerTest extends TestCase
 {
 
-    public function invalidStrategyExceptionProvider()
+    public static function invalidStrategyExceptionProvider(): array
     {
         return [
             [InvalidStrategy::class],
             [new InvalidStrategy],
-            [new \stdClass()],
+            [new stdClass()],
         ];
     }
 
-    public function testCanFindStrategy()
+    public function testCanFindStrategy(): void
     {
         $this->assertInstanceOf(StrategyInterface::class, $this->strategyManager()->findStrategy(ComplexConfigQueryStrategy::class));
         $this->assertInstanceOf(StrategyInterface::class, $this->strategyManager()->findStrategy(OverrideQueryStrategy::class));
@@ -34,7 +35,7 @@ class StrategyManagerTest extends TestCase
         $this->assertInstanceOf(StrategyInterface::class, $this->strategyManager()->findStrategy(new Strategy()));
     }
 
-    public function testReturnsCachedStrategy()
+    public function testReturnsCachedStrategy(): void
     {
         $manager = $this->strategyManager();
         $strategy = $manager->findStrategy(ComplexConfigQueryStrategy::class);
@@ -42,7 +43,7 @@ class StrategyManagerTest extends TestCase
         $this->assertSame($strategy, $shouldBeCached);
     }
 
-    public function testThrowsFilterStrategyNotFound()
+    public function testThrowsFilterStrategyNotFound(): void
     {
         $this->expectException(FilterStrategyNotFoundException::class);
         $this->strategyManager()->findStrategy('Unknown/Strategy/Class');
@@ -51,7 +52,7 @@ class StrategyManagerTest extends TestCase
     /**
      * @dataProvider invalidStrategyExceptionProvider
      */
-    public function testThrowsInvalidStrategyException($possibleStrategy)
+    public function testThrowsInvalidStrategyException(string|InvalidStrategy|stdClass $possibleStrategy): void
     {
         $this->expectException(InvalidStrategyException::class);
         $this->strategyManager()->findStrategy($possibleStrategy);

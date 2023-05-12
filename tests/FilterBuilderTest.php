@@ -15,13 +15,15 @@ use Tests\Support\Models\Register;
 use Tests\Support\Models\TodoList;
 use Tests\Support\Strategies\ComplexConfigQueryStrategy;
 
+use function Myerscode\Laravel\QueryStrategies\filter;
+
 /**
  * @coversDefaultClass \Myerscode\Laravel\QueryStrategies\FilterBuilder
  */
 class FilterBuilderTest extends TestCase
 {
 
-    public function testFilterBuilderInstanceCreation()
+    public function testFilterBuilderInstanceCreation(): void
     {
         $filterBuilder = new FilterBuilder(new Request(), new StrategyManager());
         $this->assertInstanceOf(FilterBuilder::class, $filterBuilder);
@@ -36,7 +38,7 @@ class FilterBuilderTest extends TestCase
         $this->assertInstanceOf(Filter::class, $filterBuilder->filter(Item::class)->with(ComplexConfigQueryStrategy::class));
     }
 
-    public function testCanFindBuilderFromClass()
+    public function testCanFindBuilderFromClass(): void
     {
         $filterBuilder = new FilterBuilder( new Request(), new StrategyManager());
         $this->assertInstanceOf(FilterBuilder::class, $filterBuilder->filter(Item::class));
@@ -51,7 +53,7 @@ class FilterBuilderTest extends TestCase
         $this->assertInstanceOf(Builder::class, $filterBuilder->builder());
     }
 
-    public function testCanFindBuilderFromModel()
+    public function testCanFindBuilderFromModel(): void
     {
         $filterBuilder = new FilterBuilder( new Request(), new StrategyManager());
         $this->assertInstanceOf(FilterBuilder::class, $filterBuilder->filter(new Item));
@@ -66,7 +68,7 @@ class FilterBuilderTest extends TestCase
         $this->assertInstanceOf(Builder::class, $filterBuilder->builder());
     }
 
-    public function testCanFindBuilderFromBuilder()
+    public function testCanFindBuilderFromBuilder(): void
     {
         $filterBuilder = new FilterBuilder( new Request(), new StrategyManager());
         $this->assertInstanceOf(FilterBuilder::class, $filterBuilder->filter(Item::query()));
@@ -81,43 +83,43 @@ class FilterBuilderTest extends TestCase
         $this->assertInstanceOf(Builder::class, $filterBuilder->builder());
     }
 
-    public function testFilterWithReturnsInstanceOfFilter()
+    public function testFilterWithReturnsInstanceOfFilter(): void
     {
         $filterBuilder = new FilterBuilder( new Request(), new StrategyManager());
         $this->assertInstanceOf(Filter::class, $filterBuilder->filter(new Item)->with(ComplexConfigQueryStrategy::class));
     }
 
-    public function testFilteringWithInvalidBuilderOrModelThrowsBuilderNotFoundException()
+    public function testFilteringWithInvalidBuilderOrModelThrowsBuilderNotFoundException(): void
     {
         $this->expectException(BuilderNotFoundException::class);
         $filterBuilder = new FilterBuilder( new Request(), new StrategyManager());
         $filterBuilder->filter('foodbar');
     }
 
-    public function testFilteringWithoutBuilderThrowsBuilderNotSetException()
+    public function testFilteringWithoutBuilderThrowsBuilderNotSetException(): void
     {
         $this->expectException(BuilderNotSetException::class);
         $filterBuilder = new FilterBuilder( new Request(), new StrategyManager());
         $filterBuilder->with(ComplexConfigQueryStrategy::class);
     }
 
-    public function testPassingEmptyBuilderThrowsBuilderNotSetException()
+    public function testPassingEmptyBuilderThrowsBuilderNotSetException(): void
     {
         $this->expectException(BuilderNotSetException::class);
         $filterBuilder = new FilterBuilder( new Request(), new StrategyManager());
         $filterBuilder->filter('');
     }
 
-    public function testIsFilterableTrait()
+    public function testIsFilterableTrait(): void
     {
-        $model = new Register();
-        $this->assertInstanceOf(Filter::class, $model->filter());
+        $register = new Register();
+        $this->assertInstanceOf(Filter::class, $register->filter());
     }
 
-    public function testIsFilterableTraitThrowsExceptionIfStrategyNotPresent()
+    public function testIsFilterableTraitThrowsExceptionIfStrategyNotPresent(): void
     {
         $this->expectException(BuilderNotSetException::class);
-        $model = new TodoList();
-        $this->assertInstanceOf(Filter::class, $model->filter());
+        $todoList = new TodoList();
+        $this->assertInstanceOf(Filter::class, $todoList->filter());
     }
 }

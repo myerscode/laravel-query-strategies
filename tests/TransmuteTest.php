@@ -14,18 +14,20 @@ class TransmuteTest extends TestCase
         $this->simpleDatabase($this->app);
     }
 
-    public function testConfigCanOverrideDefaultMultiClause()
+    public function testConfigCanOverrideDefaultMultiClause(): void
     {
         $strategy = $this->strategyManager()->findStrategy(ComplexConfigQueryStrategy::class);
         $distill = $this->filter(Item::query(), $strategy, ['transmute_me' => 'no']);
         $distill->apply();
+
         $builder = $distill->builder();
         $expectedSql = 'select * from "items" where "transmute_me" = \'0\' limit 50';
-        $this->assertEquals($expectedSql, $this->getRawSqlFromBuilder($builder));
+        $this->assertSame($expectedSql, $this->getRawSqlFromBuilder($builder));
         $distill = $this->filter(Item::query(), $strategy, ['transmute_me' => 'yes']);
         $distill->apply();
+
         $builder = $distill->builder();
         $expectedSql = 'select * from "items" where "transmute_me" = \'1\' limit 50';
-        $this->assertEquals($expectedSql, $this->getRawSqlFromBuilder($builder));
+        $this->assertSame($expectedSql, $this->getRawSqlFromBuilder($builder));
     }
 }

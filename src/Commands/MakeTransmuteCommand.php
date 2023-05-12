@@ -44,6 +44,7 @@ class MakeTransmuteCommand extends GeneratorCommand
         if (!Str::endsWith($name, 'Transmute')) {
             $name .= 'Transmute';
         }
+
         return parent::qualifyClass($name);
     }
 

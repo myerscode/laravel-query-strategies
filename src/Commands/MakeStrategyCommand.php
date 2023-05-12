@@ -44,6 +44,7 @@ class MakeStrategyCommand extends GeneratorCommand
         if (!Str::endsWith($name, 'Strategy')) {
             $name .= 'Strategy';
         }
+
         return parent::qualifyClass($name);
     }
 

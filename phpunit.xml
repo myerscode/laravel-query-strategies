@@ -1,13 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" backupGlobals="false" backupStaticAttributes="false" bootstrap="vendor/autoload.php" colors="true" convertErrorsToExceptions="true" convertNoticesToExceptions="true" convertWarningsToExceptions="true" processIsolation="false" cacheResult="false" stopOnFailure="false" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd">
-  <coverage processUncoveredFiles="true">
-    <include>
-      <directory suffix=".php">./src/</directory>
-    </include>
-    <exclude>
-      <file>./src/ServiceProvider.php</file>
-      <directory>./src/Stubs/</directory>
-    </exclude>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" backupGlobals="false" bootstrap="vendor/autoload.php" colors="true" processIsolation="false" cacheResult="false" stopOnFailure="false" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.1/phpunit.xsd" cacheDirectory=".phpunit.cache" backupStaticProperties="false">
+  <coverage>
     <report>
       <clover outputFile="./coverage/coverage.xml"/>
       <html outputDirectory="./coverage/coverage"/>
@@ -24,4 +17,13 @@
   <php>
     <env name="DB_CONNECTION" value="testing"/>
   </php>
+  <source>
+    <include>
+      <directory suffix=".php">./src/</directory>
+    </include>
+    <exclude>
+      <file>./src/ServiceProvider.php</file>
+      <directory>./src/Stubs/</directory>
+    </exclude>
+  </source>
 </phpunit>

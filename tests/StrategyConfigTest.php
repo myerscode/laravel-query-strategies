@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use Iterator;
 use Myerscode\Laravel\QueryStrategies\Strategies\Parameter;
 use Myerscode\Laravel\QueryStrategies\Strategies\StrategyInterface;
 use Tests\Support\Strategies\ComplexConfigQueryStrategy;
@@ -14,19 +15,17 @@ use Tests\Support\Strategies\BasicConfigQueryStrategy;
 class StrategyConfigTest extends TestCase
 {
 
-    public function providerOfStrategies()
+    public static function providerOfStrategies(): Iterator
     {
-        return [
-            [new ComplexConfigQueryStrategy],
-            [new OverrideQueryStrategy],
-            [new BasicConfigQueryStrategy],
-        ];
+        yield [new ComplexConfigQueryStrategy];
+        yield [new OverrideQueryStrategy];
+        yield [new BasicConfigQueryStrategy];
     }
 
     /**
      * @dataProvider providerOfStrategies
      */
-    public function testReturnsProperties(StrategyInterface $strategy)
+    public function testReturnsProperties(StrategyInterface $strategy): void
     {
         $strategy = new $strategy;
         $this->assertIsArray($strategy->defaultMethods());

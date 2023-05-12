@@ -15,8 +15,8 @@ class IsInClause extends AbstractClause
         if (!empty($value)) {
             $values = is_array($value) ? $value : [$value];
             $whereIn = [];
-            array_walk($values, function ($value) use (&$whereIn) {
-                $whereIn = array_merge($whereIn, array_filter(explode(',', $value)));
+            array_walk($values, static function ($value) use (&$whereIn) : void {
+                $whereIn = [...$whereIn, ...array_filter(explode(',', (string) $value))];
             });
             $builder->whereIn($column, $whereIn);
         }

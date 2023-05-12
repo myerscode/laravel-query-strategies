@@ -2,6 +2,7 @@
 
 namespace Myerscode\Laravel\QueryStrategies;
 
+use Illuminate\Http\Request;
 use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
 use Myerscode\Laravel\QueryStrategies\Commands\MakeClauseCommand;
 use Myerscode\Laravel\QueryStrategies\Commands\MakeStrategyCommand;
@@ -11,10 +12,8 @@ class ServiceProvider extends LaravelServiceProvider
 {
     /**
      * Bootstrap the application services.
-     *
-     * @return void
      */
-    public function boot()
+    public function boot(): void
     {
         $this->publishes([__DIR__ . '/Stubs/config.php' => config_path('query-strategies.php')], 'config');
 
@@ -27,14 +26,10 @@ class ServiceProvider extends LaravelServiceProvider
 
     /**
      * Register the application services.
-     *
-     * @return void
      */
-    public function register()
+    public function register(): void
     {
-        $this->app->bind(FilterBuilder::class, function ($app) {
-            return new FilterBuilder($app->make('Illuminate\Http\Request'), $app->make(StrategyManager::class));
-        });
+        $this->app->bind(FilterBuilder::class, static fn($app): FilterBuilder => new FilterBuilder($app->make(Request::class), $app->make(StrategyManager::class)));
 
         $this->app->alias(FilterBuilder::class, 'Query');
     }
