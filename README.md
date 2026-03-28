@@ -4,6 +4,8 @@ a package to help build queries with Eloquent Builder from URL parameters in a r
 [![Latest Stable Version](https://poser.pugx.org/myerscode/laravel-query-strategies/v/stable)](https://packagist.org/packages/myerscode/laravel-query-strategies)
 [![Total Downloads](https://poser.pugx.org/myerscode/laravel-query-strategies/downloads)](https://packagist.org/packages/myerscode/laravel-query-strategies)
 [![License](https://poser.pugx.org/myerscode/laravel-query-strategies/license)](https://packagist.org/packages/myerscode/laravel-query-strategies)
+![Tests](https://github.com/myerscode/laravel-query-strategies/actions/workflows/tests.yml/badge.svg?branch=main)
+[![codecov](https://codecov.io/gh/myerscode/laravel-query-strategies/graph/badge.svg?token=YR0YHVERNV)](https://codecov.io/gh/myerscode/utilities-strings)
 
 ## Why this package is helpful?
 If you want to apply query clauses to Eloquent Models using parameters passed by the user, then this package will  allow you to create strategies that will enable them to be applied automatically.

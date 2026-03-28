@@ -2,6 +2,7 @@
 
 namespace Myerscode\Laravel\QueryStrategies;
 
+use Illuminate\Database\Eloquent\Model;
 use Myerscode\Laravel\QueryStrategies\Exceptions\FilterStrategyNotFoundException;
 use Myerscode\Laravel\QueryStrategies\Exceptions\InvalidStrategyException;
 use Myerscode\Laravel\QueryStrategies\Strategies\StrategyInterface;
@@ -14,11 +15,13 @@ class StrategyManager
     private array $cache = [];
 
     /**
-     * @param  $possibleStrategy
+     * @param  string|StrategyInterface|Model  $possibleStrategy
+     *
+     * @return StrategyInterface
      * @throws FilterStrategyNotFoundException
      * @throws InvalidStrategyException
      */
-    public function findStrategy($possibleStrategy): StrategyInterface
+    public function findStrategy(string|StrategyInterface|Model $possibleStrategy): StrategyInterface
     {
         $possibleStrategyName = is_object($possibleStrategy) ? $possibleStrategy::class : $possibleStrategy;
 
@@ -37,6 +40,11 @@ class StrategyManager
         }
 
         return $this->cache[$cacheName];
+    }
+
+    public function buildDefaultStrategy(string $strategy): StrategyInterface
+    {
+
     }
 
     /**

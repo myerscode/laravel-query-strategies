@@ -50,9 +50,7 @@ final class StrategyManagerTest extends TestCase
         $this->strategyManager()->findStrategy('Unknown/Strategy/Class');
     }
 
-    /**
-     * @dataProvider invalidStrategyExceptionProvider
-     */
+    #[DataProvider('invalidStrategyExceptionProvider')]
     public function testThrowsInvalidStrategyException(string|InvalidStrategy|stdClass $possibleStrategy): void
     {
         $this->expectException(InvalidStrategyException::class);

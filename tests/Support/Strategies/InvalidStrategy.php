@@ -8,14 +8,14 @@ class InvalidStrategy
     /**
      * {@inheritDoc}
      */
-    public $filters = [
+    public array $filters = [
         //
     ];
 
     /**
      * {@inheritDoc}
      */
-    protected $sortBy = [
+    protected array $sortBy = [
         //
     ];
 }

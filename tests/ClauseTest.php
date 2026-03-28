@@ -22,9 +22,6 @@ use Tests\Support\Strategies\ComplexConfigQueryStrategy;
 final class ClauseTest extends TestCase
 {
 
-    /**
-     * @covers \Myerscode\Laravel\QueryStrategies\Clause\BeginsWithClause
-     */
     public function testBeginsWithFilterClause(): void
     {
         $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
@@ -42,9 +39,6 @@ final class ClauseTest extends TestCase
         $this->assertSame($where, $filter->builder()->getQuery()->wheres);
     }
 
-    /**
-     * @covers \Myerscode\Laravel\QueryStrategies\Clause\ContainsClause
-     */
     public function testContainsFilterClause(): void
     {
         $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
@@ -62,9 +56,6 @@ final class ClauseTest extends TestCase
         $this->assertSame($where, $filter->builder()->getQuery()->wheres);
     }
 
-    /**
-     * @covers \Myerscode\Laravel\QueryStrategies\Clause\DoesNotEqualClause
-     */
     public function testDoesNotEqualFilterClause(): void
     {
         $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
@@ -82,9 +73,6 @@ final class ClauseTest extends TestCase
         $this->assertSame($where, $filter->builder()->getQuery()->wheres);
     }
 
-    /**
-     * @covers \Myerscode\Laravel\QueryStrategies\Clause\EndsWithClause
-     */
     public function testEndsWithFilterClause(): void
     {
         $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
@@ -102,9 +90,6 @@ final class ClauseTest extends TestCase
         $this->assertSame($where, $filter->builder()->getQuery()->wheres);
     }
 
-    /**
-     * @covers \Myerscode\Laravel\QueryStrategies\Clause\EqualsClause
-     */
     public function testEqualsFilterClause(): void
     {
         $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
@@ -122,9 +107,6 @@ final class ClauseTest extends TestCase
         $this->assertSame($where, $filter->builder()->getQuery()->wheres);
     }
 
-    /**
-     * @covers \Myerscode\Laravel\QueryStrategies\Clause\GreaterThanClause
-     */
     public function testGreaterThanFilterClause(): void
     {
         $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
@@ -142,9 +124,6 @@ final class ClauseTest extends TestCase
         $this->assertSame($where, $filter->builder()->getQuery()->wheres);
     }
 
-    /**
-     * @covers \Myerscode\Laravel\QueryStrategies\Clause\GreaterThanOrEqualsClause
-     */
     public function testGreaterThanOrEqualsFilterClause(): void
     {
         $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
@@ -162,9 +141,6 @@ final class ClauseTest extends TestCase
         $this->assertSame($where, $filter->builder()->getQuery()->wheres);
     }
 
-    /**
-     * @covers \Myerscode\Laravel\QueryStrategies\Clause\IsInClause
-     */
     public function testIsInFilterClause(): void
     {
         $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
@@ -181,9 +157,6 @@ final class ClauseTest extends TestCase
         $this->assertEquals($where, $filter->builder()->getQuery()->wheres);
     }
 
-    /**
-     * @covers \Myerscode\Laravel\QueryStrategies\Clause\IsNotInClause
-     */
     public function testIsNotInFilterClause(): void
     {
         $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
@@ -200,9 +173,6 @@ final class ClauseTest extends TestCase
         $this->assertEquals($where, $filter->builder()->getQuery()->wheres);
     }
 
-    /**
-     * @covers \Myerscode\Laravel\QueryStrategies\Clause\LessThanClause
-     */
     public function testLessThanFilterClause(): void
     {
         $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
@@ -220,9 +190,6 @@ final class ClauseTest extends TestCase
         $this->assertSame($where, $filter->builder()->getQuery()->wheres);
     }
 
-    /**
-     * @covers \Myerscode\Laravel\QueryStrategies\Clause\LessThanOrEqualsClause
-     */
     public function testLessThanOrEqualsFilterClause(): void
     {
         $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
@@ -240,9 +207,6 @@ final class ClauseTest extends TestCase
         $this->assertSame($where, $filter->builder()->getQuery()->wheres);
     }
 
-    /**
-     * @covers \Myerscode\Laravel\QueryStrategies\Clause\OrEqualsClause
-     */
     public function testOrEqualsFilterClause(): void
     {
         $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);

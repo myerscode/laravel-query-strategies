@@ -23,7 +23,7 @@ class Strategy implements StrategyInterface
      *
      * @var []
      */
-    protected $config = [
+    protected array $config = [
         //
     ];
 
@@ -32,7 +32,7 @@ class Strategy implements StrategyInterface
      *
      * @var Parameter[]
      */
-    protected $parameters = [
+    protected array $parameters = [
         //
     ];
 
@@ -41,7 +41,7 @@ class Strategy implements StrategyInterface
      *
      * @var array
      */
-    protected $defaultMethods = [
+    protected array $defaultMethods = [
         BeginsWithClause::class => ['beginsWith', '*%'],
         ContainsClause::class => ['contains', '%%'],
         EndsWithClause::class => ['endsWith', '%*'],
@@ -61,21 +61,21 @@ class Strategy implements StrategyInterface
      *
      * @var int
      */
-    protected $limitTo = 50;
+    protected int $limitTo = 50;
 
     /**
      * Maximum number of records a api response can have
      *
      * @var int
      */
-    protected $maxLimit = 150;
+    protected int $maxLimit = 150;
 
     /**
      * The model which to apply this strategy to
      *
      * @var []
      */
-    protected $canOrderBy = [
+    protected array $canOrderBy = [
         'id',
     ];
 
@@ -97,6 +97,14 @@ class Strategy implements StrategyInterface
                     $parameters[$alias] = $config;
                 });
             }
+
+            if (!is_array($config['aliases'])) {
+                continue;
+            }
+
+            array_walk($config['aliases'], static function ($alias) use (&$parameters, $config): void {
+                $parameters[$alias] = $config;
+            });
         }
 
         foreach ($parameters as $parameter => $config) {

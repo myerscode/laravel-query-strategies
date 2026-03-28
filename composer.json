@@ -43,7 +43,7 @@
       "Myerscode\\Laravel\\QueryStrategies\\": "src"
     },
     "files": [
-      "src/helpers.php"
+      "src/Helpers.php"
     ]
   },
   "autoload-dev": {

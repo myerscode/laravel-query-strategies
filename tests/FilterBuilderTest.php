@@ -13,6 +13,7 @@ use Myerscode\Laravel\QueryStrategies\Facades\Query;
 use Myerscode\Laravel\QueryStrategies\FilterBuilder;
 use Myerscode\Laravel\QueryStrategies\StrategyManager;
 use Tests\Support\Models\Item;
+use Tests\Support\Models\Record;
 use Tests\Support\Models\Register;
 use Tests\Support\Models\TodoList;
 use Tests\Support\Strategies\ComplexConfigQueryStrategy;
@@ -83,6 +84,11 @@ final class FilterBuilderTest extends TestCase
         $filterBuilder = filter(Item::query());
         $this->assertInstanceOf(FilterBuilder::class, $filterBuilder);
         $this->assertInstanceOf(Builder::class, $filterBuilder->builder());
+    }
+
+    public function testCanFilterUsingModelConfigForStrategy(): void
+    {
+        filter(Record::class)->results();
     }
 
     public function testFilterWithReturnsInstanceOfFilter(): void

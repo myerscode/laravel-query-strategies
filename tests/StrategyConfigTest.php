@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use Iterator;
-use Myerscode\Laravel\QueryStrategies\Strategies\Parameter;
 use Myerscode\Laravel\QueryStrategies\Strategies\StrategyInterface;
 use Tests\Support\Strategies\ComplexConfigQueryStrategy;
 use Tests\Support\Strategies\OverrideQueryStrategy;
@@ -24,9 +24,7 @@ final class StrategyConfigTest extends TestCase
         yield [new BasicConfigQueryStrategy];
     }
 
-    /**
-     * @dataProvider providerOfStrategies
-     */
+    #[DataProvider('providerOfStrategies')]
     public function testReturnsProperties(StrategyInterface $strategy): void
     {
         $strategy = new $strategy;

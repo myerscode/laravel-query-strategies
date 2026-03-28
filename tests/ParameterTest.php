@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use Iterator;
 use Myerscode\Laravel\QueryStrategies\Strategies\Parameter;
 
@@ -50,9 +51,7 @@ final class ParameterTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider dataProvider
-     */
+    #[DataProvider('dataProvider')]
     public function testInstanceCreation(array $config): void
     {
         $parameter = new Parameter('foobar', $config);
