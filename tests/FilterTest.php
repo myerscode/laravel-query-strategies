@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests;
 
 use Iterator;
@@ -13,7 +15,7 @@ use Tests\Support\Strategies\OverrideQueryStrategy;
 /**
  * @coversDefaultClass \Myerscode\Laravel\QueryStrategies\Filter
  */
-class FilterTest extends TestCase
+final class FilterTest extends TestCase
 {
 
     public static function providerForApplyStrategy(): Iterator
@@ -268,8 +270,8 @@ class FilterTest extends TestCase
     public function testCanGetBuilder(): void
     {
         $strategy = $this->strategyManager()->findStrategy(ComplexConfigQueryStrategy::class);
-        $distill = $this->filter(Item::query(), $strategy);
-        $this->assertInstanceOf(Builder::class, $distill->builder());
+        $filter = $this->filter(Item::query(), $strategy);
+        $this->assertInstanceOf(Builder::class, $filter->builder());
     }
 
     /**
@@ -278,10 +280,10 @@ class FilterTest extends TestCase
     public function testApplyTheStrategy(mixed $expectedSql, string $strategyClass, array $requestParams): void
     {
         $strategy = $this->strategyManager()->findStrategy($strategyClass);
-        $distill = $this->filter(Item::query(), $strategy, $requestParams);
-        $distill->apply();
+        $filter = $this->filter(Item::query(), $strategy, $requestParams);
+        $filter->apply();
 
-        $builder = $distill->builder();
+        $builder = $filter->builder();
         $this->assertEquals($expectedSql, $this->getRawSqlFromBuilder($builder));
     }
 
@@ -291,10 +293,10 @@ class FilterTest extends TestCase
     public function testFieldOperatorPropertiesFoundAndApplied(mixed $expectedSql, string $strategyClass, array $requestParams): void
     {
         $strategy = $this->strategyManager()->findStrategy($strategyClass);
-        $distill = $this->filter(Item::query(), $strategy, $requestParams);
-        $distill->apply();
+        $filter = $this->filter(Item::query(), $strategy, $requestParams);
+        $filter->apply();
 
-        $builder = $distill->builder();
+        $builder = $filter->builder();
         $this->assertEquals($expectedSql, $this->getRawSqlFromBuilder($builder));
     }
 
@@ -304,8 +306,8 @@ class FilterTest extends TestCase
     public function testApplyOrder(mixed $expectedSql, string $strategyClass, array $requestParams): void
     {
         $strategy = $this->strategyManager()->findStrategy($strategyClass);
-        $distill = $this->filter(Item::query(), $strategy, $requestParams);
-        $builder = $distill->order()->builder();
+        $filter = $this->filter(Item::query(), $strategy, $requestParams);
+        $builder = $filter->order()->builder();
         $this->assertEquals($expectedSql, $this->getRawSqlFromBuilder($builder));
     }
 
@@ -315,10 +317,10 @@ class FilterTest extends TestCase
     public function testApplyPagination(mixed $expectedSql, string $strategyClass, array $requestParams): void
     {
         $strategy = $this->strategyManager()->findStrategy($strategyClass);
-        $distill = $this->filter(Item::query(), $strategy, $requestParams);
-        $distill->paginate();
+        $filter = $this->filter(Item::query(), $strategy, $requestParams);
+        $filter->paginate();
 
-        $builder = $distill->builder();
+        $builder = $filter->builder();
         $this->assertEquals($expectedSql, $this->getRawSqlFromBuilder($builder));
     }
 
@@ -327,61 +329,61 @@ class FilterTest extends TestCase
      */
     public function testApplyWith(mixed $expectedEagerLoads, array $parameters): void
     {
-        $distill = $this->filter(Item::query(), new ComplexConfigQueryStrategy, $parameters);
-        $builder = $distill->with()->builder();
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy, $parameters);
+        $builder = $filter->with()->builder();
         $this->assertEquals($expectedEagerLoads, array_keys($builder->getEagerLoads()));
     }
 
     public function testApplyFilter(): void
     {
-        $distill = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
-        $distill->applyFilter(EqualsClause::class, 'bar', 'foo');
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
+        $filter->applyFilter(EqualsClause::class, 'bar', 'foo');
 
-        $builder = $distill->builder();
+        $builder = $filter->builder();
         $this->assertSame('select * from "items" where "foo" = \'bar\'', $this->getRawSqlFromBuilder($builder));
     }
 
     public function testConfigChangesLimitKey(): void
     {
-        $distill = $this->filter(Item::query(), new ComplexConfigQueryStrategy, ['limit' => '7', 'l' => '49'], ['limit' => 'l']);
-        $distill->limit();
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy, ['limit' => '7', 'l' => '49'], ['limit' => 'l']);
+        $filter->limit();
 
-        $builder = $distill->builder();
+        $builder = $filter->builder();
         $this->assertSame('select * from "items" limit 49', $this->getRawSqlFromBuilder($builder));
     }
 
     public function testConfigChangesOrderKey(): void
     {
-        $distill = $this->filter(Item::query(), new ComplexConfigQueryStrategy, ['order' => 'id', 'o' => 'name'], ['order' => 'o']);
-        $distill->order();
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy, ['order' => 'id', 'o' => 'name'], ['order' => 'o']);
+        $filter->order();
 
-        $builder = $distill->builder();
+        $builder = $filter->builder();
         $this->assertSame('select * from "items" order by "name" asc', $this->getRawSqlFromBuilder($builder));
     }
 
     public function testConfigChangesSortKey(): void
     {
-        $distill = $this->filter(Item::query(), new ComplexConfigQueryStrategy, ['order' => 'name', 'sort' => 'asc', 's' => 'desc'], ['sort' => 's']);
-        $distill->order();
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy, ['order' => 'name', 'sort' => 'asc', 's' => 'desc'], ['sort' => 's']);
+        $filter->order();
 
-        $builder = $distill->builder();
+        $builder = $filter->builder();
         $this->assertSame('select * from "items" order by "name" desc', $this->getRawSqlFromBuilder($builder));
     }
 
     public function testConfigChangesWithKey(): void
     {
-        $distill = $this->filter(Item::query(), new ComplexConfigQueryStrategy, ['with' => ['owner', 'categories'] , 'w' => 'owner'], ['with' => 'w']);
-        $builder = $distill->with()->builder();
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy, ['with' => ['owner', 'categories'] , 'w' => 'owner'], ['with' => 'w']);
+        $builder = $filter->with()->builder();
         $this->assertSame(['owner'], array_keys($builder->getEagerLoads()));
     }
 
     public function testConfigCanOverrideDefaultMultiClause(): void
     {
         $strategy = $this->strategyManager()->findStrategy(ComplexConfigQueryStrategy::class);
-        $distill = $this->filter(Item::query(), $strategy, ['multi_override' => [1,2,3,4]]);
-        $distill->apply();
+        $filter = $this->filter(Item::query(), $strategy, ['multi_override' => [1,2,3,4]]);
+        $filter->apply();
 
-        $builder = $distill->builder();
+        $builder = $filter->builder();
         $expectedSql = 'select * from "items" where "multi_override" = \'1+2+3+4\' limit 50';
         $this->assertSame($expectedSql, $this->getRawSqlFromBuilder($builder));
     }
@@ -389,10 +391,10 @@ class FilterTest extends TestCase
     public function testMultiOverrideShouldNotHavePrioritiesOnOverrides(): void
     {
         $strategy = $this->strategyManager()->findStrategy(ComplexConfigQueryStrategy::class);
-        $distill = $this->filter(Item::query(), $strategy, ['override_this' => ['lookup' => [1,2,3,4]]]);
-        $distill->apply();
+        $filter = $this->filter(Item::query(), $strategy, ['override_this' => ['lookup' => [1,2,3,4]]]);
+        $filter->apply();
 
-        $builder = $distill->builder();
+        $builder = $filter->builder();
         $expectedSql = 'select * from "items" where "override_this" = \'1&2&3&4\' limit 50';
         $this->assertSame($expectedSql, $this->getRawSqlFromBuilder($builder));
     }
@@ -403,9 +405,9 @@ class FilterTest extends TestCase
     public function testCanGetGetQueryValuesThatWillBeApplied(string $stategy, array $query, mixed $expect): void
     {
         $strategy = $this->strategyManager()->findStrategy($stategy);
-        $distill = $this->filter(Item::query(), $strategy, $query);
+        $filter = $this->filter(Item::query(), $strategy, $query);
 
-        $this->assertEquals($expect, $distill->filterValues());
-        $this->assertEquals($expect, $distill->paginate()->getAppliedFilters());
+        $this->assertEquals($expect, $filter->filterValues());
+        $this->assertEquals($expect, $filter->paginate()->getAppliedFilters());
     }
 }

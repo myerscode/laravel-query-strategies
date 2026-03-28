@@ -10,6 +10,7 @@ class BasicConfigQueryStrategy extends Strategy
     /**
      * {@inheritDoc}
      */
+    #[\Override]
     public $config = [
         'foo',
         'bar',

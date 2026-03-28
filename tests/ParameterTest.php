@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests;
 
 use Iterator;
@@ -8,7 +10,7 @@ use Myerscode\Laravel\QueryStrategies\Strategies\Parameter;
 /**
  * @coversDefaultClass \Myerscode\Laravel\QueryStrategies\Strategies\Parameter
  */
-class ParameterTest extends TestCase
+final class ParameterTest extends TestCase
 {
 
     public static function dataProvider(): Iterator

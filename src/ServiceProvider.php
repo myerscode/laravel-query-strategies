@@ -7,6 +7,7 @@ use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
 use Myerscode\Laravel\QueryStrategies\Commands\MakeClauseCommand;
 use Myerscode\Laravel\QueryStrategies\Commands\MakeStrategyCommand;
 use Myerscode\Laravel\QueryStrategies\Commands\MakeTransmuteCommand;
+use Override;
 
 class ServiceProvider extends LaravelServiceProvider
 {
@@ -27,6 +28,7 @@ class ServiceProvider extends LaravelServiceProvider
     /**
      * Register the application services.
      */
+    #[Override]
     public function register(): void
     {
         $this->app->bind(FilterBuilder::class, static fn($app): FilterBuilder => new FilterBuilder($app->make(Request::class), $app->make(StrategyManager::class)));
@@ -39,6 +41,7 @@ class ServiceProvider extends LaravelServiceProvider
      *
      * @return array
      */
+    #[Override]
     public function provides()
     {
         return [

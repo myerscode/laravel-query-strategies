@@ -11,6 +11,7 @@ class OverrideQueryStrategy extends Strategy
     /**
      * {@inheritDoc}
      */
+    #[\Override]
     public $config = [
         'foo' => [
             'column' => 'foo',
@@ -33,16 +34,19 @@ class OverrideQueryStrategy extends Strategy
     /**
      * {@inheritDoc}
      */
+    #[\Override]
     public $limitTo = 5;
 
     /**
      * {@inheritDoc}
      */
+    #[\Override]
     public $maxLimit = 50;
 
     /**
      * {@inheritDoc}
      */
+    #[\Override]
     protected $canOrderBy = [
         'id',
         'name',

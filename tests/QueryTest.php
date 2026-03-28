@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests;
 
 use Iterator;
 use Tests\Support\Models\Item;
 use Tests\Support\Strategies\BasicConfigQueryStrategy;
 
-class QueryTest extends TestCase
+final class QueryTest extends TestCase
 {
 
     public static function provider(): Iterator

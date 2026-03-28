@@ -27,7 +27,7 @@ class FilterBuilder
      * @throws BuilderNotFoundException
      * @throws BuilderNotSetException
      */
-    private function setBuilder($builderOrModel)
+    private function setBuilder($builderOrModel): void
     {
         if (empty($builderOrModel)) {
             throw new BuilderNotSetException();

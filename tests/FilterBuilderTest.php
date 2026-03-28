@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests;
 
 use Illuminate\Database\Eloquent\Builder;
@@ -20,7 +22,7 @@ use function Myerscode\Laravel\QueryStrategies\filter;
 /**
  * @coversDefaultClass \Myerscode\Laravel\QueryStrategies\FilterBuilder
  */
-class FilterBuilderTest extends TestCase
+final class FilterBuilderTest extends TestCase
 {
 
     public function testFilterBuilderInstanceCreation(): void

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests;
 
 use Iterator;
@@ -12,7 +14,7 @@ use Tests\Support\Strategies\BasicConfigQueryStrategy;
 /**
  * @coversDefaultClass \Myerscode\Laravel\QueryStrategies\Strategies\AbstractStrategy
  */
-class StrategyConfigTest extends TestCase
+final class StrategyConfigTest extends TestCase
 {
 
     public static function providerOfStrategies(): Iterator

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests;
 
 use Illuminate\Http\Request;
@@ -36,7 +38,7 @@ class TestCase extends Orchestra
         return new Filter($builderOrModel, $strategy, $request ?? [], $config);
     }
 
-    public function request($replace = [])
+    public function request(array $replace = [])
     {
         $request = $this->app->make(Request::class);
         $request->replace($replace);
@@ -48,7 +50,7 @@ class TestCase extends Orchestra
         return new StrategyManager;
     }
 
-    public function getRawSqlFromBuilder(Builder $builder)
+    public function getRawSqlFromBuilder(Builder $builder): string
     {
         $query = str_replace(['?'], ["'%s'"], $builder->toSql());
         return vsprintf($query, $builder->getBindings());

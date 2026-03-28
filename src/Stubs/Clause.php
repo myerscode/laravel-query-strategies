@@ -11,7 +11,7 @@ class DummyClass extends AbstractClause
     /**
      * {@inheritdoc}
      */
-    public function filter(Builder $builder, $value, $column)
+    public function filter(Builder $builder, $value, $column): Builder
     {
         return $builder;
     }

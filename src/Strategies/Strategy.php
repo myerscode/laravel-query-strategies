@@ -93,7 +93,7 @@ class Strategy implements StrategyInterface
 
         foreach ($parameters as $config) {
             if (isset($config['aliases']) && is_array($config['aliases'])) {
-                array_walk($config['aliases'], static function ($alias) use (&$parameters, $config) {
+                array_walk($config['aliases'], static function ($alias) use (&$parameters, $config): void {
                     $parameters[$alias] = $config;
                 });
             }

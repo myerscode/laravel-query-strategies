@@ -106,13 +106,13 @@ class Filter
 
             $defaultFilter = $parameterConf->defaultMethod();
 
-            if (empty($defaultFilter)) {
+            if (in_array($defaultFilter, [null, '', '0'], true)) {
                 $defaultFilter = $this->defaultFilter;
             }
 
             if (count($defaultFilters) > 1) {
                 $defaultFilter = $parameterConf->multiMethod();
-                if (empty($defaultFilter)) {
+                if (in_array($defaultFilter, [null, '', '0'], true)) {
                     $defaultFilter = $this->defaultMultiFilter;
                 }
             }
@@ -221,11 +221,11 @@ class Filter
                 if (is_int($key)) {
                     $direction = $sortBy->get($value) ?? $defaultDirection;
                     return [$value => $direction];
-                } elseif (is_array($value)) {
-                    return collect($value)->mapWithKeys(static fn($value): array => [$value => $key])->toArray();
-                } else {
-                    return [$value => $key];
                 }
+                if (is_array($value)) {
+                    return collect($value)->mapWithKeys(static fn($value): array => [$value => $key])->toArray();
+                }
+                return [$value => $key];
             })->toArray();
         } else {
             $orderBy[strtolower((string) $orderValues)] = strtolower((string) $defaultDirection);
@@ -333,7 +333,6 @@ class Filter
          * Get the number of items to return for the query
          *
          * @var int $limit
-         * @var int $perPage
          */
         $limit = $this->query[$limitKey] ?? $this->strategy->limit();
 
@@ -361,18 +360,18 @@ class Filter
         $filterValues = array_merge($indexedValues, $namedValues);
 
         // if there are any disabled filter clauses remove them
-        if (!empty($disabled = $parameter->disabled())) {
+        if (($disabled = $parameter->disabled()) !== []) {
             // TODO remove need for collect
-            $filterValues = collect($filterValues)->except($disabled)->all();
+            return collect($filterValues)->except($disabled)->all();
         }
 
         return $filterValues;
     }
 
-    protected function transmuteValues(array $values, Parameter $parameter)
+    protected function transmuteValues(array $values, Parameter $parameter): array
     {
         if (($transmuteClass = $parameter->transmuteWith()) && (class_exists($transmuteClass) && ($transmute = app($transmuteClass)) instanceof TransmuteInterface)) {
-            $values = array_map(static function ($filerValue) use ($transmute) {
+            return array_map(static function ($filerValue) use ($transmute) {
                 $property = new Property($filerValue);
                 $transmute->transmute($property);
                 return $property->getValue();

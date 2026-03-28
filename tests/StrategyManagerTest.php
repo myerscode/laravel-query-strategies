@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests;
 
+use Iterator;
 use stdClass;
 use Myerscode\Laravel\QueryStrategies\Exceptions\FilterStrategyNotFoundException;
 use Myerscode\Laravel\QueryStrategies\Exceptions\InvalidStrategyException;
@@ -14,16 +17,14 @@ use Tests\Support\Strategies\InvalidStrategy;
 /**
  * @coversDefaultClass \Myerscode\Laravel\QueryStrategies\StrategyManager
  */
-class StrategyManagerTest extends TestCase
+final class StrategyManagerTest extends TestCase
 {
 
-    public static function invalidStrategyExceptionProvider(): array
+    public static function invalidStrategyExceptionProvider(): Iterator
     {
-        return [
-            [InvalidStrategy::class],
-            [new InvalidStrategy],
-            [new stdClass()],
-        ];
+        yield [InvalidStrategy::class];
+        yield [new InvalidStrategy];
+        yield [new stdClass()];
     }
 
     public function testCanFindStrategy(): void
@@ -37,9 +38,9 @@ class StrategyManagerTest extends TestCase
 
     public function testReturnsCachedStrategy(): void
     {
-        $manager = $this->strategyManager();
-        $strategy = $manager->findStrategy(ComplexConfigQueryStrategy::class);
-        $shouldBeCached = $manager->findStrategy(ComplexConfigQueryStrategy::class);
+        $strategyManager = $this->strategyManager();
+        $strategy = $strategyManager->findStrategy(ComplexConfigQueryStrategy::class);
+        $shouldBeCached = $strategyManager->findStrategy(ComplexConfigQueryStrategy::class);
         $this->assertSame($strategy, $shouldBeCached);
     }
 

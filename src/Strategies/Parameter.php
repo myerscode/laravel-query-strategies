@@ -7,15 +7,13 @@ class Parameter
 
     /**
      * Default value use for creating the operator override parameter
-     * @var string
      */
-    final public const DEFAULT_OPERATOR_OVERRIDE_SUFFIX = '--operator';
+    final public const string DEFAULT_OPERATOR_OVERRIDE_SUFFIX = '--operator';
 
     /**
      * Default value use for exploding query parameters
-     * @var string
      */
-    final public const DEFAULT_EXPLODE_DELIMITER = ',';
+    final public const string DEFAULT_EXPLODE_DELIMITER = ',';
 
     private ?string $column = null;
 

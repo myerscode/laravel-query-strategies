@@ -1,14 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests;
 
 use Tests\Support\Models\Item;
 use Tests\Support\Strategies\BasicConfigQueryStrategy;
 
-class PaginatedTest extends TestCase
+final class PaginatedTest extends TestCase
 {
 
-    protected $metaShape = [
+    private array $metaShape = [
         'count',
         'firstItem',
         'lastItem',

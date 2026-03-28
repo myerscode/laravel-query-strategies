@@ -28,10 +28,7 @@ class Property
         return $this->value;
     }
 
-    /**
-     * @return Property
-     */
-    public function setValue(mixed $value)
+    public function setValue(mixed $value): static
     {
         $this->value = $value;
 

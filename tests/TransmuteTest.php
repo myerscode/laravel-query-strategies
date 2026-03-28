@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests;
 
 use Tests\Support\Models\Item;
 use Tests\Support\Strategies\ComplexConfigQueryStrategy;
 
-class TransmuteTest extends TestCase
+final class TransmuteTest extends TestCase
 {
 
     protected function setUp(): void

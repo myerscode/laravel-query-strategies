@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests;
 
 use Myerscode\Laravel\QueryStrategies\Clause\BeginsWithClause;
@@ -17,7 +19,7 @@ use Myerscode\Laravel\QueryStrategies\Clause\OrEqualsClause;
 use Tests\Support\Models\Item;
 use Tests\Support\Strategies\ComplexConfigQueryStrategy;
 
-class ClauseTest extends TestCase
+final class ClauseTest extends TestCase
 {
 
     /**
@@ -25,8 +27,8 @@ class ClauseTest extends TestCase
      */
     public function testBeginsWithFilterClause(): void
     {
-        $distill = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
-        $distill->applyFilter(BeginsWithClause::class, 'foobar', 'test_column');
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
+        $filter->applyFilter(BeginsWithClause::class, 'foobar', 'test_column');
 
         $where = [
             [
@@ -37,7 +39,7 @@ class ClauseTest extends TestCase
                 "boolean" => "and",
             ],
         ];
-        $this->assertSame($where, $distill->builder()->getQuery()->wheres);
+        $this->assertSame($where, $filter->builder()->getQuery()->wheres);
     }
 
     /**
@@ -45,8 +47,8 @@ class ClauseTest extends TestCase
      */
     public function testContainsFilterClause(): void
     {
-        $distill = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
-        $distill->applyFilter(ContainsClause::class, 'foobar', 'test_column');
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
+        $filter->applyFilter(ContainsClause::class, 'foobar', 'test_column');
 
         $where = [
             [
@@ -57,7 +59,7 @@ class ClauseTest extends TestCase
                 "boolean" => "and",
             ],
         ];
-        $this->assertSame($where, $distill->builder()->getQuery()->wheres);
+        $this->assertSame($where, $filter->builder()->getQuery()->wheres);
     }
 
     /**
@@ -65,8 +67,8 @@ class ClauseTest extends TestCase
      */
     public function testDoesNotEqualFilterClause(): void
     {
-        $distill = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
-        $distill->applyFilter(DoesNotEqualClause::class, 'foobar', 'test_column');
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
+        $filter->applyFilter(DoesNotEqualClause::class, 'foobar', 'test_column');
 
         $where = [
             [
@@ -77,7 +79,7 @@ class ClauseTest extends TestCase
                 "boolean" => "and",
             ],
         ];
-        $this->assertSame($where, $distill->builder()->getQuery()->wheres);
+        $this->assertSame($where, $filter->builder()->getQuery()->wheres);
     }
 
     /**
@@ -85,8 +87,8 @@ class ClauseTest extends TestCase
      */
     public function testEndsWithFilterClause(): void
     {
-        $distill = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
-        $distill->applyFilter(EndsWithClause::class, 'foobar', 'test_column');
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
+        $filter->applyFilter(EndsWithClause::class, 'foobar', 'test_column');
 
         $where = [
             [
@@ -97,7 +99,7 @@ class ClauseTest extends TestCase
                 "boolean" => "and",
             ],
         ];
-        $this->assertSame($where, $distill->builder()->getQuery()->wheres);
+        $this->assertSame($where, $filter->builder()->getQuery()->wheres);
     }
 
     /**
@@ -105,8 +107,8 @@ class ClauseTest extends TestCase
      */
     public function testEqualsFilterClause(): void
     {
-        $distill = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
-        $distill->applyFilter(EqualsClause::class, 'foobar', 'test_column');
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
+        $filter->applyFilter(EqualsClause::class, 'foobar', 'test_column');
 
         $where = [
             [
@@ -117,7 +119,7 @@ class ClauseTest extends TestCase
                 "boolean" => "and",
             ],
         ];
-        $this->assertSame($where, $distill->builder()->getQuery()->wheres);
+        $this->assertSame($where, $filter->builder()->getQuery()->wheres);
     }
 
     /**
@@ -125,8 +127,8 @@ class ClauseTest extends TestCase
      */
     public function testGreaterThanFilterClause(): void
     {
-        $distill = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
-        $distill->applyFilter(GreaterThanClause::class, 'foobar', 'test_column');
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
+        $filter->applyFilter(GreaterThanClause::class, 'foobar', 'test_column');
 
         $where = [
             [
@@ -137,7 +139,7 @@ class ClauseTest extends TestCase
                 "boolean" => "and",
             ],
         ];
-        $this->assertSame($where, $distill->builder()->getQuery()->wheres);
+        $this->assertSame($where, $filter->builder()->getQuery()->wheres);
     }
 
     /**
@@ -145,8 +147,8 @@ class ClauseTest extends TestCase
      */
     public function testGreaterThanOrEqualsFilterClause(): void
     {
-        $distill = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
-        $distill->applyFilter(GreaterThanOrEqualsClause::class, 'foobar', 'test_column');
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
+        $filter->applyFilter(GreaterThanOrEqualsClause::class, 'foobar', 'test_column');
 
         $where = [
             [
@@ -157,7 +159,7 @@ class ClauseTest extends TestCase
                 "boolean" => "and",
             ],
         ];
-        $this->assertSame($where, $distill->builder()->getQuery()->wheres);
+        $this->assertSame($where, $filter->builder()->getQuery()->wheres);
     }
 
     /**
@@ -165,8 +167,8 @@ class ClauseTest extends TestCase
      */
     public function testIsInFilterClause(): void
     {
-        $distill = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
-        $distill->applyFilter(IsInClause::class, ['foo', 'bar'], 'test_column');
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
+        $filter->applyFilter(IsInClause::class, ['foo', 'bar'], 'test_column');
 
         $where = [
             [
@@ -176,7 +178,7 @@ class ClauseTest extends TestCase
                 "values" => ['foo', 'bar'],
             ],
         ];
-        $this->assertEquals($where, $distill->builder()->getQuery()->wheres);
+        $this->assertEquals($where, $filter->builder()->getQuery()->wheres);
     }
 
     /**
@@ -184,8 +186,8 @@ class ClauseTest extends TestCase
      */
     public function testIsNotInFilterClause(): void
     {
-        $distill = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
-        $distill->applyFilter(IsNotInClause::class, ['foo', 'bar'], 'test_column');
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
+        $filter->applyFilter(IsNotInClause::class, ['foo', 'bar'], 'test_column');
 
         $where = [
             [
@@ -195,7 +197,7 @@ class ClauseTest extends TestCase
                 "values" => ['foo', 'bar'],
             ],
         ];
-        $this->assertEquals($where, $distill->builder()->getQuery()->wheres);
+        $this->assertEquals($where, $filter->builder()->getQuery()->wheres);
     }
 
     /**
@@ -203,8 +205,8 @@ class ClauseTest extends TestCase
      */
     public function testLessThanFilterClause(): void
     {
-        $distill = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
-        $distill->applyFilter(LessThanClause::class, 'foobar', 'test_column');
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
+        $filter->applyFilter(LessThanClause::class, 'foobar', 'test_column');
 
         $where = [
             [
@@ -215,7 +217,7 @@ class ClauseTest extends TestCase
                 "boolean" => "and",
             ],
         ];
-        $this->assertSame($where, $distill->builder()->getQuery()->wheres);
+        $this->assertSame($where, $filter->builder()->getQuery()->wheres);
     }
 
     /**
@@ -223,8 +225,8 @@ class ClauseTest extends TestCase
      */
     public function testLessThanOrEqualsFilterClause(): void
     {
-        $distill = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
-        $distill->applyFilter(LessThanOrEqualsClause::class, 'foobar', 'test_column');
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
+        $filter->applyFilter(LessThanOrEqualsClause::class, 'foobar', 'test_column');
 
         $where = [
             [
@@ -235,7 +237,7 @@ class ClauseTest extends TestCase
                 "boolean" => "and",
             ],
         ];
-        $this->assertSame($where, $distill->builder()->getQuery()->wheres);
+        $this->assertSame($where, $filter->builder()->getQuery()->wheres);
     }
 
     /**
@@ -243,8 +245,8 @@ class ClauseTest extends TestCase
      */
     public function testOrEqualsFilterClause(): void
     {
-        $distill = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
-        $distill->applyFilter(OrEqualsClause::class, 'foobar', 'test_column');
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
+        $filter->applyFilter(OrEqualsClause::class, 'foobar', 'test_column');
 
         $where = [
             [
@@ -255,6 +257,6 @@ class ClauseTest extends TestCase
                 "boolean" => "or",
             ],
         ];
-        $this->assertSame($where, $distill->builder()->getQuery()->wheres);
+        $this->assertSame($where, $filter->builder()->getQuery()->wheres);
     }
 }
