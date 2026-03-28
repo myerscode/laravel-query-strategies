@@ -92,6 +92,23 @@ Only columns listed in the strategy's `$allowedFields` array are permitted. If `
 ?name=John&name=Jane    → Multiple values (uses multi-clause, e.g. whereIn)
 ```
 
+### Relationship Filtering
+
+Use dot notation in your strategy config to filter through relationships via `whereHas`:
+
+```
+?owner.name=John        → WHERE EXISTS (SELECT * FROM owners WHERE name = 'John')
+```
+
+You can also alias relationship filters to hide the dot notation from API consumers:
+
+```php
+// In your strategy config:
+'author_name' => ['column' => 'author.name']
+
+// Then: ?author_name=John → whereHas('author', fn($q) => $q->where('name', 'John'))
+```
+
 ### Operator Override
 
 ```

@@ -14,6 +14,7 @@ use Tests\Support\Models\Item;
 use Tests\Support\Strategies\ComplexConfigQueryStrategy;
 use Tests\Support\Strategies\FieldSelectionStrategy;
 use Tests\Support\Strategies\OverrideQueryStrategy;
+use Tests\Support\Strategies\RelationshipFilterStrategy;
 use Tests\Support\Strategies\RestrictedWithStrategy;
 
 #[CoversClass(Filter::class)]
@@ -389,6 +390,30 @@ final class FilterTest extends TestCase
         $filter = $this->filter(Item::query(), new FieldSelectionStrategy(), ['fields' => 'secret', 'f' => 'id,name'], ['fields' => 'f']);
         $builder = $filter->fields()->builder();
         $this->assertEquals('select "id", "name" from "items"', $this->getRawSqlFromBuilder($builder));
+    }
+
+    #[DataProvider('providerForRelationshipFilter')]
+    public function test_relationship_filtering(string $expectedSql, array $requestParams): void
+    {
+        $filter = $this->filter(Item::query(), new RelationshipFilterStrategy(), $requestParams);
+        $filter->filter();
+        $this->assertEquals($expectedSql, $this->getRawSqlFromBuilder($filter->builder()));
+    }
+
+    public static function providerForRelationshipFilter(): Iterator
+    {
+        yield 'dot notation applies whereHas' => [
+            'select * from "items" where exists (select * from "owners" where "items"."id" = "owners"."item_id" and "name" = \'John\')',
+            ['owner.name' => 'John'],
+        ];
+        yield 'column alias with dot notation applies whereHas' => [
+            'select * from "items" where exists (select * from "owners" where "items"."id" = "owners"."item_id" and "email" like \'%test%\')',
+            ['owner_email' => 'test'],
+        ];
+        yield 'regular parameter still works alongside relationship' => [
+            'select * from "items" where "name" = \'Foo\' and exists (select * from "owners" where "items"."id" = "owners"."item_id" and "name" = \'Bar\')',
+            ['name' => 'Foo', 'owner.name' => 'Bar'],
+        ];
     }
 
     #[DataProvider('providerForGetQueryValues')]

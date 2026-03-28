@@ -68,7 +68,14 @@ class Filter
     public function applyFilter(string $class, mixed $value, string $column): Filter
     {
         if (class_exists($class) && ($filter = new $class()) instanceof ClauseInterface) {
-            $filter->filter($this->builder, $value, $column);
+            if (str_contains($column, '.')) {
+                $parts = explode('.', $column, 2);
+                $this->builder->whereHas($parts[0], static function ($query) use ($filter, $value, $parts): void {
+                    $filter->filter($query, $value, $parts[1]);
+                });
+            } else {
+                $filter->filter($this->builder, $value, $column);
+            }
         }
 
         return $this;

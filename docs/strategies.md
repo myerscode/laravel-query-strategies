@@ -158,6 +158,15 @@ class ProductStrategy extends Strategy
         'active' => [
             'transmute' => BoolTransmute::class,
         ],
+        // Relationship filtering via dot notation
+        'category.name' => [
+            'column'  => 'category.name',
+            'default' => ContainsClause::class,
+        ],
+        // Aliased relationship filter
+        'reviewer' => [
+            'column' => 'reviews.author_name',
+        ],
     ];
 }
 ```
@@ -166,4 +175,5 @@ Usage:
 
 ```
 GET /products?name=laptop&price=500&category=1,2,3&order=price&sort=desc&limit=10&with=reviews
+GET /products?category.name=electronics&reviewer=John
 ```
