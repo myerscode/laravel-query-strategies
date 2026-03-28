@@ -21,25 +21,17 @@ use Myerscode\Laravel\QueryStrategies\Clause\OrEqualsClause;
 class Strategy implements StrategyInterface
 {
     /**
-     * Columns that can be selected via field selection
-     *
-     * @var array<int, string>
-     */
-    protected array $allowedFields = [];
-
-    /**
      * Aggregate includes configuration
      *
      * @var array<string, array{type: string, relationship: string, column?: string}>
      */
     protected array $aggregateIncludes = [];
-
     /**
-     * Relationships that can be eager loaded
+     * Columns that can be selected via field selection
      *
      * @var array<int, string>
      */
-    protected array $canWith = [];
+    protected array $allowedFields = [];
 
     /**
      * The model which to apply this strategy to
@@ -49,6 +41,13 @@ class Strategy implements StrategyInterface
     protected array $canOrderBy = [
         'id',
     ];
+
+    /**
+     * Relationships that can be eager loaded
+     *
+     * @var array<int, string>
+     */
+    protected array $canWith = [];
 
     /**
      * Parameter config
@@ -116,14 +115,6 @@ class Strategy implements StrategyInterface
     /**
      * {@inheritdoc}
      */
-    public function allowedFields(): array
-    {
-        return $this->allowedFields;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function aggregateIncludes(): array
     {
         return $this->aggregateIncludes;
@@ -132,9 +123,9 @@ class Strategy implements StrategyInterface
     /**
      * {@inheritdoc}
      */
-    public function canWith(): array
+    public function allowedFields(): array
     {
-        return $this->canWith;
+        return $this->allowedFields;
     }
 
     /**
@@ -143,6 +134,14 @@ class Strategy implements StrategyInterface
     public function canOrderBy(): array
     {
         return $this->canOrderBy;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function canWith(): array
+    {
+        return $this->canWith;
     }
 
     /**

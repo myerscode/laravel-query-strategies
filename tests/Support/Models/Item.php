@@ -25,17 +25,17 @@ class Item extends Model
      * @param Builder<Model> $builder
      * @return Builder<Model>
      */
-    public function scopeStartsBefore(Builder $builder, string $date): Builder
+    public function scopeCreatedBetween(Builder $builder, string $from, string $to): Builder
     {
-        return $builder->where('starts_at', '<=', $date);
+        return $builder->whereBetween('created_at', [$from, $to]);
     }
 
     /**
      * @param Builder<Model> $builder
      * @return Builder<Model>
      */
-    public function scopeCreatedBetween(Builder $builder, string $from, string $to): Builder
+    public function scopeStartsBefore(Builder $builder, string $date): Builder
     {
-        return $builder->whereBetween('created_at', [$from, $to]);
+        return $builder->where('starts_at', '<=', $date);
     }
 }

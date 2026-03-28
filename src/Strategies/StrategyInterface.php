@@ -5,6 +5,12 @@ namespace Myerscode\Laravel\QueryStrategies\Strategies;
 interface StrategyInterface
 {
     /**
+     * Get the aggregate includes configuration
+     *
+     * @return array<string, array{type: string, relationship: string, column?: string}>
+     */
+    public function aggregateIncludes(): array;
+    /**
      * Get the columns that can be selected
      *
      * @return array<int, string>
@@ -12,11 +18,11 @@ interface StrategyInterface
     public function allowedFields(): array;
 
     /**
-     * Get the aggregate includes configuration
+     * Get the keys that can be used to order the results
      *
-     * @return array<string, array{type: string, relationship: string, column?: string}>
+     * @return array<int, string>
      */
-    public function aggregateIncludes(): array;
+    public function canOrderBy(): array;
 
     /**
      * Get the relationships that can be eager loaded
@@ -24,13 +30,6 @@ interface StrategyInterface
      * @return array<int, string>
      */
     public function canWith(): array;
-
-    /**
-     * Get the keys that can be used to order the results
-     *
-     * @return array<int, string>
-     */
-    public function canOrderBy(): array;
 
     /**
      * Get filter config matrix

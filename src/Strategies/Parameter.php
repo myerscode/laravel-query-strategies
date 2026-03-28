@@ -16,15 +16,13 @@ readonly class Parameter
      */
     public const string DEFAULT_OPERATOR_OVERRIDE_SUFFIX = '--operator';
 
-    private ?string $column;
-
     private ?Closure $callback;
+
+    private ?string $column;
 
     private ?string $default;
 
     private mixed $defaultValue;
-
-    private bool $hasDefaultValue;
 
     /** @var array<int|string, string> */
     private array $disabled;
@@ -32,6 +30,8 @@ readonly class Parameter
     private bool $explode;
 
     private string $explodeDelimiter;
+
+    private bool $hasDefaultValue;
 
     /** @var array<int, mixed> */
     private array $ignoredValues;
@@ -66,19 +66,19 @@ readonly class Parameter
     }
 
     /**
-     * The column to use when interacting with this parameter
-     */
-    public function column(): ?string
-    {
-        return $this->column;
-    }
-
-    /**
      * The callback closure for inline filtering
      */
     public function callback(): ?Closure
     {
         return $this->callback;
+    }
+
+    /**
+     * The column to use when interacting with this parameter
+     */
+    public function column(): ?string
+    {
+        return $this->column;
     }
 
     /**
@@ -98,14 +98,6 @@ readonly class Parameter
     }
 
     /**
-     * Whether this parameter has a default value configured
-     */
-    public function hasDefaultValue(): bool
-    {
-        return $this->hasDefaultValue;
-    }
-
-    /**
      * What parameters are disabled
      *
      * @return array<int|string, string>
@@ -121,6 +113,14 @@ readonly class Parameter
     public function explodeDelimiter(): string
     {
         return $this->explodeDelimiter;
+    }
+
+    /**
+     * Whether this parameter has a default value configured
+     */
+    public function hasDefaultValue(): bool
+    {
+        return $this->hasDefaultValue;
     }
 
     /**

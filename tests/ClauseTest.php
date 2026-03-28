@@ -41,21 +41,20 @@ final class ClauseTest extends TestCase
         $this->assertSame($where, $filter->builder()->getQuery()->wheres);
     }
 
-    public function test_between_filter_clause(): void
+    public function test_between_clause_ignores_single_value(): void
     {
         $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy());
-        $filter->applyFilter(BetweenClause::class, '10,100', 'test_column');
+        $filter->applyFilter(BetweenClause::class, '10', 'test_column');
 
-        $where = [
-            [
-                'type' => 'between',
-                'column' => 'test_column',
-                'boolean' => 'and',
-                'not' => false,
-                'values' => ['10', '100'],
-            ],
-        ];
-        $this->assertEquals($where, $filter->builder()->getQuery()->wheres);
+        $this->assertEmpty($filter->builder()->getQuery()->wheres);
+    }
+
+    public function test_between_clause_ignores_three_values(): void
+    {
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy());
+        $filter->applyFilter(BetweenClause::class, '1,2,3', 'test_column');
+
+        $this->assertEmpty($filter->builder()->getQuery()->wheres);
     }
 
     public function test_between_clause_with_array(): void
@@ -75,20 +74,21 @@ final class ClauseTest extends TestCase
         $this->assertEquals($where, $filter->builder()->getQuery()->wheres);
     }
 
-    public function test_between_clause_ignores_single_value(): void
+    public function test_between_filter_clause(): void
     {
         $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy());
-        $filter->applyFilter(BetweenClause::class, '10', 'test_column');
+        $filter->applyFilter(BetweenClause::class, '10,100', 'test_column');
 
-        $this->assertEmpty($filter->builder()->getQuery()->wheres);
-    }
-
-    public function test_between_clause_ignores_three_values(): void
-    {
-        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy());
-        $filter->applyFilter(BetweenClause::class, '1,2,3', 'test_column');
-
-        $this->assertEmpty($filter->builder()->getQuery()->wheres);
+        $where = [
+            [
+                'type' => 'between',
+                'column' => 'test_column',
+                'boolean' => 'and',
+                'not' => false,
+                'values' => ['10', '100'],
+            ],
+        ];
+        $this->assertEquals($where, $filter->builder()->getQuery()->wheres);
     }
 
     public function test_contains_filter_clause(): void
@@ -225,6 +225,51 @@ final class ClauseTest extends TestCase
         $this->assertEquals($where, $filter->builder()->getQuery()->wheres);
     }
 
+    public function test_is_not_null_filter_clause(): void
+    {
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy());
+        $filter->applyFilter(IsNotNullClause::class, '', 'test_column');
+
+        $where = [
+            [
+                'type' => 'NotNull',
+                'column' => 'test_column',
+                'boolean' => 'and',
+            ],
+        ];
+        $this->assertSame($where, $filter->builder()->getQuery()->wheres);
+    }
+
+    public function test_is_null_clause_ignores_value(): void
+    {
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy());
+        $filter->applyFilter(IsNullClause::class, 'anything', 'test_column');
+
+        $where = [
+            [
+                'type' => 'Null',
+                'column' => 'test_column',
+                'boolean' => 'and',
+            ],
+        ];
+        $this->assertSame($where, $filter->builder()->getQuery()->wheres);
+    }
+
+    public function test_is_null_filter_clause(): void
+    {
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy());
+        $filter->applyFilter(IsNullClause::class, '', 'test_column');
+
+        $where = [
+            [
+                'type' => 'Null',
+                'column' => 'test_column',
+                'boolean' => 'and',
+            ],
+        ];
+        $this->assertSame($where, $filter->builder()->getQuery()->wheres);
+    }
+
     public function test_less_than_filter_clause(): void
     {
         $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy());
@@ -271,51 +316,6 @@ final class ClauseTest extends TestCase
                 'operator' => '=',
                 'value' => 'foobar',
                 'boolean' => 'or',
-            ],
-        ];
-        $this->assertSame($where, $filter->builder()->getQuery()->wheres);
-    }
-
-    public function test_is_null_filter_clause(): void
-    {
-        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy());
-        $filter->applyFilter(IsNullClause::class, '', 'test_column');
-
-        $where = [
-            [
-                'type' => 'Null',
-                'column' => 'test_column',
-                'boolean' => 'and',
-            ],
-        ];
-        $this->assertSame($where, $filter->builder()->getQuery()->wheres);
-    }
-
-    public function test_is_null_clause_ignores_value(): void
-    {
-        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy());
-        $filter->applyFilter(IsNullClause::class, 'anything', 'test_column');
-
-        $where = [
-            [
-                'type' => 'Null',
-                'column' => 'test_column',
-                'boolean' => 'and',
-            ],
-        ];
-        $this->assertSame($where, $filter->builder()->getQuery()->wheres);
-    }
-
-    public function test_is_not_null_filter_clause(): void
-    {
-        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy());
-        $filter->applyFilter(IsNotNullClause::class, '', 'test_column');
-
-        $where = [
-            [
-                'type' => 'NotNull',
-                'column' => 'test_column',
-                'boolean' => 'and',
             ],
         ];
         $this->assertSame($where, $filter->builder()->getQuery()->wheres);

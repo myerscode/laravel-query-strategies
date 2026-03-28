@@ -449,7 +449,7 @@ class Filter
                 }
 
                 throw new InvalidFilterException(
-                    sprintf("Filter '%s' is not allowed. Allowed filters: ", $keyStr) . implode(', ', $filterKeys)
+                    sprintf("Filter '%s' is not allowed. Allowed filters: ", $keyStr) . implode(', ', $filterKeys),
                 );
             }
         }

@@ -181,6 +181,30 @@ final class FilterTest extends TestCase
         ];
     }
 
+    public static function providerForDefaultValues(): Iterator
+    {
+        yield 'default values applied when not in request' => [
+            'select * from "items" where "active" = \'1\' and "status" = \'published\'',
+            [],
+        ];
+        yield 'request value overrides default' => [
+            'select * from "items" where "active" = \'0\' and "status" = \'published\'',
+            ['active' => '0'],
+        ];
+        yield 'all overridden' => [
+            'select * from "items" where "active" = \'0\' and "status" = \'draft\'',
+            ['active' => '0', 'status' => 'draft'],
+        ];
+        yield 'default with explicit request param' => [
+            'select * from "items" where "name" = \'Foo\' and "active" = \'1\' and "status" = \'published\'',
+            ['name' => 'Foo'],
+        ];
+        yield 'null default value is not applied' => [
+            'select * from "items" where "active" = \'1\' and "status" = \'published\'',
+            [],
+        ];
+    }
+
     public static function providerForFieldOperatorApply(): Iterator
     {
         yield 'single field--operator' => [
@@ -210,6 +234,45 @@ final class FilterTest extends TestCase
         ];
     }
 
+    public static function providerForFields(): Iterator
+    {
+        yield 'no fields requested selects all' => [
+            'select * from "items"',
+            FieldSelectionStrategy::class,
+            [],
+        ];
+        yield 'select allowed fields' => [
+            'select "id", "name" from "items"',
+            FieldSelectionStrategy::class,
+            ['fields' => 'id,name'],
+        ];
+        yield 'disallowed fields are filtered out' => [
+            'select "id" from "items"',
+            FieldSelectionStrategy::class,
+            ['fields' => 'id,secret'],
+        ];
+        yield 'all disallowed fields keeps select star' => [
+            'select * from "items"',
+            FieldSelectionStrategy::class,
+            ['fields' => 'secret,password'],
+        ];
+        yield 'fields via array' => [
+            'select "id", "email" from "items"',
+            FieldSelectionStrategy::class,
+            ['fields' => ['id', 'email']],
+        ];
+        yield 'empty allowedFields allows all requested' => [
+            'select "anything", "goes" from "items"',
+            ComplexConfigQueryStrategy::class,
+            ['fields' => 'anything,goes'],
+        ];
+        yield 'single field' => [
+            'select "name" from "items"',
+            FieldSelectionStrategy::class,
+            ['fields' => 'name'],
+        ];
+    }
+
     public static function providerForGetQueryValues(): Iterator
     {
         yield 'example 1' => [
@@ -231,6 +294,38 @@ final class FilterTest extends TestCase
             ComplexConfigQueryStrategy::class,
             ['bf' => 'test'],
             ['bf' => ['test']],
+        ];
+    }
+
+    public static function providerForIgnoredValues(): Iterator
+    {
+        yield 'ignored value is not applied' => [
+            'select * from "items"',
+            ['name' => '-1'],
+        ];
+        yield 'non-ignored value is applied' => [
+            'select * from "items" where "name" = \'John\'',
+            ['name' => 'John'],
+        ];
+        yield 'ignored value filtered from array' => [
+            'select * from "items" where "name" = \'John\'',
+            ['name' => ['John', '-1']],
+        ];
+        yield 'all values ignored means no filter' => [
+            'select * from "items"',
+            ['name' => ['-1', 'all']],
+        ];
+        yield 'null ignored value' => [
+            'select * from "items"',
+            ['status' => null],
+        ];
+        yield 'non-ignored parameter unaffected' => [
+            'select * from "items" where "type" = \'foo\'',
+            ['type' => 'foo'],
+        ];
+        yield 'mixed ignored and valid across params' => [
+            'select * from "items" where "type" = \'foo\'',
+            ['name' => '-1', 'type' => 'foo'],
         ];
     }
 
@@ -268,6 +363,70 @@ final class FilterTest extends TestCase
         ];
     }
 
+    public static function providerForRelationshipFilter(): Iterator
+    {
+        yield 'dot notation applies whereHas' => [
+            'select * from "items" where exists (select * from "owners" where "items"."id" = "owners"."item_id" and "name" = \'John\')',
+            ['owner.name' => 'John'],
+        ];
+        yield 'column alias with dot notation applies whereHas' => [
+            'select * from "items" where exists (select * from "owners" where "items"."id" = "owners"."item_id" and "email" like \'%test%\')',
+            ['owner_email' => 'test'],
+        ];
+        yield 'regular parameter still works alongside relationship' => [
+            'select * from "items" where "name" = \'Foo\' and exists (select * from "owners" where "items"."id" = "owners"."item_id" and "name" = \'Bar\')',
+            ['name' => 'Foo', 'owner.name' => 'Bar'],
+        ];
+    }
+
+    public static function providerForScopeFilter(): Iterator
+    {
+        yield 'scope with single value' => [
+            'select * from "items" where "starts_at" <= \'2024-01-01\'',
+            ['starts_before' => '2024-01-01'],
+        ];
+        yield 'scope with comma-separated values' => [
+            'select * from "items" where "created_at" between \'2024-01-01\' and \'2024-12-31\'',
+            ['created_between' => '2024-01-01,2024-12-31'],
+        ];
+        yield 'scope with boolean-like value' => [
+            'select * from "items" where "active" = \'1\'',
+            ['active' => '1'],
+        ];
+        yield 'empty scope value is ignored' => [
+            'select * from "items"',
+            ['active' => ''],
+        ];
+        yield 'scope alongside regular filter' => [
+            'select * from "items" where "name" = \'Foo\' and "starts_at" <= \'2024-06-01\'',
+            ['name' => 'Foo', 'starts_before' => '2024-06-01'],
+        ];
+    }
+
+    public static function providerForTrashedFilter(): Iterator
+    {
+        yield 'no trashed param keeps soft delete scope' => [
+            'select * from "soft_items" where "soft_items"."deleted_at" is null',
+            [],
+        ];
+        yield 'trashed=with includes soft deleted' => [
+            'select * from "soft_items"',
+            ['trashed' => 'with'],
+        ];
+        yield 'trashed=only returns only trashed' => [
+            'select * from "soft_items" where "soft_items"."deleted_at" is not null',
+            ['trashed' => 'only'],
+        ];
+        yield 'invalid trashed value keeps default scope' => [
+            'select * from "soft_items" where "soft_items"."deleted_at" is null',
+            ['trashed' => 'invalid'],
+        ];
+        yield 'trashed alongside regular filter' => [
+            'select * from "soft_items" where "name" = \'Foo\' and "soft_items"."deleted_at" is null',
+            ['name' => 'Foo', 'trashed' => 'nope'],
+        ];
+    }
+
     public static function providerForWith(): Iterator
     {
         yield 'with single relation' => [
@@ -282,6 +441,35 @@ final class FilterTest extends TestCase
             ['owner', 'categories'],
             ['with' => 'owner,categories'],
         ];
+    }
+
+    public function test_aggregate_include_count(): void
+    {
+        $filter = $this->filter(Item::query(), new AggregateIncludeStrategy(), ['with' => 'ownerCount']);
+        $builder = $filter->with()->builder();
+        $this->assertStringContainsString('owner_count', $this->getRawSqlFromBuilder($builder));
+    }
+
+    public function test_aggregate_include_exists(): void
+    {
+        $filter = $this->filter(Item::query(), new AggregateIncludeStrategy(), ['with' => 'ownerExists']);
+        $builder = $filter->with()->builder();
+        $this->assertStringContainsString('owner_exists', $this->getRawSqlFromBuilder($builder));
+    }
+
+    public function test_aggregate_mixed_with_eager_load(): void
+    {
+        $filter = $this->filter(Item::query(), new AggregateIncludeStrategy(), ['with' => 'owner,ownerCount']);
+        $builder = $filter->with()->builder();
+        $this->assertSame(['owner'], array_keys($builder->getEagerLoads()));
+        $this->assertStringContainsString('owner_count', $this->getRawSqlFromBuilder($builder));
+    }
+
+    public function test_aggregate_unknown_include_filtered_by_canwith(): void
+    {
+        $filter = $this->filter(Item::query(), new AggregateIncludeStrategy(), ['with' => 'secret']);
+        $builder = $filter->with()->builder();
+        $this->assertSame([], array_keys($builder->getEagerLoads()));
     }
 
     public function test_apply_filter(): void
@@ -331,242 +519,9 @@ final class FilterTest extends TestCase
         $this->assertEquals($expectedEagerLoads, array_keys($builder->getEagerLoads()));
     }
 
-    public function test_with_filters_to_allowed_relationships(): void
-    {
-        $filter = $this->filter(Item::query(), new RestrictedWithStrategy(), ['with' => 'owner,categories']);
-        $builder = $filter->with()->builder();
-        $this->assertSame(['owner'], array_keys($builder->getEagerLoads()));
-    }
-
-    public function test_with_blocks_all_when_none_allowed(): void
-    {
-        $filter = $this->filter(Item::query(), new RestrictedWithStrategy(), ['with' => 'categories,secret']);
-        $builder = $filter->with()->builder();
-        $this->assertSame([], array_keys($builder->getEagerLoads()));
-    }
-
-    public function test_with_allows_all_when_canwith_empty(): void
-    {
-        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy(), ['with' => 'owner,categories']);
-        $builder = $filter->with()->builder();
-        $this->assertSame(['owner', 'categories'], array_keys($builder->getEagerLoads()));
-    }
-
-    public function test_aggregate_include_count(): void
-    {
-        $filter = $this->filter(Item::query(), new AggregateIncludeStrategy(), ['with' => 'ownerCount']);
-        $builder = $filter->with()->builder();
-        $this->assertStringContainsString('owner_count', $this->getRawSqlFromBuilder($builder));
-    }
-
-    public function test_aggregate_include_exists(): void
-    {
-        $filter = $this->filter(Item::query(), new AggregateIncludeStrategy(), ['with' => 'ownerExists']);
-        $builder = $filter->with()->builder();
-        $this->assertStringContainsString('owner_exists', $this->getRawSqlFromBuilder($builder));
-    }
-
-    public function test_aggregate_mixed_with_eager_load(): void
-    {
-        $filter = $this->filter(Item::query(), new AggregateIncludeStrategy(), ['with' => 'owner,ownerCount']);
-        $builder = $filter->with()->builder();
-        $this->assertSame(['owner'], array_keys($builder->getEagerLoads()));
-        $this->assertStringContainsString('owner_count', $this->getRawSqlFromBuilder($builder));
-    }
-
-    public function test_aggregate_unknown_include_filtered_by_canwith(): void
-    {
-        $filter = $this->filter(Item::query(), new AggregateIncludeStrategy(), ['with' => 'secret']);
-        $builder = $filter->with()->builder();
-        $this->assertSame([], array_keys($builder->getEagerLoads()));
-    }
-
-    public function test_can_get_builder(): void
-    {
-        $strategy = $this->strategyManager()->findStrategy(ComplexConfigQueryStrategy::class);
-        $filter = $this->filter(Item::query(), $strategy);
-        $this->assertInstanceOf(Builder::class, $filter->builder());
-    }
-
-    #[DataProvider('providerForFields')]
-    public function test_field_selection(string $expectedSql, string $strategyClass, array $requestParams): void
-    {
-        $strategy = $this->strategyManager()->findStrategy($strategyClass);
-        $filter = $this->filter(Item::query(), $strategy, $requestParams);
-        $builder = $filter->fields()->builder();
-        $this->assertSame($expectedSql, $this->getRawSqlFromBuilder($builder));
-    }
-
-    public static function providerForFields(): Iterator
-    {
-        yield 'no fields requested selects all' => [
-            'select * from "items"',
-            FieldSelectionStrategy::class,
-            [],
-        ];
-        yield 'select allowed fields' => [
-            'select "id", "name" from "items"',
-            FieldSelectionStrategy::class,
-            ['fields' => 'id,name'],
-        ];
-        yield 'disallowed fields are filtered out' => [
-            'select "id" from "items"',
-            FieldSelectionStrategy::class,
-            ['fields' => 'id,secret'],
-        ];
-        yield 'all disallowed fields keeps select star' => [
-            'select * from "items"',
-            FieldSelectionStrategy::class,
-            ['fields' => 'secret,password'],
-        ];
-        yield 'fields via array' => [
-            'select "id", "email" from "items"',
-            FieldSelectionStrategy::class,
-            ['fields' => ['id', 'email']],
-        ];
-        yield 'empty allowedFields allows all requested' => [
-            'select "anything", "goes" from "items"',
-            ComplexConfigQueryStrategy::class,
-            ['fields' => 'anything,goes'],
-        ];
-        yield 'single field' => [
-            'select "name" from "items"',
-            FieldSelectionStrategy::class,
-            ['fields' => 'name'],
-        ];
-    }
-
-    public function test_fields_config_key_override(): void
-    {
-        $filter = $this->filter(Item::query(), new FieldSelectionStrategy(), ['fields' => 'secret', 'f' => 'id,name'], ['fields' => 'f']);
-        $builder = $filter->fields()->builder();
-        $this->assertSame('select "id", "name" from "items"', $this->getRawSqlFromBuilder($builder));
-    }
-
-    #[DataProvider('providerForRelationshipFilter')]
-    public function test_relationship_filtering(string $expectedSql, array $requestParams): void
-    {
-        $filter = $this->filter(Item::query(), new RelationshipFilterStrategy(), $requestParams);
-        $filter->filter();
-        $this->assertSame($expectedSql, $this->getRawSqlFromBuilder($filter->builder()));
-    }
-
-    public static function providerForRelationshipFilter(): Iterator
-    {
-        yield 'dot notation applies whereHas' => [
-            'select * from "items" where exists (select * from "owners" where "items"."id" = "owners"."item_id" and "name" = \'John\')',
-            ['owner.name' => 'John'],
-        ];
-        yield 'column alias with dot notation applies whereHas' => [
-            'select * from "items" where exists (select * from "owners" where "items"."id" = "owners"."item_id" and "email" like \'%test%\')',
-            ['owner_email' => 'test'],
-        ];
-        yield 'regular parameter still works alongside relationship' => [
-            'select * from "items" where "name" = \'Foo\' and exists (select * from "owners" where "items"."id" = "owners"."item_id" and "name" = \'Bar\')',
-            ['name' => 'Foo', 'owner.name' => 'Bar'],
-        ];
-    }
-
-    #[DataProvider('providerForScopeFilter')]
-    public function test_scope_filtering(string $expectedSql, array $requestParams): void
-    {
-        $filter = $this->filter(Item::query(), new ScopeFilterStrategy(), $requestParams);
-        $filter->filter();
-        $this->assertSame($expectedSql, $this->getRawSqlFromBuilder($filter->builder()));
-    }
-
-    public static function providerForScopeFilter(): Iterator
-    {
-        yield 'scope with single value' => [
-            'select * from "items" where "starts_at" <= \'2024-01-01\'',
-            ['starts_before' => '2024-01-01'],
-        ];
-        yield 'scope with comma-separated values' => [
-            'select * from "items" where "created_at" between \'2024-01-01\' and \'2024-12-31\'',
-            ['created_between' => '2024-01-01,2024-12-31'],
-        ];
-        yield 'scope with boolean-like value' => [
-            'select * from "items" where "active" = \'1\'',
-            ['active' => '1'],
-        ];
-        yield 'empty scope value is ignored' => [
-            'select * from "items"',
-            ['active' => ''],
-        ];
-        yield 'scope alongside regular filter' => [
-            'select * from "items" where "name" = \'Foo\' and "starts_at" <= \'2024-06-01\'',
-            ['name' => 'Foo', 'starts_before' => '2024-06-01'],
-        ];
-    }
-
-    #[DataProvider('providerForDefaultValues')]
-    public function test_default_filter_values(string $expectedSql, array $requestParams): void
-    {
-        $filter = $this->filter(Item::query(), new DefaultValueStrategy(), $requestParams);
-        $filter->filter();
-        $this->assertSame($expectedSql, $this->getRawSqlFromBuilder($filter->builder()));
-    }
-
-    public static function providerForDefaultValues(): Iterator
-    {
-        yield 'default values applied when not in request' => [
-            'select * from "items" where "active" = \'1\' and "status" = \'published\'',
-            [],
-        ];
-        yield 'request value overrides default' => [
-            'select * from "items" where "active" = \'0\' and "status" = \'published\'',
-            ['active' => '0'],
-        ];
-        yield 'all overridden' => [
-            'select * from "items" where "active" = \'0\' and "status" = \'draft\'',
-            ['active' => '0', 'status' => 'draft'],
-        ];
-        yield 'default with explicit request param' => [
-            'select * from "items" where "name" = \'Foo\' and "active" = \'1\' and "status" = \'published\'',
-            ['name' => 'Foo'],
-        ];
-        yield 'null default value is not applied' => [
-            'select * from "items" where "active" = \'1\' and "status" = \'published\'',
-            [],
-        ];
-    }
-
-    #[DataProvider('providerForTrashedFilter')]
-    public function test_trashed_filtering(string $expectedSql, array $requestParams): void
-    {
-        $this->softDeletableDatabase($this->app);
-        $filter = $this->filter(SoftDeletableItem::query(), new TrashedFilterStrategy(), $requestParams);
-        $filter->filter();
-        $this->assertSame($expectedSql, $this->getRawSqlFromBuilder($filter->builder()));
-    }
-
-    public static function providerForTrashedFilter(): Iterator
-    {
-        yield 'no trashed param keeps soft delete scope' => [
-            'select * from "soft_items" where "soft_items"."deleted_at" is null',
-            [],
-        ];
-        yield 'trashed=with includes soft deleted' => [
-            'select * from "soft_items"',
-            ['trashed' => 'with'],
-        ];
-        yield 'trashed=only returns only trashed' => [
-            'select * from "soft_items" where "soft_items"."deleted_at" is not null',
-            ['trashed' => 'only'],
-        ];
-        yield 'invalid trashed value keeps default scope' => [
-            'select * from "soft_items" where "soft_items"."deleted_at" is null',
-            ['trashed' => 'invalid'],
-        ];
-        yield 'trashed alongside regular filter' => [
-            'select * from "soft_items" where "name" = \'Foo\' and "soft_items"."deleted_at" is null',
-            ['name' => 'Foo', 'trashed' => 'nope'],
-        ];
-    }
-
     public function test_callback_filter(): void
     {
-        $strategy = new class extends \Myerscode\Laravel\QueryStrategies\Strategies\Strategy {
+        $strategy = new class () extends \Myerscode\Laravel\QueryStrategies\Strategies\Strategy {
             protected array $config = [];
 
             public function __construct()
@@ -587,9 +542,32 @@ final class FilterTest extends TestCase
         $this->assertSame('select * from "items" where "post_count" > \'0\'', $this->getRawSqlFromBuilder($filter->builder()));
     }
 
+    public function test_callback_filter_not_applied_when_absent(): void
+    {
+        $strategy = new class () extends \Myerscode\Laravel\QueryStrategies\Strategies\Strategy {
+            protected array $config = [];
+
+            public function __construct()
+            {
+                $this->config = [
+                    'has_posts' => [
+                        'callback' => static function ($builder, $value, $column): void {
+                            $builder->where('post_count', '>', 0);
+                        },
+                    ],
+                ];
+                parent::__construct();
+            }
+        };
+
+        $filter = new Filter(Item::query(), $strategy, []);
+        $filter->filter();
+        $this->assertSame('select * from "items"', $this->getRawSqlFromBuilder($filter->builder()));
+    }
+
     public function test_callback_filter_receives_value(): void
     {
-        $strategy = new class extends \Myerscode\Laravel\QueryStrategies\Strategies\Strategy {
+        $strategy = new class () extends \Myerscode\Laravel\QueryStrategies\Strategies\Strategy {
             protected array $config = [];
 
             public function __construct()
@@ -611,104 +589,11 @@ final class FilterTest extends TestCase
         $this->assertSame('select * from "items" where "score" >= \'42\'', $this->getRawSqlFromBuilder($filter->builder()));
     }
 
-    public function test_callback_filter_not_applied_when_absent(): void
+    public function test_can_get_builder(): void
     {
-        $strategy = new class extends \Myerscode\Laravel\QueryStrategies\Strategies\Strategy {
-            protected array $config = [];
-
-            public function __construct()
-            {
-                $this->config = [
-                    'has_posts' => [
-                        'callback' => static function ($builder, $value, $column): void {
-                            $builder->where('post_count', '>', 0);
-                        },
-                    ],
-                ];
-                parent::__construct();
-            }
-        };
-
-        $filter = new Filter(Item::query(), $strategy, []);
-        $filter->filter();
-        $this->assertSame('select * from "items"', $this->getRawSqlFromBuilder($filter->builder()));
-    }
-
-    #[DataProvider('providerForIgnoredValues')]
-    public function test_ignored_filter_values(string $expectedSql, array $requestParams): void
-    {
-        $filter = $this->filter(Item::query(), new IgnoredValuesStrategy(), $requestParams);
-        $filter->filter();
-        $this->assertSame($expectedSql, $this->getRawSqlFromBuilder($filter->builder()));
-    }
-
-    public static function providerForIgnoredValues(): Iterator
-    {
-        yield 'ignored value is not applied' => [
-            'select * from "items"',
-            ['name' => '-1'],
-        ];
-        yield 'non-ignored value is applied' => [
-            'select * from "items" where "name" = \'John\'',
-            ['name' => 'John'],
-        ];
-        yield 'ignored value filtered from array' => [
-            'select * from "items" where "name" = \'John\'',
-            ['name' => ['John', '-1']],
-        ];
-        yield 'all values ignored means no filter' => [
-            'select * from "items"',
-            ['name' => ['-1', 'all']],
-        ];
-        yield 'null ignored value' => [
-            'select * from "items"',
-            ['status' => null],
-        ];
-        yield 'non-ignored parameter unaffected' => [
-            'select * from "items" where "type" = \'foo\'',
-            ['type' => 'foo'],
-        ];
-        yield 'mixed ignored and valid across params' => [
-            'select * from "items" where "type" = \'foo\'',
-            ['name' => '-1', 'type' => 'foo'],
-        ];
-    }
-
-    public function test_strict_mode_throws_for_unknown_filter(): void
-    {
-        $this->expectException(InvalidFilterException::class);
-        $this->expectExceptionMessage("Filter 'unknown' is not allowed");
-
-        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy(), ['unknown' => 'value'], ['strict' => true]);
-        $filter->filter();
-    }
-
-    public function test_strict_mode_allows_valid_filters(): void
-    {
-        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy(), ['foo' => 'bar'], ['strict' => true]);
-        $filter->filter();
-        $this->assertSame('select * from "items" where "foo" = \'bar\'', $this->getRawSqlFromBuilder($filter->builder()));
-    }
-
-    public function test_strict_mode_allows_system_keys(): void
-    {
-        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy(), ['order' => 'id', 'sort' => 'desc', 'limit' => '10', 'with' => 'owner', 'fields' => 'id', 'page' => '1'], ['strict' => true]);
-        $filter->filter();
-        $this->assertSame('select * from "items"', $this->getRawSqlFromBuilder($filter->builder()));
-    }
-
-    public function test_strict_mode_allows_operator_overrides(): void
-    {
-        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy(), ['foo--contains' => 'bar'], ['strict' => true]);
-        $filter->filter();
-        $this->assertStringContainsString('like', $this->getRawSqlFromBuilder($filter->builder()));
-    }
-
-    public function test_strict_mode_off_ignores_unknown(): void
-    {
-        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy(), ['unknown' => 'value'], ['strict' => false]);
-        $filter->filter();
-        $this->assertSame('select * from "items"', $this->getRawSqlFromBuilder($filter->builder()));
+        $strategy = $this->strategyManager()->findStrategy(ComplexConfigQueryStrategy::class);
+        $filter = $this->filter(Item::query(), $strategy);
+        $this->assertInstanceOf(Builder::class, $filter->builder());
     }
 
     #[DataProvider('providerForGetQueryValues')]
@@ -773,6 +658,14 @@ final class FilterTest extends TestCase
         $this->assertInstanceOf(Filter::class, $filter);
     }
 
+    #[DataProvider('providerForDefaultValues')]
+    public function test_default_filter_values(string $expectedSql, array $requestParams): void
+    {
+        $filter = $this->filter(Item::query(), new DefaultValueStrategy(), $requestParams);
+        $filter->filter();
+        $this->assertSame($expectedSql, $this->getRawSqlFromBuilder($filter->builder()));
+    }
+
     #[DataProvider('providerForFieldOperatorApply')]
     public function test_field_operator_properties_found_and_applied(mixed $expectedSql, string $strategyClass, array $requestParams): void
     {
@@ -782,6 +675,22 @@ final class FilterTest extends TestCase
 
         $builder = $filter->builder();
         $this->assertEquals($expectedSql, $this->getRawSqlFromBuilder($builder));
+    }
+
+    #[DataProvider('providerForFields')]
+    public function test_field_selection(string $expectedSql, string $strategyClass, array $requestParams): void
+    {
+        $strategy = $this->strategyManager()->findStrategy($strategyClass);
+        $filter = $this->filter(Item::query(), $strategy, $requestParams);
+        $builder = $filter->fields()->builder();
+        $this->assertSame($expectedSql, $this->getRawSqlFromBuilder($builder));
+    }
+
+    public function test_fields_config_key_override(): void
+    {
+        $filter = $this->filter(Item::query(), new FieldSelectionStrategy(), ['fields' => 'secret', 'f' => 'id,name'], ['fields' => 'f']);
+        $builder = $filter->fields()->builder();
+        $this->assertSame('select "id", "name" from "items"', $this->getRawSqlFromBuilder($builder));
     }
 
     public function test_filter_ignores_unknown_parameters(): void
@@ -810,6 +719,14 @@ final class FilterTest extends TestCase
         $this->assertEquals($strategy->defaultMethods(), $methods);
     }
 
+    #[DataProvider('providerForIgnoredValues')]
+    public function test_ignored_filter_values(string $expectedSql, array $requestParams): void
+    {
+        $filter = $this->filter(Item::query(), new IgnoredValuesStrategy(), $requestParams);
+        $filter->filter();
+        $this->assertSame($expectedSql, $this->getRawSqlFromBuilder($filter->builder()));
+    }
+
     public function test_multi_override_should_not_have_priorities_on_overrides(): void
     {
         $strategy = $this->strategyManager()->findStrategy(ComplexConfigQueryStrategy::class);
@@ -821,6 +738,68 @@ final class FilterTest extends TestCase
         $this->assertSame($expectedSql, $this->getRawSqlFromBuilder($builder));
     }
 
+    #[DataProvider('providerForRelationshipFilter')]
+    public function test_relationship_filtering(string $expectedSql, array $requestParams): void
+    {
+        $filter = $this->filter(Item::query(), new RelationshipFilterStrategy(), $requestParams);
+        $filter->filter();
+        $this->assertSame($expectedSql, $this->getRawSqlFromBuilder($filter->builder()));
+    }
+
+    #[DataProvider('providerForScopeFilter')]
+    public function test_scope_filtering(string $expectedSql, array $requestParams): void
+    {
+        $filter = $this->filter(Item::query(), new ScopeFilterStrategy(), $requestParams);
+        $filter->filter();
+        $this->assertSame($expectedSql, $this->getRawSqlFromBuilder($filter->builder()));
+    }
+
+    public function test_strict_mode_allows_operator_overrides(): void
+    {
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy(), ['foo--contains' => 'bar'], ['strict' => true]);
+        $filter->filter();
+        $this->assertStringContainsString('like', $this->getRawSqlFromBuilder($filter->builder()));
+    }
+
+    public function test_strict_mode_allows_system_keys(): void
+    {
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy(), ['order' => 'id', 'sort' => 'desc', 'limit' => '10', 'with' => 'owner', 'fields' => 'id', 'page' => '1'], ['strict' => true]);
+        $filter->filter();
+        $this->assertSame('select * from "items"', $this->getRawSqlFromBuilder($filter->builder()));
+    }
+
+    public function test_strict_mode_allows_valid_filters(): void
+    {
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy(), ['foo' => 'bar'], ['strict' => true]);
+        $filter->filter();
+        $this->assertSame('select * from "items" where "foo" = \'bar\'', $this->getRawSqlFromBuilder($filter->builder()));
+    }
+
+    public function test_strict_mode_off_ignores_unknown(): void
+    {
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy(), ['unknown' => 'value'], ['strict' => false]);
+        $filter->filter();
+        $this->assertSame('select * from "items"', $this->getRawSqlFromBuilder($filter->builder()));
+    }
+
+    public function test_strict_mode_throws_for_unknown_filter(): void
+    {
+        $this->expectException(InvalidFilterException::class);
+        $this->expectExceptionMessage("Filter 'unknown' is not allowed");
+
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy(), ['unknown' => 'value'], ['strict' => true]);
+        $filter->filter();
+    }
+
+    #[DataProvider('providerForTrashedFilter')]
+    public function test_trashed_filtering(string $expectedSql, array $requestParams): void
+    {
+        $this->softDeletableDatabase($this->app);
+        $filter = $this->filter(SoftDeletableItem::query(), new TrashedFilterStrategy(), $requestParams);
+        $filter->filter();
+        $this->assertSame($expectedSql, $this->getRawSqlFromBuilder($filter->builder()));
+    }
+
     public function test_triple_dash_parameter_is_ignored(): void
     {
         $strategy = $this->strategyManager()->findStrategy(ComplexConfigQueryStrategy::class);
@@ -828,5 +807,26 @@ final class FilterTest extends TestCase
         $filter->filter();
 
         $this->assertSame('select * from "items"', $this->getRawSqlFromBuilder($filter->builder()));
+    }
+
+    public function test_with_allows_all_when_canwith_empty(): void
+    {
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy(), ['with' => 'owner,categories']);
+        $builder = $filter->with()->builder();
+        $this->assertSame(['owner', 'categories'], array_keys($builder->getEagerLoads()));
+    }
+
+    public function test_with_blocks_all_when_none_allowed(): void
+    {
+        $filter = $this->filter(Item::query(), new RestrictedWithStrategy(), ['with' => 'categories,secret']);
+        $builder = $filter->with()->builder();
+        $this->assertSame([], array_keys($builder->getEagerLoads()));
+    }
+
+    public function test_with_filters_to_allowed_relationships(): void
+    {
+        $filter = $this->filter(Item::query(), new RestrictedWithStrategy(), ['with' => 'owner,categories']);
+        $builder = $filter->with()->builder();
+        $this->assertSame(['owner'], array_keys($builder->getEagerLoads()));
     }
 }
