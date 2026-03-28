@@ -466,6 +466,7 @@ class Filter
             if (count($parts) <= 1) {
                 continue;
             }
+
             if ($parameterConf instanceof Parameter && $parameterConf->operatorOverride() === $key) {
                 continue;
             }
