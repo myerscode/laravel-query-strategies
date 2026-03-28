@@ -40,11 +40,6 @@ class StrategyManager
         return $this->cache[$cacheName];
     }
 
-    public function buildDefaultStrategy(string $strategy): StrategyInterface
-    {
-
-    }
-
     /**
      * Create a safe slug for caching the strategy
      *
