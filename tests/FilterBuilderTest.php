@@ -139,6 +139,21 @@ final class FilterBuilderTest extends TestCase
         $filterBuilder->filter('');
     }
 
+    public function test_results_picks_up_strategy_from_model(): void
+    {
+        $this->simpleDatabase($this->app);
+
+        $model = new class () extends \Illuminate\Database\Eloquent\Model {
+            protected $table = 'items';
+
+            public string $strategy = \Tests\Support\Strategies\BasicConfigQueryStrategy::class;
+        };
+
+        $filterBuilder = new FilterBuilder(new Request(), new StrategyManager());
+        $result = $filterBuilder->filter($model)->results();
+        $this->assertInstanceOf(LengthAwarePaginator::class, $result);
+    }
+
     public function test_results_throws_exception_when_no_strategy_provided(): void
     {
         $this->expectException(BuilderNotSetException::class);

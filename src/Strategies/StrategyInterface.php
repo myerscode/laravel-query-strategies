@@ -2,6 +2,8 @@
 
 namespace Myerscode\Laravel\QueryStrategies\Strategies;
 
+use Closure;
+
 interface StrategyInterface
 {
     /**
@@ -37,6 +39,13 @@ interface StrategyInterface
      * @return array<int, string>
      */
     public function canWith(): array;
+
+    /**
+     * Get closures that are always applied to the query
+     *
+     * @return array<int, Closure>
+     */
+    public function defaultFilters(): array;
 
     /**
      * Get filter config matrix

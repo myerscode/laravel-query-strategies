@@ -50,6 +50,15 @@ Then filter directly from the model:
 $paginated = (new Item)->filter()->apply();
 ```
 
+Models with a `$strategy` property are also automatically picked up by `results()`:
+
+```php
+use function Myerscode\Laravel\QueryStrategies\filter;
+
+// No need to pass a strategy — it's read from the model
+$paginated = filter(Item::class)->results();
+```
+
 ## Filter Methods
 
 Once you have a `Filter` instance, you can call these methods:

@@ -16,6 +16,7 @@ use Tests\Support\Models\SoftDeletableItem;
 use Tests\Support\Strategies\AggregateIncludeStrategy;
 use Tests\Support\Strategies\AppendStrategy;
 use Tests\Support\Strategies\ComplexConfigQueryStrategy;
+use Tests\Support\Strategies\DefaultFilterStrategy;
 use Tests\Support\Strategies\DefaultValueStrategy;
 use Tests\Support\Strategies\FieldSelectionStrategy;
 use Tests\Support\Strategies\IgnoredValuesStrategy;
@@ -728,6 +729,22 @@ final class FilterTest extends TestCase
         $this->assertSame($expectedSql, $this->getRawSqlFromBuilder($filter->builder()));
     }
 
+    public function test_default_filters_always_applied(): void
+    {
+        $filter = $this->filter(Item::query(), new DefaultFilterStrategy(), []);
+        $filter->filter();
+        $this->assertSame('select * from "items" where "active" = \'1\'', $this->getRawSqlFromBuilder($filter->builder()));
+    }
+
+    public function test_default_filters_applied_alongside_user_filters(): void
+    {
+        $filter = $this->filter(Item::query(), new DefaultFilterStrategy(), ['name' => 'Test']);
+        $filter->filter();
+        $sql = $this->getRawSqlFromBuilder($filter->builder());
+        $this->assertStringContainsString('"active" = \'1\'', $sql);
+        $this->assertStringContainsString('"name" = \'Test\'', $sql);
+    }
+
     #[DataProvider('providerForFieldOperatorApply')]
     public function test_field_operator_properties_found_and_applied(mixed $expectedSql, string $strategyClass, array $requestParams): void
     {
@@ -798,6 +815,13 @@ final class FilterTest extends TestCase
         $builder = $filter->builder();
         $expectedSql = 'select * from "items" where "override_this" = \'1&2&3&4\' limit 50';
         $this->assertSame($expectedSql, $this->getRawSqlFromBuilder($builder));
+    }
+
+    public function test_no_default_filters_when_none_defined(): void
+    {
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy(), []);
+        $filter->filter();
+        $this->assertSame('select * from "items"', $this->getRawSqlFromBuilder($filter->builder()));
     }
 
     #[DataProvider('providerForRelationshipFilter')]

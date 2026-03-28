@@ -145,6 +145,28 @@ The key is the include name used in the query parameter. Supported types: `count
 
 Default: `[]`
 
+### `$defaultFilters` — Always-Applied Filters
+
+Define closures that are always applied to the query, regardless of request parameters:
+
+```php
+protected array $defaultFilters = [];
+
+public function __construct()
+{
+    $this->defaultFilters = [
+        fn (Builder $builder) => $builder->where('active', true),
+        fn (Builder $builder) => $builder->where('published', true),
+    ];
+
+    parent::__construct();
+}
+```
+
+Default filters run before user filters. They're useful for scoping queries to only return relevant records (e.g. active, published, non-deleted) without requiring the API consumer to pass those parameters.
+
+Default: `[]`
+
 ### `$limitTo` — Default Result Limit
 
 ```php

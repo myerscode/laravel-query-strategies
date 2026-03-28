@@ -17,6 +17,7 @@ use Myerscode\Laravel\QueryStrategies\Clause\IsNullClause;
 use Myerscode\Laravel\QueryStrategies\Clause\LessThanClause;
 use Myerscode\Laravel\QueryStrategies\Clause\LessThanOrEqualsClause;
 use Myerscode\Laravel\QueryStrategies\Clause\OrEqualsClause;
+use Closure;
 
 class Strategy implements StrategyInterface
 {
@@ -64,6 +65,13 @@ class Strategy implements StrategyInterface
     protected array $config = [
         //
     ];
+
+    /**
+     * Closures that are always applied to the query
+     *
+     * @var array<int, Closure>
+     */
+    protected array $defaultFilters = [];
 
     /**
      * Supported default filter methods
@@ -167,6 +175,14 @@ class Strategy implements StrategyInterface
     public function config(): array
     {
         return $this->config;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function defaultFilters(): array
+    {
+        return $this->defaultFilters;
     }
 
     /**

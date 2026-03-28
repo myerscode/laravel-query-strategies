@@ -132,6 +132,10 @@ class Filter
      */
     public function filter(): Filter
     {
+        // Apply default filters that always run
+        foreach ($this->strategy->defaultFilters() as $defaultFilter) {
+            $defaultFilter($this->builder);
+        }
 
         $parameters = $this->filterParameters();
 

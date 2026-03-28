@@ -78,6 +78,10 @@ class FilterBuilder
             $possibleStrategy = DefaultModelStrategy::fromConfig($this->model->strategyConfig);
         }
 
+        if (is_null($possibleStrategy) && ($this->model instanceof Model) && isset($this->model->strategy)) {
+            $possibleStrategy = $this->model->strategy;
+        }
+
         if (is_null($possibleStrategy)) {
             throw new BuilderNotSetException('No strategy provided and model has no strategyConfig');
         }
