@@ -18,8 +18,40 @@ Clauses define how a filter value is applied to the Eloquent query builder. Each
 | `IsInClause` | `WHERE column IN (...)` | `isIn`, `in` |
 | `IsNotInClause` | `WHERE column NOT IN (...)` | `notIn`, `!in` |
 | `OrEqualsClause` | `OR WHERE column = value` | `or`, `\|\|` |
+| `ScopeClause` | Calls a model scope | — |
 
 Aliases are used in operator overrides. For example, `?name--contains=John` uses the `ContainsClause`.
+
+## Scope Clause
+
+The `ScopeClause` calls an Eloquent local scope on the model instead of applying a direct WHERE condition. The parameter name is converted to camelCase to match the scope method name.
+
+```php
+// Model scope
+public function scopeStartsBefore(Builder $query, string $date): Builder
+{
+    return $query->where('starts_at', '<=', $date);
+}
+
+// Strategy config
+protected array $config = [
+    'starts_before' => [
+        'default' => ScopeClause::class,
+    ],
+];
+```
+
+Usage: `?starts_before=2024-01-01`
+
+Multiple parameters can be passed to a scope using comma-separated values:
+
+```
+?created_between=2024-01-01,2024-12-31
+```
+
+This calls `scopeCreatedBetween($query, '2024-01-01', '2024-12-31')`.
+
+Empty values are ignored — the scope won't be called.
 
 ## Creating a Custom Clause
 

@@ -2,6 +2,7 @@
 
 namespace Tests\Support\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class Item extends Model
@@ -9,5 +10,32 @@ class Item extends Model
     public function owner()
     {
         return $this->hasOne(Owner::class);
+    }
+
+    /**
+     * @param Builder<Model> $query
+     * @return Builder<Model>
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('active', true);
+    }
+
+    /**
+     * @param Builder<Model> $query
+     * @return Builder<Model>
+     */
+    public function scopeStartsBefore(Builder $query, string $date): Builder
+    {
+        return $query->where('starts_at', '<=', $date);
+    }
+
+    /**
+     * @param Builder<Model> $query
+     * @return Builder<Model>
+     */
+    public function scopeCreatedBetween(Builder $query, string $from, string $to): Builder
+    {
+        return $query->whereBetween('created_at', [$from, $to]);
     }
 }

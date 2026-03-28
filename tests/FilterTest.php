@@ -16,6 +16,7 @@ use Tests\Support\Strategies\FieldSelectionStrategy;
 use Tests\Support\Strategies\OverrideQueryStrategy;
 use Tests\Support\Strategies\RelationshipFilterStrategy;
 use Tests\Support\Strategies\RestrictedWithStrategy;
+use Tests\Support\Strategies\ScopeFilterStrategy;
 
 #[CoversClass(Filter::class)]
 final class FilterTest extends TestCase
@@ -413,6 +414,38 @@ final class FilterTest extends TestCase
         yield 'regular parameter still works alongside relationship' => [
             'select * from "items" where "name" = \'Foo\' and exists (select * from "owners" where "items"."id" = "owners"."item_id" and "name" = \'Bar\')',
             ['name' => 'Foo', 'owner.name' => 'Bar'],
+        ];
+    }
+
+    #[DataProvider('providerForScopeFilter')]
+    public function test_scope_filtering(string $expectedSql, array $requestParams): void
+    {
+        $filter = $this->filter(Item::query(), new ScopeFilterStrategy(), $requestParams);
+        $filter->filter();
+        $this->assertEquals($expectedSql, $this->getRawSqlFromBuilder($filter->builder()));
+    }
+
+    public static function providerForScopeFilter(): Iterator
+    {
+        yield 'scope with single value' => [
+            'select * from "items" where "starts_at" <= \'2024-01-01\'',
+            ['starts_before' => '2024-01-01'],
+        ];
+        yield 'scope with comma-separated values' => [
+            'select * from "items" where "created_at" between \'2024-01-01\' and \'2024-12-31\'',
+            ['created_between' => '2024-01-01,2024-12-31'],
+        ];
+        yield 'scope with boolean-like value' => [
+            'select * from "items" where "active" = \'1\'',
+            ['active' => '1'],
+        ];
+        yield 'empty scope value is ignored' => [
+            'select * from "items"',
+            ['active' => ''],
+        ];
+        yield 'scope alongside regular filter' => [
+            'select * from "items" where "name" = \'Foo\' and "starts_at" <= \'2024-06-01\'',
+            ['name' => 'Foo', 'starts_before' => '2024-06-01'],
         ];
     }
 
