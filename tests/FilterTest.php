@@ -11,6 +11,7 @@ use Myerscode\Laravel\QueryStrategies\Filter;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Support\Models\Item;
+use Tests\Support\Models\SoftDeletableItem;
 use Tests\Support\Strategies\ComplexConfigQueryStrategy;
 use Tests\Support\Strategies\DefaultValueStrategy;
 use Tests\Support\Strategies\FieldSelectionStrategy;
@@ -18,6 +19,7 @@ use Tests\Support\Strategies\OverrideQueryStrategy;
 use Tests\Support\Strategies\RelationshipFilterStrategy;
 use Tests\Support\Strategies\RestrictedWithStrategy;
 use Tests\Support\Strategies\ScopeFilterStrategy;
+use Tests\Support\Strategies\TrashedFilterStrategy;
 
 #[CoversClass(Filter::class)]
 final class FilterTest extends TestCase
@@ -489,6 +491,39 @@ final class FilterTest extends TestCase
         yield 'null default value is not applied' => [
             'select * from "items" where "active" = \'1\' and "status" = \'published\'',
             [],
+        ];
+    }
+
+    #[DataProvider('providerForTrashedFilter')]
+    public function test_trashed_filtering(string $expectedSql, array $requestParams): void
+    {
+        $this->softDeletableDatabase($this->app);
+        $filter = $this->filter(SoftDeletableItem::query(), new TrashedFilterStrategy(), $requestParams);
+        $filter->filter();
+        $this->assertEquals($expectedSql, $this->getRawSqlFromBuilder($filter->builder()));
+    }
+
+    public static function providerForTrashedFilter(): Iterator
+    {
+        yield 'no trashed param keeps soft delete scope' => [
+            'select * from "soft_items" where "soft_items"."deleted_at" is null',
+            [],
+        ];
+        yield 'trashed=with includes soft deleted' => [
+            'select * from "soft_items"',
+            ['trashed' => 'with'],
+        ];
+        yield 'trashed=only returns only trashed' => [
+            'select * from "soft_items" where "soft_items"."deleted_at" is not null',
+            ['trashed' => 'only'],
+        ];
+        yield 'invalid trashed value keeps default scope' => [
+            'select * from "soft_items" where "soft_items"."deleted_at" is null',
+            ['trashed' => 'invalid'],
+        ];
+        yield 'trashed alongside regular filter' => [
+            'select * from "soft_items" where "name" = \'Foo\' and "soft_items"."deleted_at" is null',
+            ['name' => 'Foo', 'trashed' => 'nope'],
         ];
     }
 

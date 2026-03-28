@@ -19,6 +19,7 @@ Clauses define how a filter value is applied to the Eloquent query builder. Each
 | `IsNotInClause` | `WHERE column NOT IN (...)` | `notIn`, `!in` |
 | `IsNullClause` | `WHERE column IS NULL` | `isNull`, `null` |
 | `IsNotNullClause` | `WHERE column IS NOT NULL` | `isNotNull`, `!null`, `notNull` |
+| `TrashedClause` | Soft delete filtering (`with`, `only`) | — |
 | `OrEqualsClause` | `OR WHERE column = value` | `or`, `\|\|` |
 | `ScopeClause` | Calls a model scope | — |
 
@@ -54,6 +55,33 @@ Multiple parameters can be passed to a scope using comma-separated values:
 This calls `scopeCreatedBetween($query, '2024-01-01', '2024-12-31')`.
 
 Empty values are ignored — the scope won't be called.
+
+## Trashed Clause
+
+The `TrashedClause` provides built-in soft delete filtering for models using Laravel's `SoftDeletes` trait.
+
+```php
+protected array $config = [
+    'trashed' => [
+        'default' => TrashedClause::class,
+    ],
+];
+```
+
+Accepted values:
+
+| Value | Behaviour |
+|---|---|
+| `with` | Include soft-deleted records in results |
+| `only` | Return only soft-deleted records |
+| Any other value | Default behaviour (exclude soft-deleted) |
+
+Usage:
+
+```
+?trashed=with    → Include trashed records
+?trashed=only    → Only trashed records
+```
 
 ## Creating a Custom Clause
 

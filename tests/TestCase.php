@@ -46,6 +46,16 @@ class TestCase extends Orchestra
         });
     }
 
+    public function softDeletableDatabase(Application $application): void
+    {
+        $application['db']->connection()->getSchemaBuilder()->create('soft_items', static function (Blueprint $blueprint): void {
+            $blueprint->increments('id');
+            $blueprint->string('name');
+            $blueprint->timestamps();
+            $blueprint->softDeletes();
+        });
+    }
+
     public function strategyManager(): StrategyManager
     {
         return new StrategyManager();
