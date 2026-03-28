@@ -7,6 +7,7 @@ namespace Tests;
 use Iterator;
 use Illuminate\Database\Eloquent\Builder;
 use Myerscode\Laravel\QueryStrategies\Clause\EqualsClause;
+use Myerscode\Laravel\QueryStrategies\Exceptions\InvalidFilterException;
 use Myerscode\Laravel\QueryStrategies\Filter;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -663,6 +664,43 @@ final class FilterTest extends TestCase
             'select * from "items" where "type" = \'foo\'',
             ['name' => '-1', 'type' => 'foo'],
         ];
+    }
+
+    public function test_strict_mode_throws_for_unknown_filter(): void
+    {
+        $this->expectException(InvalidFilterException::class);
+        $this->expectExceptionMessage("Filter 'unknown' is not allowed");
+
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy(), ['unknown' => 'value'], ['strict' => true]);
+        $filter->filter();
+    }
+
+    public function test_strict_mode_allows_valid_filters(): void
+    {
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy(), ['foo' => 'bar'], ['strict' => true]);
+        $filter->filter();
+        $this->assertEquals('select * from "items" where "foo" = \'bar\'', $this->getRawSqlFromBuilder($filter->builder()));
+    }
+
+    public function test_strict_mode_allows_system_keys(): void
+    {
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy(), ['order' => 'id', 'sort' => 'desc', 'limit' => '10', 'with' => 'owner', 'fields' => 'id', 'page' => '1'], ['strict' => true]);
+        $filter->filter();
+        $this->assertEquals('select * from "items"', $this->getRawSqlFromBuilder($filter->builder()));
+    }
+
+    public function test_strict_mode_allows_operator_overrides(): void
+    {
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy(), ['foo--contains' => 'bar'], ['strict' => true]);
+        $filter->filter();
+        $this->assertStringContainsString('like', $this->getRawSqlFromBuilder($filter->builder()));
+    }
+
+    public function test_strict_mode_off_ignores_unknown(): void
+    {
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy(), ['unknown' => 'value'], ['strict' => false]);
+        $filter->filter();
+        $this->assertEquals('select * from "items"', $this->getRawSqlFromBuilder($filter->builder()));
     }
 
     #[DataProvider('providerForGetQueryValues')]

@@ -10,6 +10,7 @@ use Myerscode\Laravel\QueryStrategies\Clause\CallbackClause;
 use Myerscode\Laravel\QueryStrategies\Clause\ClauseInterface;
 use Myerscode\Laravel\QueryStrategies\Clause\EqualsClause;
 use Myerscode\Laravel\QueryStrategies\Clause\IsInClause;
+use Myerscode\Laravel\QueryStrategies\Exceptions\InvalidFilterException;
 use Myerscode\Laravel\QueryStrategies\Strategies\Parameter;
 use Myerscode\Laravel\QueryStrategies\Strategies\Property;
 use Myerscode\Laravel\QueryStrategies\Strategies\StrategyInterface;
@@ -34,6 +35,8 @@ class Filter
     private string $orderKey = 'order';
 
     private string $sortKey = 'sort';
+
+    private bool $strict = false;
 
     private string $with = 'with';
 
@@ -420,6 +423,33 @@ class Filter
     {
         $filterKeys = array_keys($this->strategy->parameters());
 
+        // In strict mode, throw if unknown filter parameters are present
+        if ($this->strict) {
+            $systemKeys = [$this->fieldsKey, $this->orderKey, $this->sortKey, $this->limitKey, $this->with, 'page'];
+            $allowedKeys = array_merge($filterKeys, $systemKeys);
+
+            // Also allow operator overrides and suffixed operators
+            foreach ($this->query as $key => $value) {
+                $keyStr = (string) $key;
+                if (in_array($keyStr, $allowedKeys, true)) {
+                    continue;
+                }
+                // Check if it's an operator override or suffixed operator
+                $parts = explode('--', $keyStr);
+                if (count($parts) === 2 && in_array($parts[0], $filterKeys, true)) {
+                    continue;
+                }
+                $parameterConf = $this->strategy->parameter($parts[0]);
+                if ($parameterConf !== null && $parameterConf->operatorOverride() === $keyStr) {
+                    continue;
+                }
+
+                throw new InvalidFilterException(
+                    "Filter '{$keyStr}' is not allowed. Allowed filters: " . implode(', ', $filterKeys)
+                );
+            }
+        }
+
         // get parameters that can be used to filter this query from the current request
         $parameters = array_intersect_key($this->query, array_flip($filterKeys));
 
@@ -564,6 +594,7 @@ class Filter
      */
     private function setConfig(array $config): void
     {
+        $this->strict = (bool) ($config['strict'] ?? false);
         $this->fieldsKey = $config['fields'] ?? 'fields';
         $this->orderKey = $config['order'] ?? 'order';
         $this->sortKey = $config['sort'] ?? 'sort';
