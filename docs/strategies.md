@@ -56,6 +56,7 @@ protected array $config = [
 | Option | Type | Description |
 |---|---|---|
 | `column` | `string` | Database column name. Defaults to the parameter name. |
+| `filter` | `string` | Shorthand for setting the default clause class. Alias for `default`. |
 | `default` | `string` | Clause class for single values. Defaults to `EqualsClause`. |
 | `multi` | `string` | Clause class for multiple values. Defaults to `IsInClause`. |
 | `explode` | `bool` | Split values by delimiter into multiple values. |

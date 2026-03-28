@@ -52,7 +52,7 @@ readonly class Parameter
     {
         $this->column = $configuration['column'] ?? $this->name;
         $this->callback = $configuration['callback'] ?? null;
-        $this->default = $configuration['default'] ?? null;
+        $this->default = $configuration['filter'] ?? $configuration['default'] ?? null;
         $this->hasDefaultValue = array_key_exists('defaultValue', $configuration);
         $this->defaultValue = $configuration['defaultValue'] ?? null;
         $this->multi = $configuration['multi'] ?? null;

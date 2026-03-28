@@ -781,6 +781,21 @@ final class FilterTest extends TestCase
         $this->assertSame('select * from "items"', $this->getRawSqlFromBuilder($filter->builder()));
     }
 
+    public function test_filter_shorthand_sets_default_clause(): void
+    {
+        $strategy = new class () extends \Myerscode\Laravel\QueryStrategies\Strategies\Strategy {
+            protected array $config = [
+                'name' => [
+                    'filter' => \Myerscode\Laravel\QueryStrategies\Clause\ContainsClause::class,
+                ],
+            ];
+        };
+
+        $filter = $this->filter(Item::query(), $strategy, ['name' => 'test']);
+        $filter->filter();
+        $this->assertSame('select * from "items" where "name" like \'%test%\'', $this->getRawSqlFromBuilder($filter->builder()));
+    }
+
     public function test_filter_values_ignores_unknown_parameters(): void
     {
         $strategy = $this->strategyManager()->findStrategy(ComplexConfigQueryStrategy::class);
