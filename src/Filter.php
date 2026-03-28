@@ -257,8 +257,6 @@ class Filter
 
         $perPage = $this->getLimitValue();
 
-        $this->builder->limit($perPage);
-
         $lengthAwarePaginator = $this->builder->paginate($perPage);
 
         $lengthAwarePaginator->appends($appends);

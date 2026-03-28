@@ -212,32 +212,32 @@ final class FilterTest extends TestCase
     public static function providerForPagination(): Iterator
     {
         yield 'default limit value' => [
-            'select * from "items" limit 50',
+            50,
             ComplexConfigQueryStrategy::class,
             [],
         ];
         yield 'user limits via query' => [
-            'select * from "items" limit 5',
+            5,
             ComplexConfigQueryStrategy::class,
             ['limit' => 5],
         ];
         yield 'no negative value' => [
-            'select * from "items" limit 50',
+            50,
             ComplexConfigQueryStrategy::class,
             ['limit' => '-1'],
         ];
-        yield 'zero value' => [
-            'select * from "items" limit 0',
+        yield 'zero value falls back to paginator default' => [
+            15,
             ComplexConfigQueryStrategy::class,
             ['limit' => '0'],
         ];
         yield 'low value' => [
-            'select * from "items" limit 1',
+            1,
             ComplexConfigQueryStrategy::class,
             ['limit' => '1'],
         ];
         yield 'user exceeds max limit' => [
-            'select * from "items" limit 150',
+            150,
             ComplexConfigQueryStrategy::class,
             ['limit' => 500_000_000_000],
         ];
@@ -278,14 +278,13 @@ final class FilterTest extends TestCase
     }
 
     #[DataProvider('providerForPagination')]
-    public function test_apply_pagination(mixed $expectedSql, string $strategyClass, array $requestParams): void
+    public function test_apply_pagination(mixed $expectedLimit, string $strategyClass, array $requestParams): void
     {
         $strategy = $this->strategyManager()->findStrategy($strategyClass);
         $filter = $this->filter(Item::query(), $strategy, $requestParams);
-        $filter->paginate();
+        $paginated = $filter->paginate();
 
-        $builder = $filter->builder();
-        $this->assertEquals($expectedSql, $this->getRawSqlFromBuilder($builder));
+        $this->assertEquals($expectedLimit, $paginated->perPage());
     }
 
     #[DataProvider('providerForApplyStrategy')]
