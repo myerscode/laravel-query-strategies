@@ -62,6 +62,7 @@ protected array $config = [
 | `delimiter` | `string` | Delimiter for exploding. Default: `,` |
 | `transmute` | `string` | Transmute class to transform values before filtering. |
 | `disabled` | `array` | Clause aliases to disable for this parameter. |
+| `defaultValue` | `mixed` | Value applied when the parameter is absent from the request. Null values are ignored. |
 | `aliases` | `array` | Alternative parameter names that map to this config. |
 | `methods` | `array` | Custom clause alias-to-class mappings for this parameter. |
 | `override` | `string` | Custom operator override parameter name. |

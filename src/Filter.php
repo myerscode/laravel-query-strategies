@@ -409,7 +409,16 @@ class Filter
             }
         }
 
-        return array_merge_recursive($parameters, $otherParameters);
+        $merged = array_merge_recursive($parameters, $otherParameters);
+
+        // Apply default values for parameters not present in the request
+        foreach ($this->strategy->parameters() as $name => $parameterConf) {
+            if (!isset($merged[$name]) && $parameterConf->hasDefaultValue() && $parameterConf->defaultValue() !== null) {
+                $merged[$name] = $parameterConf->defaultValue();
+            }
+        }
+
+        return $merged;
     }
 
     /**

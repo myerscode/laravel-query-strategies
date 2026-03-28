@@ -12,6 +12,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Support\Models\Item;
 use Tests\Support\Strategies\ComplexConfigQueryStrategy;
+use Tests\Support\Strategies\DefaultValueStrategy;
 use Tests\Support\Strategies\FieldSelectionStrategy;
 use Tests\Support\Strategies\OverrideQueryStrategy;
 use Tests\Support\Strategies\RelationshipFilterStrategy;
@@ -446,6 +447,38 @@ final class FilterTest extends TestCase
         yield 'scope alongside regular filter' => [
             'select * from "items" where "name" = \'Foo\' and "starts_at" <= \'2024-06-01\'',
             ['name' => 'Foo', 'starts_before' => '2024-06-01'],
+        ];
+    }
+
+    #[DataProvider('providerForDefaultValues')]
+    public function test_default_filter_values(string $expectedSql, array $requestParams): void
+    {
+        $filter = $this->filter(Item::query(), new DefaultValueStrategy(), $requestParams);
+        $filter->filter();
+        $this->assertEquals($expectedSql, $this->getRawSqlFromBuilder($filter->builder()));
+    }
+
+    public static function providerForDefaultValues(): Iterator
+    {
+        yield 'default values applied when not in request' => [
+            'select * from "items" where "active" = \'1\' and "status" = \'published\'',
+            [],
+        ];
+        yield 'request value overrides default' => [
+            'select * from "items" where "active" = \'0\' and "status" = \'published\'',
+            ['active' => '0'],
+        ];
+        yield 'all overridden' => [
+            'select * from "items" where "active" = \'0\' and "status" = \'draft\'',
+            ['active' => '0', 'status' => 'draft'],
+        ];
+        yield 'default with explicit request param' => [
+            'select * from "items" where "name" = \'Foo\' and "active" = \'1\' and "status" = \'published\'',
+            ['name' => 'Foo'],
+        ];
+        yield 'null default value is not applied' => [
+            'select * from "items" where "active" = \'1\' and "status" = \'published\'',
+            [],
         ];
     }
 

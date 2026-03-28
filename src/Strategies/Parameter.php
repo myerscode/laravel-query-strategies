@@ -18,6 +18,10 @@ class Parameter
 
     private ?string $default = null;
 
+    private mixed $defaultValue = null;
+
+    private bool $hasDefaultValue = false;
+
     /** @var array<int|string, string> */
     private array $disabled = [];
 
@@ -57,6 +61,22 @@ class Parameter
     public function defaultMethod(): ?string
     {
         return $this->default;
+    }
+
+    /**
+     * The default value to use when the parameter is not in the request
+     */
+    public function defaultValue(): mixed
+    {
+        return $this->defaultValue;
+    }
+
+    /**
+     * Whether this parameter has a default value configured
+     */
+    public function hasDefaultValue(): bool
+    {
+        return $this->hasDefaultValue;
     }
 
     /**
@@ -134,6 +154,8 @@ class Parameter
     {
         $this->column = $configuration['column'] ?? $this->name;
         $this->default = $configuration['default'] ?? null;
+        $this->hasDefaultValue = array_key_exists('defaultValue', $configuration);
+        $this->defaultValue = $configuration['defaultValue'] ?? null;
         $this->multi = $configuration['multi'] ?? null;
         $this->transmute = $configuration['transmute'] ?? null;
         $this->methods = $configuration['methods'] ?? [];
