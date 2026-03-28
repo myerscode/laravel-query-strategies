@@ -11,5 +11,6 @@ return [
         'page' => 'page',
         'with' => 'with',
         'fields' => 'fields',
+        'append' => 'append',
     ],
 ];

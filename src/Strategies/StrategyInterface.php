@@ -11,6 +11,13 @@ interface StrategyInterface
      */
     public function aggregateIncludes(): array;
     /**
+     * Get the accessors that can be appended to results
+     *
+     * @return array<int, string>
+     */
+    public function allowedAppends(): array;
+
+    /**
      * Get the columns that can be selected
      *
      * @return array<int, string>

@@ -142,6 +142,14 @@ You can also alias relationship filters to hide the dot notation from API consum
 
 Only relationships listed in the strategy's `$canWith` array are allowed. If `$canWith` is empty, all relationships are permitted.
 
+### Appending Accessors
+
+```
+?append=full_name,avatar_url → Append model accessors to results
+```
+
+Only accessors listed in the strategy's `$allowedAppends` array are permitted. If `$allowedAppends` is empty, all requested appends are allowed. Appends are applied after pagination, so they operate on the result collection.
+
 ### Aggregate Includes
 
 Include relationship counts and aggregates alongside eager loads:

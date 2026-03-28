@@ -35,12 +35,13 @@ class FilterBuilder
 
     /**
      * The config the will be built with
-     * @return array{order: mixed, sort: mixed, limit: mixed, page: mixed, with: mixed}
+     * @return array{strict: mixed, append: mixed, fields: mixed, order: mixed, sort: mixed, limit: mixed, page: mixed, with: mixed}
      */
     public function config(): array
     {
         return [
             'strict' => config('query-strategies.strict', false),
+            'append' => config('query-strategies.parameters.append', 'append'),
             'fields' => config('query-strategies.parameters.fields', 'fields'),
             'order' => config('query-strategies.parameters.order', 'order'),
             'sort' => config('query-strategies.parameters.sort', 'sort'),

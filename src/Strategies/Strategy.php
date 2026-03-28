@@ -27,6 +27,13 @@ class Strategy implements StrategyInterface
      */
     protected array $aggregateIncludes = [];
     /**
+     * Accessors that can be appended to results
+     *
+     * @var array<int, string>
+     */
+    protected array $allowedAppends = [];
+
+    /**
      * Columns that can be selected via field selection
      *
      * @var array<int, string>
@@ -118,6 +125,14 @@ class Strategy implements StrategyInterface
     public function aggregateIncludes(): array
     {
         return $this->aggregateIncludes;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function allowedAppends(): array
+    {
+        return $this->allowedAppends;
     }
 
     /**

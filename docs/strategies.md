@@ -98,6 +98,21 @@ protected array $allowedFields = [
 
 Default: `[]` (empty means all requested fields are allowed)
 
+### `$allowedAppends` — Appendable Accessors
+
+Allowlist which model accessors can be appended to results via the `append` query parameter:
+
+```php
+protected array $allowedAppends = [
+    'full_name',
+    'avatar_url',
+];
+```
+
+When a user requests `?append=full_name,avatar_url`, the listed accessors are appended to each model in the paginated results. Accessors not in the allowlist are silently filtered out.
+
+Default: `[]` (empty means all requested appends are allowed)
+
 ### `$canWith` — Allowed Eager Loads
 
 Allowlist which relationships can be eager loaded:

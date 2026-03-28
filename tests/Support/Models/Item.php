@@ -3,10 +3,13 @@
 namespace Tests\Support\Models;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 
 class Item extends Model
 {
+    protected $fillable = ['name', 'likes'];
+
     public function owner()
     {
         return $this->hasOne(Owner::class);
@@ -37,5 +40,12 @@ class Item extends Model
     public function scopeStartsBefore(Builder $builder, string $date): Builder
     {
         return $builder->where('starts_at', '<=', $date);
+    }
+
+    protected function displayName(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): string => 'Item #' . $this->id,
+        );
     }
 }

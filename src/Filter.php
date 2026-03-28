@@ -19,6 +19,8 @@ use Myerscode\Laravel\QueryStrategies\Transmute\TransmuteInterface;
 
 class Filter
 {
+    private string $appendKey = 'append';
+
     /**
      * If no filter is set or no default is set in strategy, use this
      */
@@ -64,7 +66,10 @@ class Filter
         $this->order();
         $this->limit();
         $this->with();
-        return $this->paginate();
+        $paginated = $this->paginate();
+        $this->appendAccessors($paginated);
+
+        return $paginated;
     }
 
     /**
@@ -369,6 +374,34 @@ class Filter
     }
 
     /**
+     * Append accessors to paginated results
+     */
+    protected function appendAccessors(Paginated $paginated): void
+    {
+        $pieces = $this->query[$this->appendKey] ?? [];
+
+        $requested = array_filter(explode(',', implode(',', is_array($pieces) ? $pieces : [$pieces])));
+
+        if ($requested === []) {
+            return;
+        }
+
+        $allowed = $this->strategy->allowedAppends();
+
+        if ($allowed !== []) {
+            $requested = array_intersect($requested, $allowed);
+        }
+
+        if ($requested === []) {
+            return;
+        }
+
+        $paginated->each(static function (Model $model) use ($requested): void {
+            $model->append($requested);
+        });
+    }
+
+    /**
      * @param array<string, array<int|string, mixed>> $filters
      */
     protected function applyFilters(string $column, array $filters): void
@@ -427,7 +460,7 @@ class Filter
 
         // In strict mode, throw if unknown filter parameters are present
         if ($this->strict) {
-            $systemKeys = [$this->fieldsKey, $this->orderKey, $this->sortKey, $this->limitKey, $this->with, 'page'];
+            $systemKeys = [$this->appendKey, $this->fieldsKey, $this->orderKey, $this->sortKey, $this->limitKey, $this->with, 'page'];
             $allowedKeys = array_merge($filterKeys, $systemKeys);
 
             // Also allow operator overrides and suffixed operators
@@ -605,6 +638,7 @@ class Filter
     private function setConfig(array $config): void
     {
         $this->strict = (bool) ($config['strict'] ?? false);
+        $this->appendKey = $config['append'] ?? 'append';
         $this->fieldsKey = $config['fields'] ?? 'fields';
         $this->orderKey = $config['order'] ?? 'order';
         $this->sortKey = $config['sort'] ?? 'sort';

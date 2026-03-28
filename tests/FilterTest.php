@@ -14,6 +14,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Support\Models\Item;
 use Tests\Support\Models\SoftDeletableItem;
 use Tests\Support\Strategies\AggregateIncludeStrategy;
+use Tests\Support\Strategies\AppendStrategy;
 use Tests\Support\Strategies\ComplexConfigQueryStrategy;
 use Tests\Support\Strategies\DefaultValueStrategy;
 use Tests\Support\Strategies\FieldSelectionStrategy;
@@ -470,6 +471,67 @@ final class FilterTest extends TestCase
         $filter = $this->filter(Item::query(), new AggregateIncludeStrategy(), ['with' => 'secret']);
         $builder = $filter->with()->builder();
         $this->assertSame([], array_keys($builder->getEagerLoads()));
+    }
+
+    public function test_append_adds_accessors_to_results(): void
+    {
+        Item::create(['name' => 'Test', 'likes' => '0']);
+
+        $filter = $this->filter(Item::query(), new AppendStrategy(), ['append' => 'display_name']);
+        $paginated = $filter->apply();
+
+        $first = $paginated->items()[0];
+        $this->assertArrayHasKey('display_name', $first->toArray());
+    }
+
+    public function test_append_all_disallowed_appends_nothing(): void
+    {
+        Item::create(['name' => 'Test', 'likes' => '0']);
+
+        $filter = $this->filter(Item::query(), new AppendStrategy(), ['append' => 'secret_value']);
+        $paginated = $filter->apply();
+
+        $first = $paginated->items()[0];
+        $this->assertArrayNotHasKey('secret_value', $first->toArray());
+        $this->assertArrayNotHasKey('display_name', $first->toArray());
+    }
+
+    public function test_append_filters_disallowed_accessors(): void
+    {
+        Item::create(['name' => 'Test', 'likes' => '0']);
+
+        $filter = $this->filter(Item::query(), new AppendStrategy(), ['append' => 'display_name,secret_value']);
+        $paginated = $filter->apply();
+
+        $first = $paginated->items()[0];
+        $this->assertArrayHasKey('display_name', $first->toArray());
+        $this->assertArrayNotHasKey('secret_value', $first->toArray());
+    }
+
+    public function test_append_with_empty_allowed_permits_all(): void
+    {
+        Item::create(['name' => 'Test', 'likes' => '0']);
+
+        $strategy = new class () extends \Myerscode\Laravel\QueryStrategies\Strategies\Strategy {
+            protected array $config = ['name'];
+        };
+
+        $filter = $this->filter(Item::query(), $strategy, ['append' => 'display_name']);
+        $paginated = $filter->apply();
+
+        $first = $paginated->items()[0];
+        $this->assertArrayHasKey('display_name', $first->toArray());
+    }
+
+    public function test_append_with_no_request_does_not_append(): void
+    {
+        Item::create(['name' => 'Test', 'likes' => '0']);
+
+        $filter = $this->filter(Item::query(), new AppendStrategy(), []);
+        $paginated = $filter->apply();
+
+        $first = $paginated->items()[0];
+        $this->assertArrayNotHasKey('display_name', $first->toArray());
     }
 
     public function test_apply_filter(): void
