@@ -58,13 +58,13 @@ class StrategyManager
     {
         if (class_exists($strategy) && ($strategyClass = new $strategy())) {
             if ($strategyClass instanceof StrategyInterface) {
-                $this->cache[$strategy] = new $strategyClass();
+                $this->cache[$strategy] = $strategyClass;
                 return $this->cache[$strategy];
             }
 
             throw new InvalidStrategyException($strategy . ' does not implement StrategyInterface');
         }
 
-        throw new FilterStrategyNotFoundException('Strategy not found' . $strategy);
+        throw new FilterStrategyNotFoundException('Strategy not found: ' . $strategy);
     }
 }
