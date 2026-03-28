@@ -32,68 +32,12 @@ You can install the package via composer:
 composer require myerscode/laravel-query-strategies
 ```
 
-## Applying strategies
+## Documentation
 
-Getting a filter instance by using one of the following methods:
-
-Using the global helper
-```php
-filter(Item::class)->with(MyStrategy::class);
-```
-
-Use the facade
-```php
-Query::filter(Item::class)->with(MyStrategy::class);
-```
-
-Building it yourself
-```php
-new Filter(Item::query(), new MyStrategy, $request->query->all());
-```
-
-Using the `IsFilterable` trait
-
-```php
-class Foo extends Model
-{
-    use IsFilterableTrait;
-
-    public $strategy = BarStrategy::class;
-}
-```
-
-You can then use the model itself to apply the filter
-
-```php
-$filter = (new Foo)->filter();
-```
-
-You can apply query filters, ordering, limits, includes, pagination.
-
-```php
-$filter->apply(); // Applies filter, order, limit, with methods and returns the paginated query
-$filter->filter(); // Only applies filters and returns the Filter class
-$filter->order(); // Only applies ordering and returns the Filter class
-$filter->limit(); // Only applies limiting and returns the Filter class
-$filter->with(); // Only applies includes and returns the Filter class
-$filter->paginate(); // Applies pagination and returns a LengthAwarePaginator class
-$filter->builder(); // Return the builder
-```
-
-## Strategies
-
-With strategies you can:
-* Have a set disable "default" clauses parameters can use
-* Set what query clauses a parameter can do
-    * You can create custom clauses
-    * Disable clauses from a parameter
-    * Set default clauses the parameter uses
-* Add aliases to your columns
-* Alias clauses to allow better for API experiences
-* Automatically apply `with` the builder can eager load
-* Set query limiting which can be capped to prevent service degradation
-* Set columns the query can be ordered by
-* Paginate the results
+- [Usage](docs/usage.md) — Getting started, filter methods, query parameter syntax, and pagination
+- [Strategies](docs/strategies.md) — Defining strategies, parameter config options, ordering, limiting, and eager loads
+- [Clauses](docs/clauses.md) — Built-in clauses, aliases, and creating custom clauses
+- [Transmutes](docs/transmutes.md) — Value transformation with built-in and custom transmutes
 
 ## License
 
