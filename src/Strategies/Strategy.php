@@ -11,6 +11,8 @@ use Myerscode\Laravel\QueryStrategies\Clause\GreaterThanClause;
 use Myerscode\Laravel\QueryStrategies\Clause\GreaterThanOrEqualsClause;
 use Myerscode\Laravel\QueryStrategies\Clause\IsInClause;
 use Myerscode\Laravel\QueryStrategies\Clause\IsNotInClause;
+use Myerscode\Laravel\QueryStrategies\Clause\IsNotNullClause;
+use Myerscode\Laravel\QueryStrategies\Clause\IsNullClause;
 use Myerscode\Laravel\QueryStrategies\Clause\LessThanClause;
 use Myerscode\Laravel\QueryStrategies\Clause\LessThanOrEqualsClause;
 use Myerscode\Laravel\QueryStrategies\Clause\OrEqualsClause;
@@ -66,6 +68,8 @@ class Strategy implements StrategyInterface
         DoesNotEqualClause::class => ['not', '!'],
         IsInClause::class => ['isIn', 'in'],
         IsNotInClause::class => ['notIn', '!in'],
+        IsNullClause::class => ['isNull', 'null'],
+        IsNotNullClause::class => ['isNotNull', '!null', 'notNull'],
         OrEqualsClause::class => ['or', '||'],
     ];
 

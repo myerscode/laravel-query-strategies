@@ -17,6 +17,8 @@ Clauses define how a filter value is applied to the Eloquent query builder. Each
 | `EndsWithClause` | `WHERE column LIKE %value` | `endsWith`, `%*` |
 | `IsInClause` | `WHERE column IN (...)` | `isIn`, `in` |
 | `IsNotInClause` | `WHERE column NOT IN (...)` | `notIn`, `!in` |
+| `IsNullClause` | `WHERE column IS NULL` | `isNull`, `null` |
+| `IsNotNullClause` | `WHERE column IS NOT NULL` | `isNotNull`, `!null`, `notNull` |
 | `OrEqualsClause` | `OR WHERE column = value` | `or`, `\|\|` |
 | `ScopeClause` | Calls a model scope | — |
 

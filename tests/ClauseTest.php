@@ -13,6 +13,8 @@ use Myerscode\Laravel\QueryStrategies\Clause\GreaterThanClause;
 use Myerscode\Laravel\QueryStrategies\Clause\GreaterThanOrEqualsClause;
 use Myerscode\Laravel\QueryStrategies\Clause\IsInClause;
 use Myerscode\Laravel\QueryStrategies\Clause\IsNotInClause;
+use Myerscode\Laravel\QueryStrategies\Clause\IsNotNullClause;
+use Myerscode\Laravel\QueryStrategies\Clause\IsNullClause;
 use Myerscode\Laravel\QueryStrategies\Clause\LessThanClause;
 use Myerscode\Laravel\QueryStrategies\Clause\LessThanOrEqualsClause;
 use Myerscode\Laravel\QueryStrategies\Clause\OrEqualsClause;
@@ -218,6 +220,51 @@ final class ClauseTest extends TestCase
                 'operator' => '=',
                 'value' => 'foobar',
                 'boolean' => 'or',
+            ],
+        ];
+        $this->assertSame($where, $filter->builder()->getQuery()->wheres);
+    }
+
+    public function test_is_null_filter_clause(): void
+    {
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy());
+        $filter->applyFilter(IsNullClause::class, '', 'test_column');
+
+        $where = [
+            [
+                'type' => 'Null',
+                'column' => 'test_column',
+                'boolean' => 'and',
+            ],
+        ];
+        $this->assertSame($where, $filter->builder()->getQuery()->wheres);
+    }
+
+    public function test_is_null_clause_ignores_value(): void
+    {
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy());
+        $filter->applyFilter(IsNullClause::class, 'anything', 'test_column');
+
+        $where = [
+            [
+                'type' => 'Null',
+                'column' => 'test_column',
+                'boolean' => 'and',
+            ],
+        ];
+        $this->assertSame($where, $filter->builder()->getQuery()->wheres);
+    }
+
+    public function test_is_not_null_filter_clause(): void
+    {
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy());
+        $filter->applyFilter(IsNotNullClause::class, '', 'test_column');
+
+        $where = [
+            [
+                'type' => 'NotNull',
+                'column' => 'test_column',
+                'boolean' => 'and',
             ],
         ];
         $this->assertSame($where, $filter->builder()->getQuery()->wheres);

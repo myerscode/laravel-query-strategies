@@ -188,6 +188,16 @@ final class FilterTest extends TestCase
             ComplexConfigQueryStrategy::class,
             ['foo--contains' => 'bar', 'foo' => 'bar'],
         ];
+        yield 'isNull operator override' => [
+            'select * from "items" where "foo" is null limit 50',
+            ComplexConfigQueryStrategy::class,
+            ['foo--isNull' => ''],
+        ];
+        yield 'isNotNull operator override' => [
+            'select * from "items" where "foo" is not null limit 50',
+            ComplexConfigQueryStrategy::class,
+            ['foo--isNotNull' => ''],
+        ];
     }
 
     public static function providerForGetQueryValues(): Iterator
