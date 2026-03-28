@@ -104,7 +104,7 @@ class Filter
 
             $namedFilters = $this->findNameValues($filterValues);
 
-            $defaultFilters = collect($filterValues)->except(array_keys($namedFilters))->toArray();
+            $defaultFilters = array_diff_key($filterValues, $namedFilters);
 
             $defaultFilter = $parameterConf->defaultMethod();
 
@@ -212,33 +212,39 @@ class Filter
         }
 
         $sortRaw = $this->query[$sortKey] ?? $defaultDirection;
-        $sortValues = collect(is_array($sortRaw) ? $sortRaw : [$sortRaw]);
-        $defaultDirection = $sortValues
-                ->filter(static fn ($value, $key): bool => is_int($key))->pop() ?? $defaultDirection;
+        $sortArray = is_array($sortRaw) ? $sortRaw : [$sortRaw];
 
-        $sortBy = $sortValues->filter(static fn ($value, $key): bool => !is_int($key));
+        $sortBy = [];
+        foreach ($sortArray as $key => $value) {
+            if (is_int($key)) {
+                $defaultDirection = $value;
+            } else {
+                $sortBy[$key] = $value;
+            }
+        }
 
         $orderBy = [];
 
         if (is_array($orderValues)) {
-            $orderBy = collect($orderValues)->mapWithKeys(static function ($value, $key) use ($sortBy, $defaultDirection) {
+            foreach ($orderValues as $key => $value) {
                 if (is_int($key)) {
-                    $direction = $sortBy->get($value) ?? $defaultDirection;
-                    return [$value => $direction];
+                    $orderBy[$value] = $sortBy[$value] ?? $defaultDirection;
+                } elseif (is_array($value)) {
+                    foreach ($value as $v) {
+                        $orderBy[$v] = $key;
+                    }
+                } else {
+                    $orderBy[$value] = $key;
                 }
-
-                if (is_array($value)) {
-                    return collect($value)->mapWithKeys(static fn ($value): array => [$value => $key])->toArray();
-                }
-
-                return [$value => $key];
-            })->toArray();
+            }
         } else {
             $orderBy[strtolower((string) $orderValues)] = strtolower((string) $defaultDirection);
         }
 
-        foreach (collect($orderBy)->only($canOrderBy) as $column => $collection) {
-            $direction = (in_array($collection, $directions)) ? $collection : 'asc';
+        $allowedOrderBy = array_intersect_key($orderBy, array_flip($canOrderBy));
+
+        foreach ($allowedOrderBy as $column => $direction) {
+            $direction = (in_array($direction, $directions)) ? $direction : 'asc';
             $this->builder->orderBy($column, $direction);
         }
 
@@ -313,7 +319,12 @@ class Filter
         if ($parameter->shouldExplode()) {
             $delimiter = $parameter->explodeDelimiter();
             if ($delimiter !== '') {
-                $values = collect($values)->flatMap(static fn ($value): array => array_filter(explode($delimiter, implode($delimiter, is_array($value) ? $value : [$value]))))->toArray();
+                $exploded = [];
+                foreach ($values as $value) {
+                    $parts = array_filter(explode($delimiter, implode($delimiter, is_array($value) ? $value : [$value])));
+                    array_push($exploded, ...$parts);
+                }
+                $values = $exploded;
             }
         }
 
@@ -329,7 +340,7 @@ class Filter
         if ($parameter->shouldExplode()) {
             $delimiter = $parameter->explodeDelimiter();
             if ($delimiter !== '') {
-                $values = collect($values)->map(static fn ($value): array => array_filter(explode($delimiter, implode($delimiter, is_array($value) ? $value : [$value]))))->toArray();
+                $values = array_map(static fn ($value): array => array_filter(explode($delimiter, implode($delimiter, is_array($value) ? $value : [$value]))), $values);
             }
         }
 
@@ -346,31 +357,23 @@ class Filter
         $filterKeys = array_keys($this->strategy->parameters());
 
         // get parameters that can be used to filter this query from the current request
-        $parameters = collect($this->query)->only($filterKeys)->toArray();
+        $parameters = array_intersect_key($this->query, array_flip($filterKeys));
 
         // find fields that have the operator attached as a suffix
-        /** @var array<string, mixed> $exceptQuery */
-        $exceptQuery = collect($this->query)->except($filterKeys)->all();
-        $otherParameters = collect($exceptQuery)
-            ->flatMap(function ($value, string $key): array {
-                $parts = explode('--', $key);
-                // skip if there is no operator or is overriding default
-                $parameterConf = $this->strategy->parameter($parts[0]);
-                if (count($parts) <= 1 || ($parameterConf !== null && $parameterConf->operatorOverride() === $key)) {
-                    return [];
-                }
+        $exceptQuery = array_diff_key($this->query, array_flip($filterKeys));
+        $otherParameters = [];
+        foreach ($exceptQuery as $key => $value) {
+            $parts = explode('--', (string) $key);
+            $parameterConf = $this->strategy->parameter($parts[0]);
+            if (count($parts) <= 1 || ($parameterConf !== null && $parameterConf->operatorOverride() === $key)) {
+                continue;
+            }
+            if (count($parts) === 2 && in_array($parts[0], $filterKeys, true)) {
+                $otherParameters[$parts[0]][$parts[1]] = $value;
+            }
+        }
 
-                if (count($parts) === 2) {
-                    return [$parts[0] => [$parts[1] => $value]];
-                }
-
-                return [];
-            })
-            ->filter()
-            ->only($filterKeys)
-            ->toArray();
-
-        return collect($parameters)->mergeRecursive($otherParameters)->toArray();
+        return array_merge_recursive($parameters, $otherParameters);
     }
 
     /**
@@ -425,9 +428,12 @@ class Filter
      */
     private function parameterOverrides(): array
     {
-        $collection = collect($this->strategy->parameters())->map(static fn (Parameter $parameter): string => $parameter->operatorOverride());
+        $overrideKeys = [];
+        foreach ($this->strategy->parameters() as $parameter) {
+            $overrideKeys[] = $parameter->operatorOverride();
+        }
 
-        return collect($this->query)->only($collection)->toArray();
+        return array_intersect_key($this->query, array_flip($overrideKeys));
     }
 
     /**
@@ -437,9 +443,15 @@ class Filter
     {
         $filterValues = is_array($values) ? $values : [$values];
 
-        $indexedValues = collect($filterValues)->only(range(0, count($filterValues) - 1))->toArray();
-
-        $namedValues = collect($filterValues)->except(range(0, count($filterValues) - 1))->toArray();
+        $indexedValues = [];
+        $namedValues = [];
+        foreach ($filterValues as $key => $value) {
+            if (is_int($key)) {
+                $indexedValues[$key] = $value;
+            } else {
+                $namedValues[$key] = $value;
+            }
+        }
 
         $indexedValues = $this->transmuteValues($indexedValues, $parameter);
         $namedValues = $this->transmuteValues($namedValues, $parameter);
@@ -451,8 +463,7 @@ class Filter
 
         // if there are any disabled filter clauses remove them
         if (($disabled = $parameter->disabled()) !== []) {
-            // TODO remove need for collect
-            return collect($filterValues)->except($disabled)->all();
+            return array_diff_key($filterValues, array_flip($disabled));
         }
 
         return $filterValues;
