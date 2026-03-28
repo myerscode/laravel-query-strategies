@@ -36,7 +36,6 @@ class FilterBuilder
         if (empty($builderOrModel)) {
             throw new BuilderNotSetException();
         }
-        dd("$builderOrModel instanceof Model");
 
         if ($builderOrModel instanceof Builder) {
             $this->builder = $builderOrModel;
@@ -44,6 +43,7 @@ class FilterBuilder
             $this->model = $builderOrModel;
             $this->builder = $builderOrModel->newQuery();
         } elseif (is_string($builderOrModel) && class_exists($builderOrModel) && ($model = app($builderOrModel)) instanceof Model) {
+            $this->model = $model;
             $this->builder = $model->query();
         } else {
             throw new BuilderNotFoundException();
@@ -103,11 +103,12 @@ class FilterBuilder
      */
     public function results(string|StrategyInterface|array|null $possibleStrategy = null): LengthAwarePaginator
     {
-        dd( ($this->model instanceof Model) );
-        dd($this->model->strategyConfig);
-
         if (is_null($possibleStrategy) && ($this->model instanceof Model) && isset($this->model->strategyConfig)) {
             $possibleStrategy = DefaultModelStrategy::fromConfig($this->model->strategyConfig);
+        }
+
+        if (is_null($possibleStrategy)) {
+            throw new BuilderNotSetException('No strategy provided and model has no strategyConfig');
         }
 
         return $this->with($possibleStrategy)->apply();

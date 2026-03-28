@@ -2,12 +2,9 @@
 
 namespace Myerscode\Laravel\QueryStrategies\Strategies;
 
-use Illuminate\Database\Eloquent\Model;
-
 class DefaultModelStrategy extends Strategy
 {
-
-    public function __construct(protected array $parameters)
+    public function __construct(protected array $config)
     {
         parent::__construct();
     }

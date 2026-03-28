@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace Tests;
 
-use PHPUnit\Framework\Attributes\DataProvider;
 use Iterator;
 use Myerscode\Laravel\QueryStrategies\Strategies\Parameter;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 
-/**
- * @coversDefaultClass \Myerscode\Laravel\QueryStrategies\Strategies\Parameter
- */
+#[CoversClass(Parameter::class)]
 final class ParameterTest extends TestCase
 {
 

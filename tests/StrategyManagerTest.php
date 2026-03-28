@@ -6,23 +6,29 @@ namespace Tests;
 
 use Iterator;
 use stdClass;
+use TypeError;
 use Myerscode\Laravel\QueryStrategies\Exceptions\FilterStrategyNotFoundException;
 use Myerscode\Laravel\QueryStrategies\Exceptions\InvalidStrategyException;
 use Myerscode\Laravel\QueryStrategies\Strategies\Strategy;
 use Myerscode\Laravel\QueryStrategies\Strategies\StrategyInterface;
+use Myerscode\Laravel\QueryStrategies\StrategyManager;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Support\Strategies\OverrideQueryStrategy;
 use Tests\Support\Strategies\ComplexConfigQueryStrategy;
 use Tests\Support\Strategies\InvalidStrategy;
 
-/**
- * @coversDefaultClass \Myerscode\Laravel\QueryStrategies\StrategyManager
- */
+#[CoversClass(StrategyManager::class)]
 final class StrategyManagerTest extends TestCase
 {
 
     public static function invalidStrategyExceptionProvider(): Iterator
     {
         yield [InvalidStrategy::class];
+    }
+
+    public static function invalidStrategyTypeErrorProvider(): Iterator
+    {
         yield [new InvalidStrategy];
         yield [new stdClass()];
     }
@@ -51,9 +57,16 @@ final class StrategyManagerTest extends TestCase
     }
 
     #[DataProvider('invalidStrategyExceptionProvider')]
-    public function testThrowsInvalidStrategyException(string|InvalidStrategy|stdClass $possibleStrategy): void
+    public function testThrowsInvalidStrategyException(string $possibleStrategy): void
     {
         $this->expectException(InvalidStrategyException::class);
+        $this->strategyManager()->findStrategy($possibleStrategy);
+    }
+
+    #[DataProvider('invalidStrategyTypeErrorProvider')]
+    public function testThrowsTypeErrorForInvalidObjects(object $possibleStrategy): void
+    {
+        $this->expectException(\TypeError::class);
         $this->strategyManager()->findStrategy($possibleStrategy);
     }
 }

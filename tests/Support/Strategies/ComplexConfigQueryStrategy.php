@@ -17,7 +17,7 @@ class ComplexConfigQueryStrategy extends Strategy
      * {@inheritDoc}
      */
     #[\Override]
-    public $config = [
+    protected array $config = [
         'foo' => [
             'column' => 'foo',
             'methods' => [
@@ -73,7 +73,7 @@ class ComplexConfigQueryStrategy extends Strategy
      * {@inheritDoc}
      */
     #[\Override]
-    protected $canOrderBy = [
+    protected array $canOrderBy = [
         'id',
         'name',
         'date'

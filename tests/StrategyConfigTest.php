@@ -4,16 +4,17 @@ declare(strict_types=1);
 
 namespace Tests;
 
-use PHPUnit\Framework\Attributes\DataProvider;
 use Iterator;
+use Myerscode\Laravel\QueryStrategies\Strategies\Parameter;
+use Myerscode\Laravel\QueryStrategies\Strategies\Strategy;
 use Myerscode\Laravel\QueryStrategies\Strategies\StrategyInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Support\Strategies\ComplexConfigQueryStrategy;
 use Tests\Support\Strategies\OverrideQueryStrategy;
 use Tests\Support\Strategies\BasicConfigQueryStrategy;
 
-/**
- * @coversDefaultClass \Myerscode\Laravel\QueryStrategies\Strategies\AbstractStrategy
- */
+#[CoversClass(Strategy::class)]
 final class StrategyConfigTest extends TestCase
 {
 

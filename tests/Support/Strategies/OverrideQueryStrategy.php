@@ -12,7 +12,7 @@ class OverrideQueryStrategy extends Strategy
      * {@inheritDoc}
      */
     #[\Override]
-    public $config = [
+    protected array $config = [
         'foo' => [
             'column' => 'foo',
             'default' => DoesNotEqualClause::class,
@@ -35,19 +35,19 @@ class OverrideQueryStrategy extends Strategy
      * {@inheritDoc}
      */
     #[\Override]
-    public $limitTo = 5;
+    protected int $limitTo = 5;
 
     /**
      * {@inheritDoc}
      */
     #[\Override]
-    public $maxLimit = 50;
+    protected int $maxLimit = 50;
 
     /**
      * {@inheritDoc}
      */
     #[\Override]
-    protected $canOrderBy = [
+    protected array $canOrderBy = [
         'id',
         'name',
         'likes',

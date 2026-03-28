@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests;
 
-use PHPUnit\Framework\Attributes\DataProvider;
 use Iterator;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Support\Models\Item;
 use Tests\Support\Strategies\BasicConfigQueryStrategy;
 

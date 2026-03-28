@@ -4,18 +4,17 @@ declare(strict_types=1);
 
 namespace Tests;
 
-use PHPUnit\Framework\Attributes\DataProvider;
 use Iterator;
 use Illuminate\Database\Eloquent\Builder;
 use Myerscode\Laravel\QueryStrategies\Clause\EqualsClause;
 use Myerscode\Laravel\QueryStrategies\Filter;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Support\Models\Item;
 use Tests\Support\Strategies\ComplexConfigQueryStrategy;
 use Tests\Support\Strategies\OverrideQueryStrategy;
 
-/**
- * @coversDefaultClass \Myerscode\Laravel\QueryStrategies\Filter
- */
+#[CoversClass(Filter::class)]
 final class FilterTest extends TestCase
 {
 

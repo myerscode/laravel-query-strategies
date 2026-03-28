@@ -88,7 +88,15 @@ final class FilterBuilderTest extends TestCase
 
     public function testCanFilterUsingModelConfigForStrategy(): void
     {
-        filter(Record::class)->results();
+        $this->app['db']->connection()->getSchemaBuilder()->create('records', static function (\Illuminate\Database\Schema\Blueprint $blueprint): void {
+            $blueprint->increments('id');
+            $blueprint->string('foo')->nullable();
+            $blueprint->string('bar')->nullable();
+            $blueprint->timestamps();
+        });
+
+        $result = filter(Record::class)->results();
+        $this->assertInstanceOf(\Illuminate\Pagination\LengthAwarePaginator::class, $result);
     }
 
     public function testFilterWithReturnsInstanceOfFilter(): void

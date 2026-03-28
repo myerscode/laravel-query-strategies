@@ -11,7 +11,7 @@ class BasicConfigQueryStrategy extends Strategy
      * {@inheritDoc}
      */
     #[\Override]
-    public $config = [
+    protected array $config = [
         'foo',
         'bar',
         'hello',
