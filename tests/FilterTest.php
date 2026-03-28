@@ -335,21 +335,21 @@ final class FilterTest extends TestCase
     {
         $filter = $this->filter(Item::query(), new RestrictedWithStrategy(), ['with' => 'owner,categories']);
         $builder = $filter->with()->builder();
-        $this->assertEquals(['owner'], array_keys($builder->getEagerLoads()));
+        $this->assertSame(['owner'], array_keys($builder->getEagerLoads()));
     }
 
     public function test_with_blocks_all_when_none_allowed(): void
     {
         $filter = $this->filter(Item::query(), new RestrictedWithStrategy(), ['with' => 'categories,secret']);
         $builder = $filter->with()->builder();
-        $this->assertEquals([], array_keys($builder->getEagerLoads()));
+        $this->assertSame([], array_keys($builder->getEagerLoads()));
     }
 
     public function test_with_allows_all_when_canwith_empty(): void
     {
         $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy(), ['with' => 'owner,categories']);
         $builder = $filter->with()->builder();
-        $this->assertEquals(['owner', 'categories'], array_keys($builder->getEagerLoads()));
+        $this->assertSame(['owner', 'categories'], array_keys($builder->getEagerLoads()));
     }
 
     public function test_aggregate_include_count(): void
@@ -370,7 +370,7 @@ final class FilterTest extends TestCase
     {
         $filter = $this->filter(Item::query(), new AggregateIncludeStrategy(), ['with' => 'owner,ownerCount']);
         $builder = $filter->with()->builder();
-        $this->assertEquals(['owner'], array_keys($builder->getEagerLoads()));
+        $this->assertSame(['owner'], array_keys($builder->getEagerLoads()));
         $this->assertStringContainsString('owner_count', $this->getRawSqlFromBuilder($builder));
     }
 
@@ -378,7 +378,7 @@ final class FilterTest extends TestCase
     {
         $filter = $this->filter(Item::query(), new AggregateIncludeStrategy(), ['with' => 'secret']);
         $builder = $filter->with()->builder();
-        $this->assertEquals([], array_keys($builder->getEagerLoads()));
+        $this->assertSame([], array_keys($builder->getEagerLoads()));
     }
 
     public function test_can_get_builder(): void
@@ -394,7 +394,7 @@ final class FilterTest extends TestCase
         $strategy = $this->strategyManager()->findStrategy($strategyClass);
         $filter = $this->filter(Item::query(), $strategy, $requestParams);
         $builder = $filter->fields()->builder();
-        $this->assertEquals($expectedSql, $this->getRawSqlFromBuilder($builder));
+        $this->assertSame($expectedSql, $this->getRawSqlFromBuilder($builder));
     }
 
     public static function providerForFields(): Iterator
@@ -440,7 +440,7 @@ final class FilterTest extends TestCase
     {
         $filter = $this->filter(Item::query(), new FieldSelectionStrategy(), ['fields' => 'secret', 'f' => 'id,name'], ['fields' => 'f']);
         $builder = $filter->fields()->builder();
-        $this->assertEquals('select "id", "name" from "items"', $this->getRawSqlFromBuilder($builder));
+        $this->assertSame('select "id", "name" from "items"', $this->getRawSqlFromBuilder($builder));
     }
 
     #[DataProvider('providerForRelationshipFilter')]
@@ -448,7 +448,7 @@ final class FilterTest extends TestCase
     {
         $filter = $this->filter(Item::query(), new RelationshipFilterStrategy(), $requestParams);
         $filter->filter();
-        $this->assertEquals($expectedSql, $this->getRawSqlFromBuilder($filter->builder()));
+        $this->assertSame($expectedSql, $this->getRawSqlFromBuilder($filter->builder()));
     }
 
     public static function providerForRelationshipFilter(): Iterator
@@ -472,7 +472,7 @@ final class FilterTest extends TestCase
     {
         $filter = $this->filter(Item::query(), new ScopeFilterStrategy(), $requestParams);
         $filter->filter();
-        $this->assertEquals($expectedSql, $this->getRawSqlFromBuilder($filter->builder()));
+        $this->assertSame($expectedSql, $this->getRawSqlFromBuilder($filter->builder()));
     }
 
     public static function providerForScopeFilter(): Iterator
@@ -504,7 +504,7 @@ final class FilterTest extends TestCase
     {
         $filter = $this->filter(Item::query(), new DefaultValueStrategy(), $requestParams);
         $filter->filter();
-        $this->assertEquals($expectedSql, $this->getRawSqlFromBuilder($filter->builder()));
+        $this->assertSame($expectedSql, $this->getRawSqlFromBuilder($filter->builder()));
     }
 
     public static function providerForDefaultValues(): Iterator
@@ -537,7 +537,7 @@ final class FilterTest extends TestCase
         $this->softDeletableDatabase($this->app);
         $filter = $this->filter(SoftDeletableItem::query(), new TrashedFilterStrategy(), $requestParams);
         $filter->filter();
-        $this->assertEquals($expectedSql, $this->getRawSqlFromBuilder($filter->builder()));
+        $this->assertSame($expectedSql, $this->getRawSqlFromBuilder($filter->builder()));
     }
 
     public static function providerForTrashedFilter(): Iterator
@@ -568,6 +568,7 @@ final class FilterTest extends TestCase
     {
         $strategy = new class extends \Myerscode\Laravel\QueryStrategies\Strategies\Strategy {
             protected array $config = [];
+
             public function __construct()
             {
                 $this->config = [
@@ -583,13 +584,14 @@ final class FilterTest extends TestCase
 
         $filter = new Filter(Item::query(), $strategy, ['has_posts' => '1']);
         $filter->filter();
-        $this->assertEquals('select * from "items" where "post_count" > \'0\'', $this->getRawSqlFromBuilder($filter->builder()));
+        $this->assertSame('select * from "items" where "post_count" > \'0\'', $this->getRawSqlFromBuilder($filter->builder()));
     }
 
     public function test_callback_filter_receives_value(): void
     {
         $strategy = new class extends \Myerscode\Laravel\QueryStrategies\Strategies\Strategy {
             protected array $config = [];
+
             public function __construct()
             {
                 $this->config = [
@@ -606,13 +608,14 @@ final class FilterTest extends TestCase
 
         $filter = new Filter(Item::query(), $strategy, ['min_score' => '42']);
         $filter->filter();
-        $this->assertEquals('select * from "items" where "score" >= \'42\'', $this->getRawSqlFromBuilder($filter->builder()));
+        $this->assertSame('select * from "items" where "score" >= \'42\'', $this->getRawSqlFromBuilder($filter->builder()));
     }
 
     public function test_callback_filter_not_applied_when_absent(): void
     {
         $strategy = new class extends \Myerscode\Laravel\QueryStrategies\Strategies\Strategy {
             protected array $config = [];
+
             public function __construct()
             {
                 $this->config = [
@@ -628,7 +631,7 @@ final class FilterTest extends TestCase
 
         $filter = new Filter(Item::query(), $strategy, []);
         $filter->filter();
-        $this->assertEquals('select * from "items"', $this->getRawSqlFromBuilder($filter->builder()));
+        $this->assertSame('select * from "items"', $this->getRawSqlFromBuilder($filter->builder()));
     }
 
     #[DataProvider('providerForIgnoredValues')]
@@ -636,7 +639,7 @@ final class FilterTest extends TestCase
     {
         $filter = $this->filter(Item::query(), new IgnoredValuesStrategy(), $requestParams);
         $filter->filter();
-        $this->assertEquals($expectedSql, $this->getRawSqlFromBuilder($filter->builder()));
+        $this->assertSame($expectedSql, $this->getRawSqlFromBuilder($filter->builder()));
     }
 
     public static function providerForIgnoredValues(): Iterator
@@ -684,14 +687,14 @@ final class FilterTest extends TestCase
     {
         $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy(), ['foo' => 'bar'], ['strict' => true]);
         $filter->filter();
-        $this->assertEquals('select * from "items" where "foo" = \'bar\'', $this->getRawSqlFromBuilder($filter->builder()));
+        $this->assertSame('select * from "items" where "foo" = \'bar\'', $this->getRawSqlFromBuilder($filter->builder()));
     }
 
     public function test_strict_mode_allows_system_keys(): void
     {
         $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy(), ['order' => 'id', 'sort' => 'desc', 'limit' => '10', 'with' => 'owner', 'fields' => 'id', 'page' => '1'], ['strict' => true]);
         $filter->filter();
-        $this->assertEquals('select * from "items"', $this->getRawSqlFromBuilder($filter->builder()));
+        $this->assertSame('select * from "items"', $this->getRawSqlFromBuilder($filter->builder()));
     }
 
     public function test_strict_mode_allows_operator_overrides(): void
@@ -705,7 +708,7 @@ final class FilterTest extends TestCase
     {
         $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy(), ['unknown' => 'value'], ['strict' => false]);
         $filter->filter();
-        $this->assertEquals('select * from "items"', $this->getRawSqlFromBuilder($filter->builder()));
+        $this->assertSame('select * from "items"', $this->getRawSqlFromBuilder($filter->builder()));
     }
 
     #[DataProvider('providerForGetQueryValues')]

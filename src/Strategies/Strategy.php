@@ -215,7 +215,7 @@ class Strategy implements StrategyInterface
         /** @var array<int|string, array<string, mixed>|string> $parameters */
         $parameters = $this->config();
 
-        foreach ($parameters as $key => $config) {
+        foreach ($parameters as $config) {
             if (is_array($config) && isset($config['aliases']) && is_array($config['aliases'])) {
                 array_walk($config['aliases'], static function ($alias) use (&$parameters, $config): void {
                     $parameters[$alias] = $config;

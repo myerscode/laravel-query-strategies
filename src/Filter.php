@@ -2,6 +2,7 @@
 
 namespace Myerscode\Laravel\QueryStrategies;
 
+use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -74,8 +75,8 @@ class Filter
         if (class_exists($class) && ($filter = new $class()) instanceof ClauseInterface) {
             if (str_contains($column, '.')) {
                 $parts = explode('.', $column, 2);
-                $this->builder->whereHas($parts[0], static function ($query) use ($filter, $value, $parts): void {
-                    $filter->filter($query, $value, $parts[1]);
+                $this->builder->whereHas($parts[0], static function (Builder $builder) use ($filter, $value, $parts): void {
+                    $filter->filter($builder, $value, $parts[1]);
                 });
             } else {
                 $filter->filter($this->builder, $value, $column);
@@ -134,12 +135,12 @@ class Filter
         foreach ($parameters as $parameter => $values) {
             $parameterConf = $this->strategy->parameter($parameter);
 
-            if ($parameterConf === null) {
+            if (!$parameterConf instanceof Parameter) {
                 continue;
             }
 
             // Handle callback filters directly
-            if ($parameterConf->callback() !== null) {
+            if ($parameterConf->callback() instanceof Closure) {
                 $callbackClause = new CallbackClause($parameterConf->callback());
                 $columnName = $parameterConf->column() ?? $parameter;
                 $callbackClause->filter($this->builder, $values, $columnName);
@@ -200,7 +201,7 @@ class Filter
         foreach ($parameters as $parameter => $values) {
             $parameterConf = $this->strategy->parameter($parameter);
 
-            if ($parameterConf === null) {
+            if (!$parameterConf instanceof Parameter) {
                 continue;
             }
 
@@ -219,7 +220,7 @@ class Filter
     {
         $parameterConf = $this->strategy->parameter($parameter);
 
-        if ($parameterConf === null) {
+        if (!$parameterConf instanceof Parameter) {
             return $this->strategy->defaultMethods();
         }
 
@@ -391,6 +392,7 @@ class Filter
                     $parts = array_filter(explode($delimiter, implode($delimiter, is_array($value) ? $value : [$value])));
                     array_push($exploded, ...$parts);
                 }
+
                 $values = $exploded;
             }
         }
@@ -429,23 +431,25 @@ class Filter
             $allowedKeys = array_merge($filterKeys, $systemKeys);
 
             // Also allow operator overrides and suffixed operators
-            foreach ($this->query as $key => $value) {
+            foreach (array_keys($this->query) as $key) {
                 $keyStr = (string) $key;
                 if (in_array($keyStr, $allowedKeys, true)) {
                     continue;
                 }
+
                 // Check if it's an operator override or suffixed operator
                 $parts = explode('--', $keyStr);
                 if (count($parts) === 2 && in_array($parts[0], $filterKeys, true)) {
                     continue;
                 }
+
                 $parameterConf = $this->strategy->parameter($parts[0]);
-                if ($parameterConf !== null && $parameterConf->operatorOverride() === $keyStr) {
+                if ($parameterConf instanceof Parameter && $parameterConf->operatorOverride() === $keyStr) {
                     continue;
                 }
 
                 throw new InvalidFilterException(
-                    "Filter '{$keyStr}' is not allowed. Allowed filters: " . implode(', ', $filterKeys)
+                    sprintf("Filter '%s' is not allowed. Allowed filters: ", $keyStr) . implode(', ', $filterKeys)
                 );
             }
         }
@@ -459,9 +463,13 @@ class Filter
         foreach ($exceptQuery as $key => $value) {
             $parts = explode('--', (string) $key);
             $parameterConf = $this->strategy->parameter($parts[0]);
-            if (count($parts) <= 1 || ($parameterConf !== null && $parameterConf->operatorOverride() === $key)) {
+            if (count($parts) <= 1) {
                 continue;
             }
+            if ($parameterConf instanceof Parameter && $parameterConf->operatorOverride() === $key) {
+                continue;
+            }
+
             if (count($parts) === 2 && in_array($parts[0], $filterKeys, true)) {
                 $otherParameters[$parts[0]][$parts[1]] = $value;
             }
@@ -576,6 +584,7 @@ class Filter
                     $reindexed[$key] = $value;
                 }
             }
+
             $filterValues = $reindexed;
         }
 

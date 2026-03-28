@@ -60,6 +60,7 @@ class TestCase extends Orchestra
     {
         return new StrategyManager();
     }
+
     protected function getPackageProviders($app)
     {
         return [

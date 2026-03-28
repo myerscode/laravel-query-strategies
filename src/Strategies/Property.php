@@ -6,7 +6,7 @@ class Property
 {
     private mixed $value;
 
-    public function __construct(private mixed $originalValue)
+    public function __construct(private readonly mixed $originalValue)
     {
         $this->value = $originalValue;
     }

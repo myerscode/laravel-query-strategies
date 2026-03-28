@@ -13,29 +13,29 @@ class Item extends Model
     }
 
     /**
-     * @param Builder<Model> $query
+     * @param Builder<Model> $builder
      * @return Builder<Model>
      */
-    public function scopeActive(Builder $query): Builder
+    public function scopeActive(Builder $builder): Builder
     {
-        return $query->where('active', true);
+        return $builder->where('active', true);
     }
 
     /**
-     * @param Builder<Model> $query
+     * @param Builder<Model> $builder
      * @return Builder<Model>
      */
-    public function scopeStartsBefore(Builder $query, string $date): Builder
+    public function scopeStartsBefore(Builder $builder, string $date): Builder
     {
-        return $query->where('starts_at', '<=', $date);
+        return $builder->where('starts_at', '<=', $date);
     }
 
     /**
-     * @param Builder<Model> $query
+     * @param Builder<Model> $builder
      * @return Builder<Model>
      */
-    public function scopeCreatedBetween(Builder $query, string $from, string $to): Builder
+    public function scopeCreatedBetween(Builder $builder, string $from, string $to): Builder
     {
-        return $query->whereBetween('created_at', [$from, $to]);
+        return $builder->whereBetween('created_at', [$from, $to]);
     }
 }
