@@ -20,7 +20,7 @@ class Strategy implements StrategyInterface
     /**
      * The model which to apply this strategy to
      *
-     * @var []
+     * @var array<int, string>
      */
     protected array $canOrderBy = [
         'id',
@@ -29,7 +29,7 @@ class Strategy implements StrategyInterface
     /**
      * Parameter config
      *
-     * @var []
+     * @var array<int|string, array<string, mixed>|string>
      */
     protected array $config = [
         //
@@ -37,6 +37,8 @@ class Strategy implements StrategyInterface
 
     /**
      * Supported default filter methods
+     *
+     * @var array<class-string, array<int, string>>
      */
     protected array $defaultMethods = [
         BeginsWithClause::class => ['beginsWith', '*%'],
@@ -66,7 +68,7 @@ class Strategy implements StrategyInterface
     /**
      * Parameters which can be applied a query
      *
-     * @var Parameter[]
+     * @var array<string, Parameter>
      */
     protected array $parameters = [
         //
@@ -88,7 +90,7 @@ class Strategy implements StrategyInterface
     /**
      * Get cofig for filter keys and validators to be applied to them
      *
-     * @return string[]
+     * @return array<int|string, array<string, mixed>|string>
      */
     public function config(): array
     {
@@ -98,7 +100,7 @@ class Strategy implements StrategyInterface
     /**
      * Get collection of default methods
      *
-     * @return string[]
+     * @return array<string, string>
      */
     public function defaultMethods(): array
     {
@@ -130,8 +132,6 @@ class Strategy implements StrategyInterface
 
     /**
      * Get the compiled filter parameter config
-     *
-     * @return Parameter
      */
     public function parameter(string $parameter): ?Parameter
     {
@@ -141,7 +141,7 @@ class Strategy implements StrategyInterface
     /**
      * Get collection of filter keys and validators to be applied to them
      *
-     * @return string[]
+     * @return array<string, Parameter>
      */
     public function parameters(): array
     {
@@ -153,10 +153,11 @@ class Strategy implements StrategyInterface
      */
     private function compile(): void
     {
-        $parameters = $this->config() ?? [];
+        /** @var array<int|string, array<string, mixed>|string> $parameters */
+        $parameters = $this->config();
 
-        foreach ($parameters as $config) {
-            if (isset($config['aliases']) && is_array($config['aliases'])) {
+        foreach ($parameters as $key => $config) {
+            if (is_array($config) && isset($config['aliases']) && is_array($config['aliases'])) {
                 array_walk($config['aliases'], static function ($alias) use (&$parameters, $config): void {
                     $parameters[$alias] = $config;
                 });
@@ -168,8 +169,9 @@ class Strategy implements StrategyInterface
                 $name = $config;
                 $parameter = new Parameter($config, []);
             } else {
-                $name = $parameter;
-                $parameter = new Parameter($parameter, $config);
+                $name = (string) $parameter;
+                /** @var array<string, mixed> $config */
+                $parameter = new Parameter($name, $config);
             }
 
             $this->setParameter($name, $parameter);

@@ -4,10 +4,18 @@ namespace Myerscode\Laravel\QueryStrategies;
 
 use Illuminate\Pagination\LengthAwarePaginator;
 
+/**
+ * @extends LengthAwarePaginator<int, mixed>
+ */
 class Paginated extends LengthAwarePaginator
 {
+    /** @var array<string, mixed>|null */
+    protected ?array $appliedFilters = null;
+
     /**
      * Get query filters applied to the query
+     *
+     * @return array<string, mixed>|null
      */
     public function getAppliedFilters(): ?array
     {
@@ -17,7 +25,7 @@ class Paginated extends LengthAwarePaginator
     /**
      * Get the meta data of the paginated query
      *
-     * @return array{count: int, firstItem: int, lastItem: int, total: int, hasMorePage: bool, currentPageUrl: string, previousPageUrl: string, nextPageUrl: string, currentPage: int, lastPage: int, perPage: int, appliedFilters: mixed[]|null}
+     * @return array{count: int, firstItem: int|null, lastItem: int|null, total: int, hasMorePage: bool, currentPageUrl: string, previousPageUrl: string, nextPageUrl: string, currentPage: int, lastPage: int, perPage: int, appliedFilters: array<string, mixed>|null}
      */
     public function getMeta(): array
     {

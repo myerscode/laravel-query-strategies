@@ -4,9 +4,9 @@ namespace Myerscode\Laravel\QueryStrategies\Strategies;
 
 class Property
 {
-    private $value;
+    private mixed $value;
 
-    public function __construct(private $originalValue)
+    public function __construct(private mixed $originalValue)
     {
         $this->value = $originalValue;
     }

@@ -3,13 +3,15 @@
 namespace Myerscode\Laravel\QueryStrategies\Clause;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 class LessThanOrEqualsClause extends AbstractClause
 {
     /**
-     * {@inheritdoc}
+     * @param Builder<Model> $builder
+     * @return Builder<Model>
      */
-    public function filter(Builder $builder, $value, $column): Builder
+    public function filter(Builder $builder, mixed $value, string $column): Builder
     {
         if (!empty($value)) {
             $values = is_array($value) ? $value : [$value];

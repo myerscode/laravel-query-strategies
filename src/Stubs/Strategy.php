@@ -8,8 +8,10 @@ class DummyClass extends Strategy
 {
     /**
      * {@inheritdoc}
+     *
+     * @var array<string, array<string, mixed>>
      */
-    public $config = [
+    protected array $config = [
         //
     ];
 }

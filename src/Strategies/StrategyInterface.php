@@ -6,13 +6,15 @@ interface StrategyInterface
 {
     /**
      * Get the keys that can be used to order the results
+     *
+     * @return array<int, string>
      */
     public function canOrderBy(): array;
 
     /**
      * Get filter config matrix
      *
-     * @return mixed[]
+     * @return array<string, string>
      */
     public function defaultMethods(): array;
 
@@ -28,15 +30,13 @@ interface StrategyInterface
 
     /**
      * Get filter config matrix
-     *
-     * @return Parameter
      */
     public function parameter(string $name): ?Parameter;
 
     /**
      * Get filter config matrix
      *
-     * @return Parameter[]
+     * @return array<string, Parameter>
      */
     public function parameters(): array;
 }

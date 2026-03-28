@@ -3,9 +3,12 @@
 namespace Myerscode\Laravel\QueryStrategies\Facades;
 
 use Illuminate\Support\Facades\Facade;
+use Myerscode\Laravel\QueryStrategies\FilterBuilder;
 
 /**
- * @see \Myerscode\Laravel\QueryStrategies\FilterBuilder
+ * @method static FilterBuilder filter(mixed $builderOrModel)
+ *
+ * @see FilterBuilder
  */
 class Query extends Facade
 {

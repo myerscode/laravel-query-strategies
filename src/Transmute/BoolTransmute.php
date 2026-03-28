@@ -17,7 +17,7 @@ class BoolTransmute implements TransmuteInterface
         return $property;
     }
 
-    protected function isTrue($value): bool
+    protected function isTrue(mixed $value): bool
     {
         return $value == 'ok' || (true === filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE));
     }

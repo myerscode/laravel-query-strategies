@@ -15,6 +15,7 @@ use Myerscode\Laravel\QueryStrategies\Strategies\StrategyInterface;
 
 class FilterBuilder
 {
+    /** @var Builder<Model>|null */
     private ?Builder $builder = null;
 
     private ?Model $model = null;
@@ -24,13 +25,16 @@ class FilterBuilder
     {
     }
 
+    /**
+     * @return Builder<Model>|null
+     */
     public function builder(): ?Builder
     {
         return $this->builder;
     }
 
     /**
-     * The config the will be built eiyh
+     * The config the will be built with
      * @return array{order: mixed, sort: mixed, limit: mixed, page: mixed, with: mixed}
      */
     public function config(): array
@@ -47,11 +51,11 @@ class FilterBuilder
     /**
      * Set the builder which we will be used for querying
      *
-     * @param $builderOrModel
+     * @param Builder<Model>|Model|string $builderOrModel
      * @throws BuilderNotFoundException
      * @throws BuilderNotSetException
      */
-    public function filter($builderOrModel): FilterBuilder
+    public function filter(Builder|Model|string $builderOrModel): FilterBuilder
     {
         $this->setBuilder($builderOrModel);
 
@@ -59,6 +63,8 @@ class FilterBuilder
     }
 
     /**
+     * @param string|StrategyInterface|array<int|string, array<string, mixed>|string>|null $possibleStrategy
+     * @return LengthAwarePaginator<int, mixed>
      * @throws BuilderNotSetException
      * @throws FilterStrategyNotFoundException
      * @throws InvalidStrategyException
@@ -79,7 +85,7 @@ class FilterBuilder
     /**
      * Apply a possible strategy by name or a given class
      *
-     * @param  string|StrategyInterface|null  $possibleStrategy
+     * @param string|StrategyInterface|array<int|string, array<string, mixed>|string> $possibleStrategy
      *
      * @throws BuilderNotSetException
      * @throws FilterStrategyNotFoundException
@@ -91,12 +97,20 @@ class FilterBuilder
             throw new BuilderNotSetException();
         }
 
+        if (is_array($possibleStrategy)) {
+            $possibleStrategy = DefaultModelStrategy::fromConfig($possibleStrategy);
+        }
+
         $strategy = $this->strategyManager->findStrategy($possibleStrategy);
         return new Filter($this->builder, $strategy, $this->request->query->all(), $this->config());
     }
 
     protected function hasFilterTrait(): bool
     {
+        if (!$this->model instanceof Model) {
+            return false;
+        }
+
         $usedTraits = class_uses($this->model);
 
         return $usedTraits && in_array(IsFilterableTrait::class, $usedTraits);
@@ -105,11 +119,11 @@ class FilterBuilder
     /**
      * Get a query builder via the passed by checking if its a model or already a builder
      *
-     * @param $builderOrModel
+     * @param Builder<Model>|Model|string $builderOrModel
      * @throws BuilderNotFoundException
      * @throws BuilderNotSetException
      */
-    private function setBuilder($builderOrModel): void
+    private function setBuilder(Builder|Model|string $builderOrModel): void
     {
         if (empty($builderOrModel)) {
             throw new BuilderNotSetException();
@@ -120,7 +134,7 @@ class FilterBuilder
         } elseif ($builderOrModel instanceof Model) {
             $this->model = $builderOrModel;
             $this->builder = $builderOrModel->newQuery();
-        } elseif (is_string($builderOrModel) && class_exists($builderOrModel) && ($model = app($builderOrModel)) instanceof Model) {
+        } elseif (class_exists($builderOrModel) && ($model = app($builderOrModel)) instanceof Model) {
             $this->model = $model;
             $this->builder = $model->query();
         } else {

@@ -18,27 +18,26 @@ class Parameter
 
     private ?string $default = null;
 
+    /** @var array<int|string, string> */
     private array $disabled = [];
 
     private bool $explode = false;
 
     private string $explodeDelimiter;
 
-    /**
-     * @var array
-     */
-    private $methods = [];
+    /** @var array<string, string> */
+    private array $methods = [];
 
     private ?string $multi = null;
 
-    /**
-     * @var string
-     */
-    private $overrideParameter;
+    private string $overrideParameter;
 
     private ?string $transmute = null;
 
 
+    /**
+     * @param array<string, mixed> $configuration
+     */
     public function __construct(private readonly ?string $name, array $configuration)
     {
         $this->bindConfig($configuration);
@@ -62,6 +61,8 @@ class Parameter
 
     /**
      * What parameters are disabled
+     *
+     * @return array<int|string, string>
      */
     public function disabled(): array
     {
@@ -78,6 +79,8 @@ class Parameter
 
     /**
      * What custom methods can this parameter use
+     *
+     * @return array<string, string>
      */
     public function methods(): array
     {
@@ -95,17 +98,15 @@ class Parameter
     /**
      * The name of this parameter
      */
-    public function name(): string
+    public function name(): ?string
     {
         return $this->name;
     }
 
     /**
      * The operator override key
-     *
-     * @return string
      */
-    public function operatorOverride()
+    public function operatorOverride(): string
     {
         return $this->overrideParameter;
     }
@@ -126,6 +127,9 @@ class Parameter
         return $this->transmute;
     }
 
+    /**
+     * @param array<string, mixed> $configuration
+     */
     private function bindConfig(array $configuration): void
     {
         $this->column = $configuration['column'] ?? $this->name;

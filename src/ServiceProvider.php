@@ -28,7 +28,7 @@ class ServiceProvider extends LaravelServiceProvider
     /**
      * Get the services provided by the provider.
      *
-     * @return array
+     * @return array<int, string>
      */
     #[Override]
     public function provides()

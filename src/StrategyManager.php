@@ -10,7 +10,7 @@ use Myerscode\Laravel\QueryStrategies\Strategies\StrategyInterface;
 class StrategyManager
 {
     /**
-     * @var StrategyInterface[]
+     * @var array<string, StrategyInterface>
      */
     private array $cache = [];
 
@@ -42,12 +42,10 @@ class StrategyManager
 
     /**
      * Create a safe slug for caching the strategy
-     *
-     * @param $strategyName
      */
     private function getCacheName(string $strategyName): string
     {
-        return preg_replace('#[^A-Za-z0-9-]+#', '-', strtolower(trim($strategyName)));
+        return (string) preg_replace('#[^A-Za-z0-9-]+#', '-', strtolower(trim($strategyName)));
     }
 
     /**
