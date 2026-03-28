@@ -1,6 +1,6 @@
 # Transmutes
 
-Transmutes transform parameter values before they are applied as filter clauses. This is useful when the user-facing value differs from the database value.
+Transmutes transform parameter values before they reach the clause. This is useful when the value a user sends doesn't match what the database expects.
 
 ## Built-in Transmutes
 
@@ -8,8 +8,10 @@ Transmutes transform parameter values before they are applied as filter clauses.
 
 Converts boolean-like strings to `1` or `0`:
 
-- Truthy values: `'ok'`, `'true'`, `'yes'`, `'1'`, `true`
-- Everything else becomes `0`
+| Input | Output |
+|---|---|
+| `'ok'`, `'true'`, `'yes'`, `'1'`, `true` | `1` |
+| Everything else | `0` |
 
 ```php
 protected array $config = [
@@ -19,19 +21,21 @@ protected array $config = [
 ];
 ```
 
-With this config, `?active=yes` becomes `WHERE active = 1`.
+`?active=yes` becomes `WHERE active = 1`.
+`?active=no` becomes `WHERE active = 0`.
 
 ## Creating a Custom Transmute
 
-Generate a transmute using the artisan command:
+Generate one with artisan:
 
 ```bash
 php artisan make:transmute DateTransmute
 ```
 
-This creates a class in `app/Queries/Transmute/`. Implement the `transmute` method:
+This creates `app/Queries/Transmute/DateTransmute.php`. Implement the `transmute` method:
 
 ```php
+use Carbon\Carbon;
 use Myerscode\Laravel\QueryStrategies\Strategies\Property;
 use Myerscode\Laravel\QueryStrategies\Transmute\TransmuteInterface;
 
@@ -39,7 +43,7 @@ class DateTransmute implements TransmuteInterface
 {
     public function transmute(Property $property): Property
     {
-        $date = \Carbon\Carbon::parse($property->getOriginalValue());
+        $date = Carbon::parse($property->getOriginalValue());
         $property->setValue($date->toDateString());
 
         return $property;
@@ -47,16 +51,25 @@ class DateTransmute implements TransmuteInterface
 }
 ```
 
-The `Property` object holds both the original value (`getOriginalValue()`) and the transformed value (`getValue()` / `setValue()`).
+The `Property` object holds both the original value (`getOriginalValue()`) and the transformed value (`getValue()` / `setValue()`). The original is preserved so you can reference it if needed.
 
-### Using a Custom Transmute
+Use it in your strategy:
 
 ```php
 protected array $config = [
     'created_after' => [
         'column'    => 'created_at',
         'transmute' => DateTransmute::class,
-        'default'   => GreaterThanOrEqualsClause::class,
+        'filter'    => GreaterThanOrEqualsClause::class,
     ],
 ];
 ```
+
+`?created_after=last+monday` becomes `WHERE created_at >= '2024-03-25'` (or whatever date Carbon parses).
+
+## Other Transmute Ideas
+
+- **SlugTransmute** — convert user input to a slug before filtering (`My Product` → `my-product`)
+- **LowercaseTransmute** — normalise case for case-sensitive columns
+- **CurrencyTransmute** — convert `$19.99` to `1999` for integer cent columns
+- **EnumTransmute** — map human-readable labels to enum values

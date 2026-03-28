@@ -1,15 +1,19 @@
 # Usage
 
-## Getting a Filter Instance
+## Getting Started
 
-There are several ways to create a filter and apply a strategy:
+There are three ways to create a filter. All of them produce the same result — pick whichever fits your style.
 
-### Namespaced Helper
+### Helper Function
 
 ```php
 use function Myerscode\Laravel\QueryStrategies\filter;
 
-filter(Item::class)->with(MyStrategy::class)->apply();
+// In a controller
+public function index()
+{
+    return filter(Product::class)->with(ProductStrategy::class)->apply();
+}
 ```
 
 ### Facade
@@ -17,189 +21,242 @@ filter(Item::class)->with(MyStrategy::class)->apply();
 ```php
 use Myerscode\Laravel\QueryStrategies\Facades\Query;
 
-Query::filter(Item::class)->with(MyStrategy::class)->apply();
+public function index()
+{
+    return Query::filter(Product::class)->with(ProductStrategy::class)->apply();
+}
 ```
 
 ### Direct Instantiation
 
+Useful when you want full control over the query and request data:
+
 ```php
 use Myerscode\Laravel\QueryStrategies\Filter;
 
-$filter = new Filter(Item::query(), new MyStrategy(), $request->query->all());
-$filter->apply();
+$filter = new Filter(
+    Product::query()->where('store_id', $storeId), // start from an existing builder
+    new ProductStrategy(),
+    $request->query->all(),
+);
+
+return $filter->apply();
 ```
 
-### IsFilterable Trait
+## Model-Based Filtering
 
-Add the trait to your model and set the `$strategy` property:
+If a model always uses the same strategy, add the `IsFilterableTrait` and set the `$strategy` property:
 
 ```php
 use Myerscode\Laravel\QueryStrategies\IsFilterableTrait;
 
-class Item extends Model
+class Product extends Model
 {
     use IsFilterableTrait;
 
-    public string $strategy = ItemStrategy::class;
+    public string $strategy = ProductStrategy::class;
 }
 ```
 
 Then filter directly from the model:
 
 ```php
-$paginated = (new Item)->filter()->apply();
+// Uses the strategy defined on the model
+$paginated = (new Product)->filter()->apply();
 ```
 
-Models with a `$strategy` property are also automatically picked up by `results()`:
+The `results()` method also auto-detects the strategy:
 
 ```php
-use function Myerscode\Laravel\QueryStrategies\filter;
-
-// No need to pass a strategy — it's read from the model
-$paginated = filter(Item::class)->results();
+// No need to pass a strategy — it reads $strategy from the model
+$paginated = filter(Product::class)->results();
 ```
 
 ## Filter Methods
 
-Once you have a `Filter` instance, you can call these methods:
+`apply()` runs everything in one call: field selection, filters, ordering, limiting, eager loads, accessor appending, and pagination. But you can also call each step individually:
 
-| Method | Description |
+| Method | What it does |
 |---|---|
-| `apply()` | Applies field selection, filters, ordering, limiting, eager loads, and returns paginated results |
-| `fields()` | Applies only field selection (SELECT columns) and returns the Filter |
-| `filter()` | Applies only WHERE clauses and returns the Filter |
-| `order()` | Applies only ORDER BY and returns the Filter |
-| `limit()` | Applies only LIMIT and returns the Filter |
-| `with()` | Applies only eager loads and returns the Filter |
-| `paginate()` | Paginates the query and returns a `Paginated` instance |
+| `apply()` | Runs all steps and returns paginated results |
+| `fields()` | Applies `SELECT` column restrictions |
+| `filter()` | Applies `WHERE` clauses from request parameters |
+| `order()` | Applies `ORDER BY` |
+| `limit()` | Applies `LIMIT` |
+| `with()` | Applies eager loads and aggregate includes |
+| `paginate()` | Paginates and returns a `Paginated` instance |
 | `builder()` | Returns the underlying Eloquent Builder |
 
 Methods are chainable, so you can selectively apply what you need:
 
 ```php
-use function Myerscode\Laravel\QueryStrategies\filter;
+$filter = filter(Product::class)->with(ProductStrategy::class);
 
-$filter = filter(Item::class)->with(MyStrategy::class);
-
-// Only apply filters and ordering, then get the builder
+// Only apply filters and ordering, then get the raw builder
 $builder = $filter->filter()->order()->builder();
+$products = $builder->get();
 
 // Or apply everything and get paginated results
 $paginated = $filter->apply();
 ```
 
-## Query Parameter Syntax
+## Query Parameters
 
-### Field Selection
-
-```
-?fields=id,name,email       → Select only specific columns
-```
-
-Only columns listed in the strategy's `$allowedFields` array are permitted. If `$allowedFields` is empty, all requested fields are allowed. If all requested fields are disallowed, the default `SELECT *` is used.
+All examples below assume the default parameter names. These can be [customised via config](configuration.md).
 
 ### Filtering
 
+The simplest filter — pass a parameter name and value:
+
 ```
-?name=John              → Applies default clause (equals) to 'name'
-?name=John&name=Jane    → Multiple values (uses multi-clause, e.g. whereIn)
+GET /products?name=Laptop
+→ WHERE name = 'Laptop'
 ```
+
+Multiple values for the same parameter use the multi-clause (defaults to `whereIn`):
+
+```
+GET /products?category_id=1&category_id=2
+→ WHERE category_id IN (1, 2)
+```
+
+### Operator Overrides
+
+Override the default clause for a parameter by appending `--` and the clause alias:
+
+```
+GET /products?name--contains=lap
+→ WHERE name LIKE '%lap%'
+
+GET /products?price--gte=100
+→ WHERE price >= 100
+
+GET /products?created_at--between=2024-01-01,2024-12-31
+→ WHERE created_at BETWEEN '2024-01-01' AND '2024-12-31'
+```
+
+See [Clauses](clauses.md) for all available aliases.
 
 ### Relationship Filtering
 
-Use dot notation in your strategy config to filter through relationships via `whereHas`:
+Use dot notation to filter through relationships. This generates a `whereHas` query:
 
 ```
-?owner.name=John        → WHERE EXISTS (SELECT * FROM owners WHERE name = 'John')
+GET /products?category.name=Electronics
+→ WHERE EXISTS (SELECT * FROM categories WHERE products.category_id = categories.id AND name = 'Electronics')
 ```
 
-You can also alias relationship filters to hide the dot notation from API consumers:
+You can also alias relationship filters to keep your API clean:
 
 ```php
-// In your strategy config:
-'author_name' => ['column' => 'author.name']
+// In your strategy config
+'author' => ['column' => 'reviews.author_name']
 
-// Then: ?author_name=John → whereHas('author', fn($q) => $q->where('name', 'John'))
+// Then: GET /products?author=John
+// Generates: whereHas('reviews', fn($q) => $q->where('author_name', 'John'))
 ```
 
-### Operator Override
+### Field Selection
+
+Request only the columns you need:
 
 ```
-?name--contains=John        → Use 'contains' clause instead of default
-?name--operator=contains    → Alternative syntax for operator override
+GET /products?fields=id,name,price
+→ SELECT id, name, price FROM products
 ```
+
+Controlled by the strategy's `$allowedFields`. If a requested field isn't in the allowlist, it's silently dropped. If all fields are dropped, the default `SELECT *` is used.
 
 ### Ordering
 
 ```
-?order=id                   → Order by 'id' ascending
-?order=id&sort=desc         → Order by 'id' descending
-?order[]=id&order[]=name    → Multiple order by columns
-?order=owner.name           → Order by a relationship column (subquery)
-?order=owner.name&sort=desc → Relationship column descending
+GET /products?order=price&sort=desc
+→ ORDER BY price DESC
+
+GET /products?order[]=name&order[]=price
+→ ORDER BY name ASC, price ASC
 ```
 
-Relationship sorting uses a subquery to order by a column on a related model. The relationship must be defined on the model and the dot-notation column must be listed in the strategy's `$canOrderBy` array.
+Sort by a relationship column using dot notation:
+
+```
+GET /products?order=category.name&sort=asc
+→ ORDER BY (SELECT categories.name FROM categories WHERE ...) ASC
+```
+
+The relationship must exist on the model and the dot-notation column must be in the strategy's `$canOrderBy` array.
 
 ### Limiting
 
 ```
-?limit=10                   → Return 10 results (capped at strategy's maxLimit)
+GET /products?limit=25
+→ LIMIT 25
 ```
+
+Capped at the strategy's `$maxLimit`. Values below 1 or non-numeric values fall back to the strategy's `$limitTo` default.
 
 ### Eager Loading
 
 ```
-?with=owner,categories      → Eager load relationships
+GET /products?with=category,reviews
+→ Eager loads the category and reviews relationships
 ```
 
-Only relationships listed in the strategy's `$canWith` array are allowed. If `$canWith` is empty, all relationships are permitted.
-
-### Appending Accessors
-
-```
-?append=full_name,avatar_url → Append model accessors to results
-```
-
-Only accessors listed in the strategy's `$allowedAppends` array are permitted. If `$allowedAppends` is empty, all requested appends are allowed. Appends are applied after pagination, so they operate on the result collection.
+Controlled by the strategy's `$canWith`. If `$canWith` is empty, all relationships are allowed.
 
 ### Aggregate Includes
 
-Include relationship counts and aggregates alongside eager loads:
+Request relationship counts and aggregates alongside eager loads:
 
 ```
-?with=ownerCount            → withCount('owner')
-?with=owner,ownerCount      → Eager load + count
+GET /products?with=category,reviewsCount
+→ Eager loads category + adds reviews_count column
 ```
 
-Aggregates are defined in the strategy's `$aggregateIncludes` property. Supported types: `count`, `exists`, `sum`, `avg`, `min`, `max`.
+Aggregates are defined in the strategy's `$aggregateIncludes`. Supported types: `count`, `exists`, `sum`, `avg`, `min`, `max`.
+
+### Appending Accessors
+
+Append computed model attributes to the response:
+
+```
+GET /products?append=discount_price,formatted_price
+→ Each product in the response includes discount_price and formatted_price
+```
+
+Controlled by the strategy's `$allowedAppends`. Appends run after pagination, so they operate on the result collection — not the query.
 
 ### Pagination
 
 ```
-?page=2                     → Get page 2 of results
+GET /products?page=2
+→ Returns page 2 of results
 ```
 
 ## Paginated Response
 
 The `Paginated` class extends Laravel's `LengthAwarePaginator` and adds:
 
-- `getAppliedFilters()` — returns the filters that were applied to the query
-- `getMeta()` — returns comprehensive pagination metadata:
+`getMeta()` returns comprehensive pagination metadata, useful for API responses:
 
 ```php
-[
-    'count'           => 10,
-    'firstItem'       => 1,
-    'lastItem'        => 10,
-    'total'           => 100,
-    'hasMorePage'     => true,
-    'currentPageUrl'  => 'http://...',
-    'previousPageUrl' => 'http://...',
-    'nextPageUrl'     => 'http://...',
-    'currentPage'     => 1,
-    'lastPage'        => 10,
-    'perPage'         => 10,
-    'appliedFilters'  => ['name' => ['John']],
-]
+$paginated = filter(Product::class)->with(ProductStrategy::class)->apply();
+
+$paginated->getMeta();
+// [
+//     'count'           => 10,
+//     'firstItem'       => 1,
+//     'lastItem'        => 10,
+//     'total'           => 247,
+//     'hasMorePage'     => true,
+//     'currentPageUrl'  => 'http://example.com/products?page=1',
+//     'previousPageUrl' => '',
+//     'nextPageUrl'     => 'http://example.com/products?page=2',
+//     'currentPage'     => 1,
+//     'lastPage'        => 25,
+//     'perPage'         => 10,
+//     'appliedFilters'  => ['name' => ['Laptop']],
+// ]
 ```
+
+`getAppliedFilters()` returns just the filters that were applied, useful for debugging or displaying active filters in a UI.

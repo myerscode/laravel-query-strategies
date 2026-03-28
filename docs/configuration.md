@@ -2,13 +2,11 @@
 
 ## Publishing the Config
 
-Publish the configuration file to customise query parameter names:
-
 ```bash
 php artisan vendor:publish --tag=config --provider="Myerscode\Laravel\QueryStrategies\ServiceProvider"
 ```
 
-This creates `config/query-strategies.php`.
+This creates `config/query-strategies.php`. If you don't publish it, the package uses sensible defaults.
 
 ## Options
 
@@ -27,31 +25,39 @@ return [
 ];
 ```
 
-### Strict Mode
+## Strict Mode
 
-| Key | Default | Description |
+When `strict` is `true`, any query parameter that isn't a recognised filter, system key, or operator override throws an `InvalidFilterException`. This is useful for APIs where you want to catch typos or prevent consumers from guessing at filter names.
+
+```php
+'strict' => true,
+```
+
+When `strict` is `false` (the default), unknown parameters are silently ignored.
+
+You can also enable strict mode per-request by passing it in the config array:
+
+```php
+$filter = new Filter($builder, $strategy, $request->query->all(), ['strict' => true]);
+```
+
+## Parameter Names
+
+Each key maps an internal concept to the query parameter name your API exposes. Change these if your API conventions differ from the defaults:
+
+| Key | Default | What it controls |
 |---|---|---|
-| `strict` | `false` | When `true`, throws `InvalidFilterException` if a query parameter is not a recognised filter, system key, or operator override |
+| `order` | `order` | Column to sort by |
+| `sort` | `sort` | Sort direction (`asc` / `desc`) |
+| `limit` | `limit` | Results per page |
+| `page` | `page` | Page number |
+| `with` | `with` | Relationships to eager load |
+| `fields` | `fields` | Columns to select |
+| `append` | `append` | Model accessors to append |
 
-When strict mode is enabled, any unknown query parameter will throw an exception with a message listing the allowed filters. This is useful for APIs where you want to prevent typos or unauthorised filter attempts from silently being ignored.
+## Example: Custom Parameter Names
 
-### Parameter Keys
-
-Each key maps an internal concept to the query parameter name your API exposes:
-
-| Key | Default | Description |
-|---|---|---|
-| `order` | `order` | Parameter for specifying which column to order results by |
-| `sort` | `sort` | Parameter for specifying sort direction (`asc` or `desc`) |
-| `limit` | `limit` | Parameter for limiting the number of results returned |
-| `page` | `page` | Parameter for pagination page number |
-| `with` | `with` | Parameter for specifying relationships to eager load |
-| `fields` | `fields` | Parameter for selecting specific columns |
-| `append` | `append` | Reserved for future use |
-
-## Example
-
-If your API uses `sort_by` instead of `order` and `per_page` instead of `limit`:
+If your API uses different conventions:
 
 ```php
 return [
@@ -61,10 +67,16 @@ return [
         'limit'  => 'per_page',
         'page'   => 'page',
         'with'   => 'include',
-        'fields' => 'fields',
+        'fields' => 'select',
         'append' => 'append',
     ],
 ];
 ```
 
-Users would then query with `?sort_by=name&direction=desc&per_page=25&include=owner`.
+Consumers would then query with:
+
+```
+GET /products?sort_by=name&direction=desc&per_page=25&include=category&select=id,name
+```
+
+The strategy and filter logic stays the same — only the URL parameter names change.

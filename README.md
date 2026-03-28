@@ -1,6 +1,6 @@
 # Laravel Query Strategies
 
-A package to help build queries with Eloquent Builder from URL parameters in a request.
+Build safe, flexible API endpoints by turning URL query parameters into Eloquent queries. Define a strategy that controls exactly which filters, sorts, fields, and relationships your API consumers can use.
 
 [![Latest Stable Version](https://poser.pugx.org/myerscode/laravel-query-strategies/v/stable)](https://packagist.org/packages/myerscode/laravel-query-strategies)
 [![Total Downloads](https://poser.pugx.org/myerscode/laravel-query-strategies/downloads)](https://packagist.org/packages/myerscode/laravel-query-strategies)
@@ -14,31 +14,68 @@ A package to help build queries with Eloquent Builder from URL parameters in a r
 - PHP ^8.5
 - Laravel ^13.0
 
-## Why this package is helpful?
+## Quick Example
 
-If you want to apply query clauses to Eloquent Models using parameters passed by the user, then this package will allow you to create strategies that will enable them to be applied automatically.
+Given a `ProductStrategy` that defines which parameters are allowed:
 
-Using query strategies you can define what properties a user can have access to offering a safer way for them interact with your data schemas.
+```php
+class ProductStrategy extends Strategy
+{
+    protected array $canOrderBy = ['name', 'price', 'created_at'];
+    protected array $canWith = ['category', 'reviews'];
+    protected array $allowedFields = ['id', 'name', 'price', 'category_id'];
+    protected array $allowedAppends = ['discount_price'];
 
-Strategies can obfuscate the real column names, add aliases to them and enable/disable the query clauses that can be applied to the model.
+    protected array $config = [
+        'name'     => ['filter' => ContainsClause::class],
+        'price'    => ['column' => 'unit_price'],
+        'category' => ['column' => 'category_id', 'explode' => true],
+    ];
+}
+```
 
-You can work the builder before and after applying a strategy, so it can be easily integrated with existing code and queries.
+Your API consumers can now query like this:
+
+```
+GET /products?name=laptop&price=500&category=1,2,3&order=price&sort=desc&limit=10&with=reviews&fields=id,name,price&append=discount_price
+```
+
+And in your controller:
+
+```php
+use function Myerscode\Laravel\QueryStrategies\filter;
+
+public function index()
+{
+    return filter(Product::class)->with(ProductStrategy::class)->apply();
+}
+```
+
+That single line handles filtering, sorting, field selection, eager loading, accessor appending, limiting, and pagination — all controlled by the strategy.
+
+## Why Use This?
+
+- **Safe by default** — only parameters defined in your strategy are applied. Unknown parameters are ignored (or rejected in strict mode).
+- **Column obfuscation** — map public parameter names to real database columns so your schema stays private.
+- **Flexible clauses** — 17 built-in filter clauses (equals, contains, between, greater than, etc.) with operator overrides via URL.
+- **Relationship support** — filter through relationships with dot notation, sort by relationship columns, and control eager loading.
+- **Composable** — chain individual methods (`filter()`, `order()`, `fields()`, etc.) or call `apply()` to run everything at once.
 
 ## Installation
-
-You can install the package via composer:
 
 ```bash
 composer require myerscode/laravel-query-strategies
 ```
 
+The package auto-discovers its service provider. No manual registration needed.
+
 ## Documentation
 
-- [Usage](docs/usage.md) — Getting started, filter methods, query parameter syntax, and pagination
-- [Configuration](docs/configuration.md) — Publishing and customising the config file
-- [Strategies](docs/strategies.md) — Defining strategies, parameter config options, ordering, limiting, and eager loads
-- [Clauses](docs/clauses.md) — Built-in clauses, aliases, and creating custom clauses
-- [Transmutes](docs/transmutes.md) — Value transformation with built-in and custom transmutes
+- [Usage](docs/usage.md) — Getting started, creating filters, query parameter syntax, and pagination
+- [Strategies](docs/strategies.md) — Defining strategies, parameter options, ordering, limiting, eager loads, and default filters
+- [Clauses](docs/clauses.md) — Built-in clauses, scope and trashed filtering, callbacks, and custom clauses
+- [Transmutes](docs/transmutes.md) — Transforming values before filtering
+- [Configuration](docs/configuration.md) — Customising parameter names and strict mode
 
 ## License
 

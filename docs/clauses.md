@@ -1,6 +1,6 @@
 # Clauses
 
-Clauses define how a filter value is applied to the Eloquent query builder. Each clause maps to a SQL WHERE condition.
+Clauses define how a filter value translates into a SQL condition. When a user sends `?name=John`, the clause determines whether that becomes `WHERE name = 'John'`, `WHERE name LIKE '%John%'`, or something else entirely.
 
 ## Built-in Clauses
 
@@ -20,86 +20,100 @@ Clauses define how a filter value is applied to the Eloquent query builder. Each
 | `IsNotInClause` | `WHERE column NOT IN (...)` | `notIn`, `!in` |
 | `IsNullClause` | `WHERE column IS NULL` | `isNull`, `null` |
 | `IsNotNullClause` | `WHERE column IS NOT NULL` | `isNotNull`, `!null`, `notNull` |
-| `TrashedClause` | Soft delete filtering (`with`, `only`) | — |
 | `OrEqualsClause` | `OR WHERE column = value` | `or`, `\|\|` |
 | `ScopeClause` | Calls a model scope | — |
+| `TrashedClause` | Soft delete filtering | — |
 
-Aliases are used in operator overrides. For example, `?name--contains=John` uses the `ContainsClause`.
+## How Clauses Are Resolved
+
+When a request comes in, the package resolves which clause to use in this order:
+
+1. If the parameter has a `callback` defined, that runs instead of any clause.
+2. If the user specifies an operator override (e.g. `?name--contains=John`), the alias is looked up in the parameter's methods and the strategy's default methods.
+3. If the parameter has a `filter` or `default` clause class set, that's used.
+4. If multiple values are provided, the `multi` clause is used (defaults to `IsInClause`).
+5. Otherwise, the global default `EqualsClause` is used.
+
+## Operator Overrides
+
+API consumers can override the default clause for any parameter by appending `--` and a clause alias:
+
+```
+?name--contains=lap        → WHERE name LIKE '%lap%'
+?price--gte=100            → WHERE price >= 100
+?price--between=10,500     → WHERE price BETWEEN 10 AND 500
+?email--beginsWith=admin   → WHERE email LIKE 'admin%'
+?status--isNull            → WHERE status IS NULL
+```
+
+This gives consumers flexibility without you needing to define separate parameters for each operation.
 
 ## Scope Clause
 
-The `ScopeClause` calls an Eloquent local scope on the model instead of applying a direct WHERE condition. The parameter name is converted to camelCase to match the scope method name.
+The `ScopeClause` calls an Eloquent local scope instead of applying a direct WHERE condition. The parameter name is converted to camelCase to match the scope method.
+
+Say your model has:
 
 ```php
-// Model scope
 public function scopeStartsBefore(Builder $query, string $date): Builder
 {
     return $query->where('starts_at', '<=', $date);
 }
+```
 
-// Strategy config
+Configure it in your strategy:
+
+```php
 protected array $config = [
     'starts_before' => [
-        'default' => ScopeClause::class,
+        'filter' => ScopeClause::class,
     ],
 ];
 ```
 
-Usage: `?starts_before=2024-01-01`
+Then `?starts_before=2024-01-01` calls `scopeStartsBefore($query, '2024-01-01')`.
 
-Multiple parameters can be passed to a scope using comma-separated values:
+Scopes that accept multiple arguments work with comma-separated values:
 
 ```
 ?created_between=2024-01-01,2024-12-31
+→ scopeCreatedBetween($query, '2024-01-01', '2024-12-31')
 ```
-
-This calls `scopeCreatedBetween($query, '2024-01-01', '2024-12-31')`.
 
 Empty values are ignored — the scope won't be called.
 
 ## Trashed Clause
 
-The `TrashedClause` provides built-in soft delete filtering for models using Laravel's `SoftDeletes` trait.
+For models using Laravel's `SoftDeletes` trait, the `TrashedClause` provides built-in soft delete control:
 
 ```php
 protected array $config = [
     'trashed' => [
-        'default' => TrashedClause::class,
+        'filter' => TrashedClause::class,
     ],
 ];
 ```
 
-Accepted values:
-
 | Value | Behaviour |
 |---|---|
-| `with` | Include soft-deleted records in results |
-| `only` | Return only soft-deleted records |
+| `?trashed=with` | Include soft-deleted records alongside active ones |
+| `?trashed=only` | Return only soft-deleted records |
 | Any other value | Default behaviour (exclude soft-deleted) |
-
-Usage:
-
-```
-?trashed=with    → Include trashed records
-?trashed=only    → Only trashed records
-```
 
 ## Callback Filters
 
-For one-off filters that don't warrant a full clause class, use the `callback` config option:
+For one-off filters that don't warrant a full clause class, use a closure:
 
 ```php
 protected array $config = [
-    'has_posts' => [
-        'callback' => static function ($builder, $value, $column): void {
-            $builder->whereHas('posts');
-        },
+    // Simple boolean check
+    'has_reviews' => [
+        'callback' => fn ($builder, $value, $column) => $builder->whereHas('reviews'),
     ],
+
+    // Value-dependent filter
     'min_score' => [
-        'callback' => static function ($builder, $value, $column): void {
-            $val = is_array($value) ? $value[0] : $value;
-            $builder->where('score', '>=', $val);
-        },
+        'callback' => fn ($builder, $value, $column) => $builder->where('score', '>=', is_array($value) ? $value[0] : $value),
     ],
 ];
 ```
@@ -108,13 +122,13 @@ The closure receives `(Builder $builder, mixed $value, string $column)`. When a 
 
 ## Creating a Custom Clause
 
-Generate a clause using the artisan command:
+Generate one with artisan:
 
 ```bash
 php artisan make:clause ILikeClause
 ```
 
-This creates a class in `app/Queries/Clause/`. Implement the `filter` method:
+This creates `app/Queries/Clause/ILikeClause.php`. Implement the `filter` method:
 
 ```php
 use Illuminate\Database\Eloquent\Builder;
@@ -141,16 +155,16 @@ class ILikeClause extends AbstractClause
 }
 ```
 
-### Using a Custom Clause
-
-Register it in your strategy's `$config`:
+Use it in your strategy:
 
 ```php
 protected array $config = [
+    // As the default clause for a parameter
     'name' => [
-        'default' => ILikeClause::class,
+        'filter' => ILikeClause::class,
     ],
-    // Or as a named method alias
+
+    // As a named method alias (usable via operator override)
     'email' => [
         'methods' => [
             'ilike' => ILikeClause::class,
@@ -159,11 +173,12 @@ protected array $config = [
 ];
 ```
 
-You can also add it to the strategy's `$defaultMethods` to make it available to all parameters:
+With the methods approach, users can opt in: `?email--ilike=admin`.
+
+You can also register a custom clause globally by overriding `$defaultMethods` in your strategy, making it available to all parameters:
 
 ```php
 protected array $defaultMethods = [
-    // Include parent defaults
     ...parent::$defaultMethods,
     ILikeClause::class => ['ilike', '~'],
 ];
