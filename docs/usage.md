@@ -138,6 +138,17 @@ You can also alias relationship filters to hide the dot notation from API consum
 
 Only relationships listed in the strategy's `$canWith` array are allowed. If `$canWith` is empty, all relationships are permitted.
 
+### Aggregate Includes
+
+Include relationship counts and aggregates alongside eager loads:
+
+```
+?with=ownerCount            → withCount('owner')
+?with=owner,ownerCount      → Eager load + count
+```
+
+Aggregates are defined in the strategy's `$aggregateIncludes` property. Supported types: `count`, `exists`, `sum`, `avg`, `min`, `max`.
+
 ### Pagination
 
 ```

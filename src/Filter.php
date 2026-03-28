@@ -332,15 +332,34 @@ class Filter
     {
         $pieces = $this->query[$this->with] ?? [];
 
-        $with = array_filter(explode(',', implode(',', is_array($pieces) ? $pieces : [$pieces])));
+        $requested = array_filter(explode(',', implode(',', is_array($pieces) ? $pieces : [$pieces])));
 
+        $aggregates = $this->strategy->aggregateIncludes();
         $allowed = $this->strategy->canWith();
 
-        if ($allowed !== []) {
-            $with = array_intersect($with, $allowed);
+        $eagerLoads = [];
+        foreach ($requested as $include) {
+            if (isset($aggregates[$include])) {
+                $agg = $aggregates[$include];
+                match ($agg['type']) {
+                    'count' => $this->builder->withCount($agg['relationship']),
+                    'exists' => $this->builder->withExists($agg['relationship']),
+                    'sum' => $this->builder->withSum($agg['relationship'], $agg['column'] ?? ''),
+                    'avg' => $this->builder->withAvg($agg['relationship'], $agg['column'] ?? ''),
+                    'min' => $this->builder->withMin($agg['relationship'], $agg['column'] ?? ''),
+                    'max' => $this->builder->withMax($agg['relationship'], $agg['column'] ?? ''),
+                    default => null,
+                };
+            } else {
+                $eagerLoads[] = $include;
+            }
         }
 
-        $this->builder->with($with);
+        if ($allowed !== []) {
+            $eagerLoads = array_intersect($eagerLoads, $allowed);
+        }
+
+        $this->builder->with($eagerLoads);
 
         return $this;
     }

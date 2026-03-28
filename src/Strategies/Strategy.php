@@ -27,6 +27,13 @@ class Strategy implements StrategyInterface
     protected array $allowedFields = [];
 
     /**
+     * Aggregate includes configuration
+     *
+     * @var array<string, array{type: string, relationship: string, column?: string}>
+     */
+    protected array $aggregateIncludes = [];
+
+    /**
      * Relationships that can be eager loaded
      *
      * @var array<int, string>
@@ -110,6 +117,14 @@ class Strategy implements StrategyInterface
     public function allowedFields(): array
     {
         return $this->allowedFields;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function aggregateIncludes(): array
+    {
+        return $this->aggregateIncludes;
     }
 
     /**

@@ -111,6 +111,25 @@ protected array $canWith = [
 
 Default: `[]` (empty means all relationships are allowed)
 
+### `$aggregateIncludes` — Aggregate Relationship Includes
+
+Define aggregate includes that can be requested via the `with` parameter:
+
+```php
+protected array $aggregateIncludes = [
+    'postsCount'    => ['type' => 'count', 'relationship' => 'posts'],
+    'postsExists'   => ['type' => 'exists', 'relationship' => 'posts'],
+    'postsViewsSum' => ['type' => 'sum', 'relationship' => 'posts', 'column' => 'views'],
+    'postsViewsAvg' => ['type' => 'avg', 'relationship' => 'posts', 'column' => 'views'],
+    'postsViewsMin' => ['type' => 'min', 'relationship' => 'posts', 'column' => 'views'],
+    'postsViewsMax' => ['type' => 'max', 'relationship' => 'posts', 'column' => 'views'],
+];
+```
+
+The key is the include name used in the query parameter. Supported types: `count`, `exists`, `sum`, `avg`, `min`, `max`. The `column` key is required for `sum`, `avg`, `min`, and `max`.
+
+Default: `[]`
+
 ### `$limitTo` — Default Result Limit
 
 ```php

@@ -12,6 +12,13 @@ interface StrategyInterface
     public function allowedFields(): array;
 
     /**
+     * Get the aggregate includes configuration
+     *
+     * @return array<string, array{type: string, relationship: string, column?: string}>
+     */
+    public function aggregateIncludes(): array;
+
+    /**
      * Get the relationships that can be eager loaded
      *
      * @return array<int, string>

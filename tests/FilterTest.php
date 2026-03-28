@@ -12,6 +12,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Support\Models\Item;
 use Tests\Support\Models\SoftDeletableItem;
+use Tests\Support\Strategies\AggregateIncludeStrategy;
 use Tests\Support\Strategies\ComplexConfigQueryStrategy;
 use Tests\Support\Strategies\DefaultValueStrategy;
 use Tests\Support\Strategies\FieldSelectionStrategy;
@@ -343,6 +344,35 @@ final class FilterTest extends TestCase
         $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy(), ['with' => 'owner,categories']);
         $builder = $filter->with()->builder();
         $this->assertEquals(['owner', 'categories'], array_keys($builder->getEagerLoads()));
+    }
+
+    public function test_aggregate_include_count(): void
+    {
+        $filter = $this->filter(Item::query(), new AggregateIncludeStrategy(), ['with' => 'ownerCount']);
+        $builder = $filter->with()->builder();
+        $this->assertStringContainsString('owner_count', $this->getRawSqlFromBuilder($builder));
+    }
+
+    public function test_aggregate_include_exists(): void
+    {
+        $filter = $this->filter(Item::query(), new AggregateIncludeStrategy(), ['with' => 'ownerExists']);
+        $builder = $filter->with()->builder();
+        $this->assertStringContainsString('owner_exists', $this->getRawSqlFromBuilder($builder));
+    }
+
+    public function test_aggregate_mixed_with_eager_load(): void
+    {
+        $filter = $this->filter(Item::query(), new AggregateIncludeStrategy(), ['with' => 'owner,ownerCount']);
+        $builder = $filter->with()->builder();
+        $this->assertEquals(['owner'], array_keys($builder->getEagerLoads()));
+        $this->assertStringContainsString('owner_count', $this->getRawSqlFromBuilder($builder));
+    }
+
+    public function test_aggregate_unknown_include_filtered_by_canwith(): void
+    {
+        $filter = $this->filter(Item::query(), new AggregateIncludeStrategy(), ['with' => 'secret']);
+        $builder = $filter->with()->builder();
+        $this->assertEquals([], array_keys($builder->getEagerLoads()));
     }
 
     public function test_can_get_builder(): void
