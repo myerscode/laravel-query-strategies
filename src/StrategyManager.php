@@ -15,9 +15,7 @@ class StrategyManager
     private array $cache = [];
 
     /**
-     * @param  string|StrategyInterface|Model  $possibleStrategy
      *
-     * @return StrategyInterface
      * @throws FilterStrategyNotFoundException
      * @throws InvalidStrategyException
      */
@@ -52,9 +50,9 @@ class StrategyManager
      *
      * @param $strategyName
      */
-    private function getCacheName($strategyName): string
+    private function getCacheName(string $strategyName): string
     {
-        return preg_replace('#[^A-Za-z0-9-]+#', '-', strtolower(trim((string) $strategyName)));
+        return preg_replace('#[^A-Za-z0-9-]+#', '-', strtolower(trim($strategyName)));
     }
 
     /**

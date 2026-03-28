@@ -17,6 +17,7 @@ class FilterBuilder
 {
 
     private ?Model $model = null;
+
     private ?Builder $builder = null;
 
 
@@ -74,7 +75,6 @@ class FilterBuilder
      *
      * @param  string|StrategyInterface|null  $possibleStrategy
      *
-     * @return Filter
      * @throws BuilderNotSetException
      * @throws FilterStrategyNotFoundException
      * @throws InvalidStrategyException

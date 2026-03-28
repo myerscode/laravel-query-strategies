@@ -6,6 +6,7 @@ namespace Tests;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Myerscode\Laravel\QueryStrategies\Exceptions\BuilderNotSetException;
 use Myerscode\Laravel\QueryStrategies\Filter;
 use Myerscode\Laravel\QueryStrategies\Exceptions\BuilderNotFoundException;
@@ -95,8 +96,8 @@ final class FilterBuilderTest extends TestCase
             $blueprint->timestamps();
         });
 
-        $result = filter(Record::class)->results();
-        $this->assertInstanceOf(\Illuminate\Pagination\LengthAwarePaginator::class, $result);
+        $lengthAwarePaginator = filter(Record::class)->results();
+        $this->assertInstanceOf(LengthAwarePaginator::class, $lengthAwarePaginator);
     }
 
     public function testFilterWithReturnsInstanceOfFilter(): void

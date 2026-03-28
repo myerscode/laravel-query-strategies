@@ -222,9 +222,11 @@ class Filter
                     $direction = $sortBy->get($value) ?? $defaultDirection;
                     return [$value => $direction];
                 }
+
                 if (is_array($value)) {
                     return collect($value)->mapWithKeys(static fn($value): array => [$value => $key])->toArray();
                 }
+
                 return [$value => $key];
             })->toArray();
         } else {

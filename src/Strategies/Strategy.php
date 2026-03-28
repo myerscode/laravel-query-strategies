@@ -38,8 +38,6 @@ class Strategy implements StrategyInterface
 
     /**
      * Supported default filter methods
-     *
-     * @var array
      */
     protected array $defaultMethods = [
         BeginsWithClause::class => ['beginsWith', '*%'],
@@ -58,15 +56,11 @@ class Strategy implements StrategyInterface
 
     /**
      * How many records should be returned by default
-     *
-     * @var int
      */
     protected int $limitTo = 50;
 
     /**
      * Maximum number of records a api response can have
-     *
-     * @var int
      */
     protected int $maxLimit = 150;
 

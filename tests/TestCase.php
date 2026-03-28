@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Tests;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Application;
 use Myerscode\Laravel\QueryStrategies\Filter;
+use Myerscode\Laravel\QueryStrategies\Strategies\StrategyInterface;
 use Myerscode\Laravel\QueryStrategies\StrategyManager;
 use Myerscode\Laravel\QueryStrategies\ServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
@@ -32,7 +34,7 @@ class TestCase extends Orchestra
         });
     }
 
-    public function filter($builderOrModel, $strategyClass, $request = null, $config = []): Filter
+    public function filter($builderOrModel, string|StrategyInterface|Model $strategyClass, $request = null, $config = []): Filter
     {
         $strategy = $this->strategyManager()->findStrategy($strategyClass);
         return new Filter($builderOrModel, $strategy, $request ?? [], $config);
