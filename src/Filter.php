@@ -515,6 +515,21 @@ class Filter
 
         $filterValues = array_merge($indexedValues, $namedValues);
 
+        // Remove ignored values
+        if (($ignored = $parameter->ignoredValues()) !== []) {
+            $filterValues = array_filter($filterValues, static fn ($v): bool => !in_array($v, $ignored, true));
+            // Re-index numeric keys
+            $reindexed = [];
+            foreach ($filterValues as $key => $value) {
+                if (is_int($key)) {
+                    $reindexed[] = $value;
+                } else {
+                    $reindexed[$key] = $value;
+                }
+            }
+            $filterValues = $reindexed;
+        }
+
         // if there are any disabled filter clauses remove them
         if (($disabled = $parameter->disabled()) !== []) {
             return array_diff_key($filterValues, array_flip($disabled));

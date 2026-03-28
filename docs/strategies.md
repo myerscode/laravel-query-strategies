@@ -62,6 +62,7 @@ protected array $config = [
 | `delimiter` | `string` | Delimiter for exploding. Default: `,` |
 | `transmute` | `string` | Transmute class to transform values before filtering. |
 | `callback` | `Closure` | Inline closure filter — receives `($builder, $value, $column)`. |
+| `ignore` | `mixed\|array` | Values to ignore when filtering. If all values are ignored, the filter is not applied. |
 | `disabled` | `array` | Clause aliases to disable for this parameter. |
 | `defaultValue` | `mixed` | Value applied when the parameter is absent from the request. Null values are ignored. |
 | `aliases` | `array` | Alternative parameter names that map to this config. |

@@ -31,6 +31,9 @@ class Parameter
 
     private string $explodeDelimiter;
 
+    /** @var array<int, mixed> */
+    private array $ignoredValues = [];
+
     /** @var array<string, string> */
     private array $methods = [];
 
@@ -108,6 +111,16 @@ class Parameter
     }
 
     /**
+     * Values that should be ignored when filtering
+     *
+     * @return array<int, mixed>
+     */
+    public function ignoredValues(): array
+    {
+        return $this->ignoredValues;
+    }
+
+    /**
      * What custom methods can this parameter use
      *
      * @return array<string, string>
@@ -174,6 +187,7 @@ class Parameter
         $this->overrideParameter = $configuration['override'] ?? $this->name . ($configuration['overrideSuffix'] ?? Parameter::DEFAULT_OPERATOR_OVERRIDE_SUFFIX);
         $this->explode = isset($configuration['explode']) && filter_var($configuration['explode'], FILTER_VALIDATE_BOOLEAN);
         $this->explodeDelimiter = $configuration['delimiter'] ?? Parameter::DEFAULT_EXPLODE_DELIMITER;
+        $this->ignoredValues = isset($configuration['ignore']) ? (is_array($configuration['ignore']) ? $configuration['ignore'] : [$configuration['ignore']]) : [];
     }
 
 }

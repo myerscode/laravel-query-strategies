@@ -15,6 +15,7 @@ use Tests\Support\Models\SoftDeletableItem;
 use Tests\Support\Strategies\ComplexConfigQueryStrategy;
 use Tests\Support\Strategies\DefaultValueStrategy;
 use Tests\Support\Strategies\FieldSelectionStrategy;
+use Tests\Support\Strategies\IgnoredValuesStrategy;
 use Tests\Support\Strategies\OverrideQueryStrategy;
 use Tests\Support\Strategies\RelationshipFilterStrategy;
 use Tests\Support\Strategies\RestrictedWithStrategy;
@@ -592,6 +593,46 @@ final class FilterTest extends TestCase
         $filter = new Filter(Item::query(), $strategy, []);
         $filter->filter();
         $this->assertEquals('select * from "items"', $this->getRawSqlFromBuilder($filter->builder()));
+    }
+
+    #[DataProvider('providerForIgnoredValues')]
+    public function test_ignored_filter_values(string $expectedSql, array $requestParams): void
+    {
+        $filter = $this->filter(Item::query(), new IgnoredValuesStrategy(), $requestParams);
+        $filter->filter();
+        $this->assertEquals($expectedSql, $this->getRawSqlFromBuilder($filter->builder()));
+    }
+
+    public static function providerForIgnoredValues(): Iterator
+    {
+        yield 'ignored value is not applied' => [
+            'select * from "items"',
+            ['name' => '-1'],
+        ];
+        yield 'non-ignored value is applied' => [
+            'select * from "items" where "name" = \'John\'',
+            ['name' => 'John'],
+        ];
+        yield 'ignored value filtered from array' => [
+            'select * from "items" where "name" = \'John\'',
+            ['name' => ['John', '-1']],
+        ];
+        yield 'all values ignored means no filter' => [
+            'select * from "items"',
+            ['name' => ['-1', 'all']],
+        ];
+        yield 'null ignored value' => [
+            'select * from "items"',
+            ['status' => null],
+        ];
+        yield 'non-ignored parameter unaffected' => [
+            'select * from "items" where "type" = \'foo\'',
+            ['type' => 'foo'],
+        ];
+        yield 'mixed ignored and valid across params' => [
+            'select * from "items" where "type" = \'foo\'',
+            ['name' => '-1', 'type' => 'foo'],
+        ];
     }
 
     #[DataProvider('providerForGetQueryValues')]
