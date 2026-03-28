@@ -72,7 +72,7 @@ protected array $config = [
 
 ### `$canOrderBy` — Allowed Order Columns
 
-Whitelist which columns can be used for ordering:
+Allowlist which columns can be used for ordering:
 
 ```php
 protected array $canOrderBy = [
@@ -86,7 +86,7 @@ Default: `['id']`
 
 ### `$allowedFields` — Selectable Columns
 
-Whitelist which columns can be selected via the `fields` query parameter:
+Allowlist which columns can be selected via the `fields` query parameter:
 
 ```php
 protected array $allowedFields = [
@@ -100,7 +100,7 @@ Default: `[]` (empty means all requested fields are allowed)
 
 ### `$canWith` — Allowed Eager Loads
 
-Whitelist which relationships can be eager loaded:
+Allowlist which relationships can be eager loaded:
 
 ```php
 protected array $canWith = [
