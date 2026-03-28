@@ -22,6 +22,7 @@ use Tests\Support\Strategies\FieldSelectionStrategy;
 use Tests\Support\Strategies\IgnoredValuesStrategy;
 use Tests\Support\Strategies\OverrideQueryStrategy;
 use Tests\Support\Strategies\RelationshipFilterStrategy;
+use Tests\Support\Strategies\RelationshipOrderStrategy;
 use Tests\Support\Strategies\RestrictedWithStrategy;
 use Tests\Support\Strategies\ScopeFilterStrategy;
 use Tests\Support\Strategies\TrashedFilterStrategy;
@@ -837,6 +838,41 @@ final class FilterTest extends TestCase
         $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy(), []);
         $filter->filter();
         $this->assertSame('select * from "items"', $this->getRawSqlFromBuilder($filter->builder()));
+    }
+
+    public function test_order_by_disallowed_relationship_is_ignored(): void
+    {
+        $filter = $this->filter(Item::query(), new RelationshipOrderStrategy(), ['order' => 'owner.secret']);
+        $filter->order();
+        $sql = $this->getRawSqlFromBuilder($filter->builder());
+        $this->assertStringNotContainsString('order by', $sql);
+    }
+
+    public function test_order_by_relationship_column(): void
+    {
+        $filter = $this->filter(Item::query(), new RelationshipOrderStrategy(), ['order' => 'owner.name']);
+        $filter->order();
+        $sql = $this->getRawSqlFromBuilder($filter->builder());
+        $this->assertStringContainsString('order by', $sql);
+        $this->assertStringContainsString('"owners"."name"', $sql);
+    }
+
+    public function test_order_by_relationship_column_desc(): void
+    {
+        $filter = $this->filter(Item::query(), new RelationshipOrderStrategy(), ['order' => 'owner.name', 'sort' => 'desc']);
+        $filter->order();
+        $sql = $this->getRawSqlFromBuilder($filter->builder());
+        $this->assertStringContainsString('order by', $sql);
+        $this->assertStringContainsString('desc', $sql);
+    }
+
+    public function test_order_by_relationship_mixed_with_regular(): void
+    {
+        $filter = $this->filter(Item::query(), new RelationshipOrderStrategy(), ['order' => ['id', 'owner.name']]);
+        $filter->order();
+        $sql = $this->getRawSqlFromBuilder($filter->builder());
+        $this->assertStringContainsString('"id"', $sql);
+        $this->assertStringContainsString('"owners"."name"', $sql);
     }
 
     #[DataProvider('providerForRelationshipFilter')]

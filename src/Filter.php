@@ -303,7 +303,12 @@ class Filter
 
         foreach ($allowedOrderBy as $column => $direction) {
             $direction = (in_array($direction, $directions)) ? $direction : 'asc';
-            $this->builder->orderBy($column, $direction);
+
+            if (str_contains($column, '.')) {
+                $this->orderByRelationship($column, $direction);
+            } else {
+                $this->builder->orderBy($column, $direction);
+            }
         }
 
         return $this;
@@ -570,6 +575,33 @@ class Filter
         $limit = (int) $limit;
 
         return ($limit <= $this->strategy->maxLimit()) ? $limit : $this->strategy->maxLimit();
+    }
+
+    /**
+     * Order by a relationship column using a subquery
+     */
+    private function orderByRelationship(string $column, string $direction): void
+    {
+        $parts = explode('.', $column, 2);
+        $relationship = $parts[0];
+        $relatedColumn = $parts[1];
+
+        $model = $this->builder->getModel();
+
+        if (!method_exists($model, $relationship)) {
+            return;
+        }
+
+        $relation = $model->{$relationship}();
+        $relatedTable = $relation->getRelated()->getTable();
+
+        $this->builder->orderBy(
+            $relation->getRelated()->newQuery()
+                ->select($relatedTable . '.' . $relatedColumn)
+                ->whereColumn($relation->getQualifiedForeignKeyName(), $model->getQualifiedKeyName())
+                ->limit(1),
+            $direction,
+        );
     }
 
     /**

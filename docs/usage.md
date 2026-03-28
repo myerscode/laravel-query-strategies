@@ -135,7 +135,11 @@ You can also alias relationship filters to hide the dot notation from API consum
 ?order=id                   → Order by 'id' ascending
 ?order=id&sort=desc         → Order by 'id' descending
 ?order[]=id&order[]=name    → Multiple order by columns
+?order=owner.name           → Order by a relationship column (subquery)
+?order=owner.name&sort=desc → Relationship column descending
 ```
+
+Relationship sorting uses a subquery to order by a column on a related model. The relationship must be defined on the model and the dot-notation column must be listed in the strategy's `$canOrderBy` array.
 
 ### Limiting
 
