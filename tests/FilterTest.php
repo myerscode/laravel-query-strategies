@@ -203,6 +203,11 @@ final class FilterTest extends TestCase
             ComplexConfigQueryStrategy::class,
             ['foo--isNotNull' => ''],
         ];
+        yield 'between operator override' => [
+            'select * from "items" where "foo" between \'10\' and \'100\' limit 50',
+            ComplexConfigQueryStrategy::class,
+            ['foo--between' => '10,100'],
+        ];
     }
 
     public static function providerForGetQueryValues(): Iterator

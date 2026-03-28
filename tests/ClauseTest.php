@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests;
 
 use Myerscode\Laravel\QueryStrategies\Clause\BeginsWithClause;
+use Myerscode\Laravel\QueryStrategies\Clause\BetweenClause;
 use Myerscode\Laravel\QueryStrategies\Clause\ContainsClause;
 use Myerscode\Laravel\QueryStrategies\Clause\DoesNotEqualClause;
 use Myerscode\Laravel\QueryStrategies\Clause\EndsWithClause;
@@ -38,6 +39,56 @@ final class ClauseTest extends TestCase
             ],
         ];
         $this->assertSame($where, $filter->builder()->getQuery()->wheres);
+    }
+
+    public function test_between_filter_clause(): void
+    {
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy());
+        $filter->applyFilter(BetweenClause::class, '10,100', 'test_column');
+
+        $where = [
+            [
+                'type' => 'between',
+                'column' => 'test_column',
+                'boolean' => 'and',
+                'not' => false,
+                'values' => ['10', '100'],
+            ],
+        ];
+        $this->assertEquals($where, $filter->builder()->getQuery()->wheres);
+    }
+
+    public function test_between_clause_with_array(): void
+    {
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy());
+        $filter->applyFilter(BetweenClause::class, ['2024-01-01', '2024-12-31'], 'test_column');
+
+        $where = [
+            [
+                'type' => 'between',
+                'column' => 'test_column',
+                'boolean' => 'and',
+                'not' => false,
+                'values' => ['2024-01-01', '2024-12-31'],
+            ],
+        ];
+        $this->assertEquals($where, $filter->builder()->getQuery()->wheres);
+    }
+
+    public function test_between_clause_ignores_single_value(): void
+    {
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy());
+        $filter->applyFilter(BetweenClause::class, '10', 'test_column');
+
+        $this->assertEmpty($filter->builder()->getQuery()->wheres);
+    }
+
+    public function test_between_clause_ignores_three_values(): void
+    {
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy());
+        $filter->applyFilter(BetweenClause::class, '1,2,3', 'test_column');
+
+        $this->assertEmpty($filter->builder()->getQuery()->wheres);
     }
 
     public function test_contains_filter_clause(): void

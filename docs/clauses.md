@@ -12,6 +12,7 @@ Clauses define how a filter value is applied to the Eloquent query builder. Each
 | `GreaterThanOrEqualsClause` | `WHERE column >= value` | `greaterThanOrEquals`, `>=`, `gte` |
 | `LessThanClause` | `WHERE column < value` | `lessThan`, `<`, `lt` |
 | `LessThanOrEqualsClause` | `WHERE column <= value` | `lessThanOrEquals`, `<=`, `lte` |
+| `BetweenClause` | `WHERE column BETWEEN a AND b` | `between`, `><` |
 | `ContainsClause` | `WHERE column LIKE %value%` | `contains`, `%%` |
 | `BeginsWithClause` | `WHERE column LIKE value%` | `beginsWith`, `*%` |
 | `EndsWithClause` | `WHERE column LIKE %value` | `endsWith`, `%*` |

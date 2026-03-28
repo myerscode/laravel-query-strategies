@@ -3,6 +3,7 @@
 namespace Myerscode\Laravel\QueryStrategies\Strategies;
 
 use Myerscode\Laravel\QueryStrategies\Clause\BeginsWithClause;
+use Myerscode\Laravel\QueryStrategies\Clause\BetweenClause;
 use Myerscode\Laravel\QueryStrategies\Clause\ContainsClause;
 use Myerscode\Laravel\QueryStrategies\Clause\DoesNotEqualClause;
 use Myerscode\Laravel\QueryStrategies\Clause\EndsWithClause;
@@ -65,6 +66,7 @@ class Strategy implements StrategyInterface
      */
     protected array $defaultMethods = [
         BeginsWithClause::class => ['beginsWith', '*%'],
+        BetweenClause::class => ['between', '><'],
         ContainsClause::class => ['contains', '%%'],
         EndsWithClause::class => ['endsWith', '%*'],
         LessThanClause::class => ['lessThan', '<', 'lt'],
