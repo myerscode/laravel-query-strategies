@@ -7,7 +7,6 @@ use Myerscode\Laravel\QueryStrategies\Clause\AbstractClause;
 
 class CustomMultiClause extends AbstractClause
 {
-
     /**
      * {@inheritdoc}
      */

@@ -15,45 +15,33 @@ use Myerscode\Laravel\QueryStrategies\Strategies\StrategyInterface;
 
 class FilterBuilder
 {
+    private ?Builder $builder = null;
 
     private ?Model $model = null;
-
-    private ?Builder $builder = null;
 
 
     public function __construct(private readonly Request $request, private readonly StrategyManager $strategyManager)
     {
     }
 
-    /**
-     * Get a query builder via the passed by checking if its a model or already a builder
-     *
-     * @param $builderOrModel
-     * @throws BuilderNotFoundException
-     * @throws BuilderNotSetException
-     */
-    private function setBuilder($builderOrModel): void
-    {
-        if (empty($builderOrModel)) {
-            throw new BuilderNotSetException();
-        }
-
-        if ($builderOrModel instanceof Builder) {
-            $this->builder = $builderOrModel;
-        } elseif ($builderOrModel instanceof Model) {
-            $this->model = $builderOrModel;
-            $this->builder = $builderOrModel->newQuery();
-        } elseif (is_string($builderOrModel) && class_exists($builderOrModel) && ($model = app($builderOrModel)) instanceof Model) {
-            $this->model = $model;
-            $this->builder = $model->query();
-        } else {
-            throw new BuilderNotFoundException();
-        }
-    }
-
     public function builder(): ?Builder
     {
         return $this->builder;
+    }
+
+    /**
+     * The config the will be built eiyh
+     * @return array{order: mixed, sort: mixed, limit: mixed, page: mixed, with: mixed}
+     */
+    public function config(): array
+    {
+        return [
+            'order' => config('query-strategies.parameters.order', 'order'),
+            'sort' => config('query-strategies.parameters.sort', 'sort'),
+            'limit' => config('query-strategies.parameters.limit', 'limit'),
+            'page' => config('query-strategies.parameters.page', 'page'),
+            'with' => config('query-strategies.parameters.with', 'with'),
+        ];
     }
 
     /**
@@ -68,6 +56,24 @@ class FilterBuilder
         $this->setBuilder($builderOrModel);
 
         return $this;
+    }
+
+    /**
+     * @throws BuilderNotSetException
+     * @throws FilterStrategyNotFoundException
+     * @throws InvalidStrategyException
+     */
+    public function results(string|StrategyInterface|array|null $possibleStrategy = null): LengthAwarePaginator
+    {
+        if (is_null($possibleStrategy) && ($this->model instanceof Model) && isset($this->model->strategyConfig)) {
+            $possibleStrategy = DefaultModelStrategy::fromConfig($this->model->strategyConfig);
+        }
+
+        if (is_null($possibleStrategy)) {
+            throw new BuilderNotSetException('No strategy provided and model has no strategyConfig');
+        }
+
+        return $this->with($possibleStrategy)->apply();
     }
 
     /**
@@ -97,35 +103,28 @@ class FilterBuilder
     }
 
     /**
+     * Get a query builder via the passed by checking if its a model or already a builder
+     *
+     * @param $builderOrModel
+     * @throws BuilderNotFoundException
      * @throws BuilderNotSetException
-     * @throws FilterStrategyNotFoundException
-     * @throws InvalidStrategyException
      */
-    public function results(string|StrategyInterface|array|null $possibleStrategy = null): LengthAwarePaginator
+    private function setBuilder($builderOrModel): void
     {
-        if (is_null($possibleStrategy) && ($this->model instanceof Model) && isset($this->model->strategyConfig)) {
-            $possibleStrategy = DefaultModelStrategy::fromConfig($this->model->strategyConfig);
+        if (empty($builderOrModel)) {
+            throw new BuilderNotSetException();
         }
 
-        if (is_null($possibleStrategy)) {
-            throw new BuilderNotSetException('No strategy provided and model has no strategyConfig');
+        if ($builderOrModel instanceof Builder) {
+            $this->builder = $builderOrModel;
+        } elseif ($builderOrModel instanceof Model) {
+            $this->model = $builderOrModel;
+            $this->builder = $builderOrModel->newQuery();
+        } elseif (is_string($builderOrModel) && class_exists($builderOrModel) && ($model = app($builderOrModel)) instanceof Model) {
+            $this->model = $model;
+            $this->builder = $model->query();
+        } else {
+            throw new BuilderNotFoundException();
         }
-
-        return $this->with($possibleStrategy)->apply();
-    }
-
-    /**
-     * The config the will be built eiyh
-     * @return array{order: mixed, sort: mixed, limit: mixed, page: mixed, with: mixed}
-     */
-    public function config(): array
-    {
-        return [
-            'order' => config('query-strategies.parameters.order', 'order'),
-            'sort' => config('query-strategies.parameters.sort', 'sort'),
-            'limit' => config('query-strategies.parameters.limit', 'limit'),
-            'page' => config('query-strategies.parameters.page', 'page'),
-            'with' => config('query-strategies.parameters.with', 'with'),
-        ];
     }
 }

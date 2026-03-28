@@ -15,7 +15,6 @@ use Myerscode\Laravel\QueryStrategies\Transmute\TransmuteInterface;
 
 class Filter
 {
-
     /**
      * If no filter is set or no default is set in strategy, use this
      */
@@ -25,6 +24,11 @@ class Filter
      * If a parameter allows multiple values use this class
      */
     private string $defaultMultiFilter = IsInClause::class;
+
+    /**
+     * @var string
+     */
+    private $limitKey = 'limit';
 
     /**
      * @var string
@@ -39,36 +43,12 @@ class Filter
     /**
      * @var string
      */
-    private $limitKey = 'limit';
-
-    /**
-     * @var string
-     */
     private $with = 'with';
 
 
     public function __construct(private readonly Builder $builder, private readonly StrategyInterface $strategy, private array $query, array $config = [])
     {
         $this->setConfig($config);
-    }
-
-    /**
-     * Set any configurable options
-     */
-    private function setConfig(array $config): void
-    {
-        $this->orderKey = $config['order'] ?? 'order';
-        $this->sortKey = $config['sort'] ?? 'sort';
-        $this->limitKey = $config['limit'] ?? 'limit';
-        $this->with = $config['with'] ?? 'with';
-    }
-
-    /**
-     * The builder Distill will apply a strategy to
-     */
-    public function builder(): Builder
-    {
-        return $this->builder;
     }
 
     /**
@@ -81,6 +61,33 @@ class Filter
         $this->limit();
         $this->with();
         return $this->paginate();
+    }
+
+    /**
+     * Apply a filter clause to a builder
+     *
+     * @param  $class
+     * @param  $value
+     * @param  $column
+     */
+    public function applyFilter($class, $value, $column): Filter
+    {
+        if (class_exists($class) && ($filter = app($class)) instanceof ClauseInterface) {
+            /**
+             * @var $filter ClauseInterface
+             */
+            $filter->filter($this->builder, $value, $column);
+        }
+
+        return $this;
+    }
+
+    /**
+     * The builder Distill will apply a strategy to
+     */
+    public function builder(): Builder
+    {
+        return $this->builder;
     }
 
     /**
@@ -141,6 +148,172 @@ class Filter
     }
 
     /**
+     * @return mixed[][]
+     */
+    public function filterValues(): array
+    {
+        $parameters = $this->filterParameters();
+        $filterValues = [];
+        foreach ($parameters as $parameter => $values) {
+            $parameterConf = $this->strategy->parameter($parameter);
+            $filterValues[$parameter] = $this->prepareValues($values, $parameterConf);
+        }
+
+        return $filterValues;
+    }
+
+    /**
+     * Get the clauses that the parameter can apply to the query
+     *
+     * @param $parameter
+     */
+    public function getParameterMethods(string $parameter): array
+    {
+        $filters = $this->strategy->parameter($parameter)->methods();
+        $except = $this->strategy->parameter($parameter)->disabled();
+        return array_diff_assoc(array_merge($this->strategy->defaultMethods(), $filters), array_keys($except));
+    }
+
+    /**
+     * Limit the amount of results returned
+     */
+    public function limit(): Filter
+    {
+        $this->builder->limit($this->getLimitValue());
+
+        return $this;
+    }
+
+    /**
+     * Apply order and sorting rules to the query
+     */
+    public function order(): Filter
+    {
+        $canOrderBy = $this->strategy->canOrderBy();
+
+        $directions = ['asc', 'desc'];
+
+        $defaultDirection = 'asc';
+
+        $orderKey = $this->orderKey;
+
+        $sortKey = $this->sortKey;
+
+        $orderValues = $this->query[$orderKey] ?? [];
+
+        if (empty($orderValues)) {
+            return $this;
+        }
+
+        $sortValues = collect($this->query[$sortKey] ?? $defaultDirection);
+        $defaultDirection = $sortValues
+                ->filter(static fn ($value, $key): bool => is_int($key))->pop() ?? $defaultDirection;
+
+        $sortBy = $sortValues->filter(static fn ($value, $key): bool => !is_int($key));
+
+        $orderBy = [];
+
+        if (is_array($orderValues)) {
+            $orderBy = collect($orderValues)->mapWithKeys(static function ($value, $key) use ($sortBy, $defaultDirection) {
+                if (is_int($key)) {
+                    $direction = $sortBy->get($value) ?? $defaultDirection;
+                    return [$value => $direction];
+                }
+
+                if (is_array($value)) {
+                    return collect($value)->mapWithKeys(static fn ($value): array => [$value => $key])->toArray();
+                }
+
+                return [$value => $key];
+            })->toArray();
+        } else {
+            $orderBy[strtolower((string) $orderValues)] = strtolower((string) $defaultDirection);
+        }
+
+        foreach (collect($orderBy)->only($canOrderBy) as $column => $collection) {
+            $direction = (in_array($collection, $directions)) ? $collection : 'asc';
+            $this->builder->orderBy($column, $direction);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Paginate the query using the strategy rules
+     */
+    public function paginate(): Paginated
+    {
+        /**
+         * Get the current key value pairs currently used in the paginated query
+         */
+        $appends = array_diff_assoc($this->query, array_keys($this->strategy->parameters()));
+
+        $perPage = $this->getLimitValue();
+
+        $this->builder->limit($perPage);
+
+        /**
+         * @var $pagination LengthAwarePaginator
+         */
+        $lengthAwarePaginator = $this->builder->paginate($perPage);
+
+        $lengthAwarePaginator->appends($appends);
+
+        return new Paginated(
+            $lengthAwarePaginator->items(),
+            $lengthAwarePaginator->total(),
+            $lengthAwarePaginator->perPage(),
+            $lengthAwarePaginator->currentPage(),
+            [
+                'path' => Paginator::resolveCurrentPath(),
+                'pageName' => $lengthAwarePaginator->getPageName(),
+                'appliedFilters' => $this->filterValues(),
+            ],
+        );
+    }
+
+    /**
+     * Apply eloquent withs for eager loading relationships
+     */
+    public function with(): Filter
+    {
+        $pieces = $this->query[$this->with] ?? [];
+
+        $with = array_filter(explode(',', implode(',', is_array($pieces) ? $pieces : [$pieces])));
+
+        $this->builder->with($with);
+
+        return $this;
+    }
+
+    protected function applyFilters(string $column, array $filters)
+    {
+        foreach ($filters as $filterClass => $filterValues) {
+            $this->applyFilter($filterClass, $filterValues, $column);
+        }
+    }
+
+    protected function explodeIndexedValues(array $values, Parameter $parameter)
+    {
+        if ($parameter->shouldExplode()) {
+            $delimiter = $parameter->explodeDelimiter();
+            $values = collect($values)->flatMap(static fn ($value): array => array_filter(explode($delimiter, implode($delimiter, is_array($value) ? $value : [$value]))))->toArray();
+        }
+
+        return $values;
+    }
+
+    protected function explodeNamedValues(array $values, Parameter $parameter)
+    {
+        if ($parameter->shouldExplode()) {
+            $delimiter = $parameter->explodeDelimiter();
+            $values = collect($values)->map(static fn ($value): array => array_filter(explode($delimiter, implode($delimiter, is_array($value) ? $value : [$value]))))->toArray();
+        }
+
+        return $values;
+    }
+
+    /**
      * Get array of query parameters that can be used
      *
      * @return array
@@ -172,156 +345,25 @@ class Filter
         return collect($parameters)->mergeRecursive($otherParameters)->toArray();
     }
 
-    /**
-     * @return mixed[][]
-     */
-    public function filterValues(): array
+    protected function transmuteValues(array $values, Parameter $parameter): array
     {
-        $parameters = $this->filterParameters();
-        $filterValues = [];
-        foreach ($parameters as $parameter => $values) {
-            $parameterConf = $this->strategy->parameter($parameter);
-            $filterValues[$parameter] = $this->prepareValues($values, $parameterConf);
+        if (($transmuteClass = $parameter->transmuteWith()) && (class_exists($transmuteClass) && ($transmute = app($transmuteClass)) instanceof TransmuteInterface)) {
+            return array_map(static function ($filerValue) use ($transmute) {
+                $property = new Property($filerValue);
+                $transmute->transmute($property);
+                return $property->getValue();
+            }, $values);
         }
 
-        return $filterValues;
+        return $values;
     }
 
     /**
-     * Apply order and sorting rules to the query
+     * @param $values
      */
-    public function order(): Filter
+    private function findNameValues(array $values): array
     {
-        $canOrderBy = $this->strategy->canOrderBy();
-
-        $directions = ['asc', 'desc'];
-
-        $defaultDirection = 'asc';
-
-        $orderKey = $this->orderKey;
-
-        $sortKey = $this->sortKey;
-
-        $orderValues = $this->query[$orderKey] ?? [];
-
-        if (empty($orderValues)) {
-            return $this;
-        }
-
-        $sortValues = collect($this->query[$sortKey] ?? $defaultDirection);
-        $defaultDirection = $sortValues
-                ->filter(static fn($value, $key): bool => is_int($key))->pop() ?? $defaultDirection;
-
-        $sortBy = $sortValues->filter(static fn($value, $key): bool => !is_int($key));
-
-        $orderBy = [];
-
-        if (is_array($orderValues)) {
-            $orderBy = collect($orderValues)->mapWithKeys(static function ($value, $key) use ($sortBy, $defaultDirection) {
-                if (is_int($key)) {
-                    $direction = $sortBy->get($value) ?? $defaultDirection;
-                    return [$value => $direction];
-                }
-
-                if (is_array($value)) {
-                    return collect($value)->mapWithKeys(static fn($value): array => [$value => $key])->toArray();
-                }
-
-                return [$value => $key];
-            })->toArray();
-        } else {
-            $orderBy[strtolower((string) $orderValues)] = strtolower((string) $defaultDirection);
-        }
-
-        foreach (collect($orderBy)->only($canOrderBy) as $column => $collection) {
-            $direction = (in_array($collection, $directions)) ? $collection : 'asc';
-            $this->builder->orderBy($column, $direction);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Limit the amount of results returned
-     */
-    public function limit(): Filter
-    {
-        $this->builder->limit($this->getLimitValue());
-
-        return $this;
-    }
-
-    /**
-     * Paginate the query using the strategy rules
-     */
-    public function paginate(): Paginated
-    {
-        /**
-         * Get the current key value pairs currently used in the paginated query
-         */
-        $appends = array_diff_assoc($this->query, array_keys($this->strategy->parameters()));
-
-        $perPage = $this->getLimitValue();
-
-        $this->builder->limit($perPage);
-
-        /**
-         * @var $pagination LengthAwarePaginator
-         */
-        $lengthAwarePaginator = $this->builder->paginate($perPage);
-
-        $lengthAwarePaginator->appends($appends);
-
-        return new Paginated(
-            $lengthAwarePaginator->items(),
-            $lengthAwarePaginator->total(),
-            $lengthAwarePaginator->perPage(),
-            $lengthAwarePaginator->currentPage(), [
-                'path' => Paginator::resolveCurrentPath(),
-                'pageName' => $lengthAwarePaginator->getPageName(),
-                'appliedFilters' => $this->filterValues(),
-            ]
-        );
-    }
-
-    /**
-     * Apply eloquent withs for eager loading relationships
-     */
-    public function with(): Filter
-    {
-        $pieces = $this->query[$this->with] ?? [];
-
-        $with = array_filter(explode(',', implode(',', is_array($pieces) ? $pieces : [$pieces])));
-
-        $this->builder->with($with);
-
-        return $this;
-    }
-
-    protected function applyFilters(string $column, array $filters)
-    {
-        foreach ($filters as $filterClass => $filterValues) {
-            $this->applyFilter($filterClass, $filterValues, $column);
-        }
-    }
-
-    /**
-     * Apply a filter clause to a builder
-     *
-     * @param  $class
-     * @param  $value
-     * @param  $column
-     */
-    public function applyFilter($class, $value, $column): Filter
-    {
-        if (class_exists($class) && ($filter = app($class)) instanceof ClauseInterface) {
-            /**
-             * @var $filter ClauseInterface
-             */
-            $filter->filter($this->builder, $value, $column);
-        }
-
-        return $this;
+        return array_filter($values, static fn ($key): bool => !is_int($key), ARRAY_FILTER_USE_KEY);
     }
 
     /**
@@ -343,6 +385,16 @@ class Filter
         }
 
         return ($limit <= $this->strategy->maxLimit()) ? $limit : $this->strategy->maxLimit();
+    }
+
+    /**
+     * @return array
+     */
+    private function parameterOverrides()
+    {
+        $collection = collect($this->strategy->parameters())->map(static fn (Parameter $parameter): string => $parameter->operatorOverride());
+
+        return collect($this->query)->only($collection)->toArray();
     }
 
     private function prepareValues(mixed $values, Parameter $parameter): array
@@ -370,66 +422,14 @@ class Filter
         return $filterValues;
     }
 
-    protected function transmuteValues(array $values, Parameter $parameter): array
-    {
-        if (($transmuteClass = $parameter->transmuteWith()) && (class_exists($transmuteClass) && ($transmute = app($transmuteClass)) instanceof TransmuteInterface)) {
-            return array_map(static function ($filerValue) use ($transmute) {
-                $property = new Property($filerValue);
-                $transmute->transmute($property);
-                return $property->getValue();
-            }, $values);
-        }
-
-        return $values;
-    }
-
-    protected function explodeIndexedValues(array $values, Parameter $parameter)
-    {
-        if ($parameter->shouldExplode()) {
-            $delimiter = $parameter->explodeDelimiter();
-            $values = collect($values)->flatMap(static fn($value): array => array_filter(explode($delimiter, implode($delimiter, is_array($value) ? $value : [$value]))))->toArray();
-        }
-
-        return $values;
-    }
-
-    protected function explodeNamedValues(array $values, Parameter $parameter)
-    {
-        if ($parameter->shouldExplode()) {
-            $delimiter = $parameter->explodeDelimiter();
-            $values = collect($values)->map(static fn($value): array => array_filter(explode($delimiter, implode($delimiter, is_array($value) ? $value : [$value]))))->toArray();
-        }
-
-        return $values;
-    }
-
     /**
-     * @param $values
+     * Set any configurable options
      */
-    private function findNameValues(array $values): array
+    private function setConfig(array $config): void
     {
-        return array_filter($values, static fn($key): bool => !is_int($key), ARRAY_FILTER_USE_KEY);
-    }
-
-    /**
-     * Get the clauses that the parameter can apply to the query
-     *
-     * @param $parameter
-     */
-    public function getParameterMethods(string $parameter): array
-    {
-        $filters = $this->strategy->parameter($parameter)->methods();
-        $except = $this->strategy->parameter($parameter)->disabled();
-        return array_diff_assoc(array_merge($this->strategy->defaultMethods(), $filters), array_keys($except));
-    }
-
-    /**
-     * @return array
-     */
-    private function parameterOverrides()
-    {
-        $collection = collect($this->strategy->parameters())->map(static fn(Parameter $parameter): string => $parameter->operatorOverride());
-
-        return collect($this->query)->only($collection)->toArray();
+        $this->orderKey = $config['order'] ?? 'order';
+        $this->sortKey = $config['sort'] ?? 'sort';
+        $this->limitKey = $config['limit'] ?? 'limit';
+        $this->with = $config['with'] ?? 'with';
     }
 }

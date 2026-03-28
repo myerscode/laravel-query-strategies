@@ -17,6 +17,14 @@ use Myerscode\Laravel\QueryStrategies\Clause\OrEqualsClause;
 
 class Strategy implements StrategyInterface
 {
+    /**
+     * The model which to apply this strategy to
+     *
+     * @var []
+     */
+    protected array $canOrderBy = [
+        'id',
+    ];
 
     /**
      * Parameter config
@@ -24,15 +32,6 @@ class Strategy implements StrategyInterface
      * @var []
      */
     protected array $config = [
-        //
-    ];
-
-    /**
-     * Parameters which can be applied a query
-     *
-     * @var Parameter[]
-     */
-    protected array $parameters = [
         //
     ];
 
@@ -65,17 +64,88 @@ class Strategy implements StrategyInterface
     protected int $maxLimit = 150;
 
     /**
-     * The model which to apply this strategy to
+     * Parameters which can be applied a query
      *
-     * @var []
+     * @var Parameter[]
      */
-    protected array $canOrderBy = [
-        'id',
+    protected array $parameters = [
+        //
     ];
 
     public function __construct()
     {
         $this->compile();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function canOrderBy(): array
+    {
+        return $this->canOrderBy;
+    }
+
+    /**
+     * Get cofig for filter keys and validators to be applied to them
+     *
+     * @return string[]
+     */
+    public function config(): array
+    {
+        return $this->config;
+    }
+
+    /**
+     * Get collection of default methods
+     *
+     * @return string[]
+     */
+    public function defaultMethods(): array
+    {
+        $defaultMethods = [];
+        foreach ($this->defaultMethods as $class => $aliases) {
+            foreach ($aliases as $alias) {
+                $defaultMethods[$alias] = $class;
+            }
+        }
+
+        return $defaultMethods;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function limit(): int
+    {
+        return $this->limitTo;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function maxLimit(): int
+    {
+        return $this->maxLimit;
+    }
+
+    /**
+     * Get the compiled filter parameter config
+     *
+     * @return Parameter
+     */
+    public function parameter(string $parameter): ?Parameter
+    {
+        return $this->parameters[$parameter] ?? null;
+    }
+
+    /**
+     * Get collection of filter keys and validators to be applied to them
+     *
+     * @return string[]
+     */
+    public function parameters(): array
+    {
+        return $this->parameters;
     }
 
     /**
@@ -114,76 +184,5 @@ class Strategy implements StrategyInterface
         $this->parameters[$name] = $parameter;
 
         return $this;
-    }
-
-    /**
-     * Get the compiled filter parameter config
-     *
-     * @return Parameter
-     */
-    public function parameter(string $parameter): ?Parameter
-    {
-        return $this->parameters[$parameter] ?? null;
-    }
-
-    /**
-     * Get collection of default methods
-     *
-     * @return string[]
-     */
-    public function defaultMethods(): array
-    {
-        $defaultMethods = [];
-        foreach ($this->defaultMethods as $class => $aliases) {
-            foreach ($aliases as $alias) {
-                $defaultMethods[$alias] = $class;
-            }
-        }
-
-        return $defaultMethods;
-    }
-
-    /**
-     * Get cofig for filter keys and validators to be applied to them
-     *
-     * @return string[]
-     */
-    public function config(): array
-    {
-        return $this->config;
-    }
-
-    /**
-     * Get collection of filter keys and validators to be applied to them
-     *
-     * @return string[]
-     */
-    public function parameters(): array
-    {
-        return $this->parameters;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function limit(): int
-    {
-        return $this->limitTo;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function maxLimit(): int
-    {
-        return $this->maxLimit;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function canOrderBy(): array
-    {
-        return $this->canOrderBy;
     }
 }

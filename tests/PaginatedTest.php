@@ -9,7 +9,6 @@ use Tests\Support\Strategies\BasicConfigQueryStrategy;
 
 final class PaginatedTest extends TestCase
 {
-
     private array $metaShape = [
         'count',
         'firstItem',
@@ -31,7 +30,7 @@ final class PaginatedTest extends TestCase
         $this->simpleDatabase($this->app);
     }
 
-    public function testGetMeta(): void
+    public function test_get_meta(): void
     {
         $filter = $this->filter(Item::query(), BasicConfigQueryStrategy::class, []);
 

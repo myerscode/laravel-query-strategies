@@ -11,7 +11,6 @@ use Tests\Support\Strategies\BasicConfigQueryStrategy;
 
 final class QueryTest extends TestCase
 {
-
     public static function provider(): Iterator
     {
         yield 'no values' => [
@@ -89,7 +88,7 @@ final class QueryTest extends TestCase
     }
 
     #[DataProvider('provider')]
-    public function testApplyTheStrategy(string $queryString, mixed $expectedSql): void
+    public function test_apply_the_strategy(string $queryString, mixed $expectedSql): void
     {
         $requestParams = [];
         parse_str($queryString, $requestParams);
@@ -98,7 +97,7 @@ final class QueryTest extends TestCase
         $this->assertEquals($expectedSql, $this->getRawSqlFromBuilder($builder));
     }
 
-    public function testParameterOperator(): void
+    public function test_parameter_operator(): void
     {
         $requestParams = [];
         parse_str('foo--contains=bar', $requestParams);

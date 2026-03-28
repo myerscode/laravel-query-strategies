@@ -21,7 +21,6 @@ use Tests\Support\Strategies\InvalidStrategy;
 #[CoversClass(StrategyManager::class)]
 final class StrategyManagerTest extends TestCase
 {
-
     public static function invalidStrategyExceptionProvider(): Iterator
     {
         yield [InvalidStrategy::class];
@@ -29,20 +28,20 @@ final class StrategyManagerTest extends TestCase
 
     public static function invalidStrategyTypeErrorProvider(): Iterator
     {
-        yield [new InvalidStrategy];
+        yield [new InvalidStrategy()];
         yield [new stdClass()];
     }
 
-    public function testCanFindStrategy(): void
+    public function test_can_find_strategy(): void
     {
         $this->assertInstanceOf(StrategyInterface::class, $this->strategyManager()->findStrategy(ComplexConfigQueryStrategy::class));
         $this->assertInstanceOf(StrategyInterface::class, $this->strategyManager()->findStrategy(OverrideQueryStrategy::class));
-        $this->assertInstanceOf(StrategyInterface::class, $this->strategyManager()->findStrategy(new ComplexConfigQueryStrategy));
-        $this->assertInstanceOf(StrategyInterface::class, $this->strategyManager()->findStrategy(new OverrideQueryStrategy));
+        $this->assertInstanceOf(StrategyInterface::class, $this->strategyManager()->findStrategy(new ComplexConfigQueryStrategy()));
+        $this->assertInstanceOf(StrategyInterface::class, $this->strategyManager()->findStrategy(new OverrideQueryStrategy()));
         $this->assertInstanceOf(StrategyInterface::class, $this->strategyManager()->findStrategy(new Strategy()));
     }
 
-    public function testReturnsCachedStrategy(): void
+    public function test_returns_cached_strategy(): void
     {
         $strategyManager = $this->strategyManager();
         $strategy = $strategyManager->findStrategy(ComplexConfigQueryStrategy::class);
@@ -50,23 +49,23 @@ final class StrategyManagerTest extends TestCase
         $this->assertSame($strategy, $shouldBeCached);
     }
 
-    public function testThrowsFilterStrategyNotFound(): void
+    public function test_throws_filter_strategy_not_found(): void
     {
         $this->expectException(FilterStrategyNotFoundException::class);
         $this->strategyManager()->findStrategy('Unknown/Strategy/Class');
     }
 
     #[DataProvider('invalidStrategyExceptionProvider')]
-    public function testThrowsInvalidStrategyException(string $possibleStrategy): void
+    public function test_throws_invalid_strategy_exception(string $possibleStrategy): void
     {
         $this->expectException(InvalidStrategyException::class);
         $this->strategyManager()->findStrategy($possibleStrategy);
     }
 
     #[DataProvider('invalidStrategyTypeErrorProvider')]
-    public function testThrowsTypeErrorForInvalidObjects(object $possibleStrategy): void
+    public function test_throws_type_error_for_invalid_objects(object $possibleStrategy): void
     {
-        $this->expectException(\TypeError::class);
+        $this->expectException(TypeError::class);
         $this->strategyManager()->findStrategy($possibleStrategy);
     }
 }

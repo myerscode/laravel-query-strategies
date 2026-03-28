@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Builder;
 
 class IsInClause extends AbstractClause
 {
-
     /**
      * {@inheritdoc}
      */
@@ -15,7 +14,7 @@ class IsInClause extends AbstractClause
         if (!empty($value)) {
             $values = is_array($value) ? $value : [$value];
             $whereIn = [];
-            array_walk($values, static function ($value) use (&$whereIn) : void {
+            array_walk($values, static function ($value) use (&$whereIn): void {
                 $whereIn = [...$whereIn, ...array_filter(explode(',', (string) $value))];
             });
             $builder->whereIn($column, $whereIn);

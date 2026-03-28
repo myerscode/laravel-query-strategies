@@ -4,7 +4,6 @@ namespace Myerscode\Laravel\QueryStrategies\Strategies;
 
 class Property
 {
-
     private $value;
 
     public function __construct(private $originalValue)

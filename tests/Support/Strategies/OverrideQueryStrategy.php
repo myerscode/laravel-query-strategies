@@ -4,21 +4,32 @@ namespace Tests\Support\Strategies;
 
 use Myerscode\Laravel\QueryStrategies\Clause\DoesNotEqualClause;
 use Myerscode\Laravel\QueryStrategies\Strategies\Strategy;
+use Override;
 
 class OverrideQueryStrategy extends Strategy
 {
+    /**
+     * {@inheritDoc}
+     */
+    #[Override]
+    protected array $canOrderBy = [
+        'id',
+        'name',
+        'likes',
+        'created',
+    ];
 
     /**
      * {@inheritDoc}
      */
-    #[\Override]
+    #[Override]
     protected array $config = [
         'foo' => [
             'column' => 'foo',
             'default' => DoesNotEqualClause::class,
             'disabled' => [
                 'equals',
-            ]
+            ],
         ],
         'bar',
         'foobar' => [
@@ -34,23 +45,12 @@ class OverrideQueryStrategy extends Strategy
     /**
      * {@inheritDoc}
      */
-    #[\Override]
+    #[Override]
     protected int $limitTo = 5;
 
     /**
      * {@inheritDoc}
      */
-    #[\Override]
+    #[Override]
     protected int $maxLimit = 50;
-
-    /**
-     * {@inheritDoc}
-     */
-    #[\Override]
-    protected array $canOrderBy = [
-        'id',
-        'name',
-        'likes',
-        'created',
-    ];
 }

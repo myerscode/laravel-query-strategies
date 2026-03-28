@@ -9,21 +9,31 @@ use Myerscode\Laravel\QueryStrategies\Strategies\Strategy;
 use Myerscode\Laravel\QueryStrategies\Transmute\BoolTransmute;
 use Tests\Support\Clause\CustomMultiClause;
 use Tests\Support\Clause\LookupClause;
+use Override;
 
 class ComplexConfigQueryStrategy extends Strategy
 {
+    /**
+     * {@inheritDoc}
+     */
+    #[Override]
+    protected array $canOrderBy = [
+        'id',
+        'name',
+        'date',
+    ];
 
     /**
      * {@inheritDoc}
      */
-    #[\Override]
+    #[Override]
     protected array $config = [
         'foo' => [
             'column' => 'foo',
             'methods' => [
                 'begins' => BeginsWithClause::class,
                 'ends' => EndsWithClause::class,
-            ]
+            ],
         ],
         'bar' => [
             'column' => 'bar',
@@ -34,7 +44,7 @@ class ComplexConfigQueryStrategy extends Strategy
             'default' => DoesNotEqualClause::class,
             'disabled' => [
                 'equals',
-            ]
+            ],
         ],
         'barfoo' => [
             'column' => 'bar_foo',
@@ -65,17 +75,7 @@ class ComplexConfigQueryStrategy extends Strategy
             'explode' => true,
             'methods' => [
                 'lookup' => LookupClause::class,
-            ]
+            ],
         ],
-    ];
-
-    /**
-     * {@inheritDoc}
-     */
-    #[\Override]
-    protected array $canOrderBy = [
-        'id',
-        'name',
-        'date'
     ];
 }

@@ -6,23 +6,6 @@ use Illuminate\Support\Facades\DB;
 
 trait QueryLog
 {
-
-    /**
-     * Start logging queries run through Laravel
-     */
-    public function startLogging(): void
-    {
-        DB::enableQueryLog();
-    }
-
-    /**
-     * Stop logging queries run through Laravel
-     */
-    public function stopLogging(): void
-    {
-        DB::disableQueryLog();
-    }
-
     /**
      * Get a parsed log of quries run, values used will replace bindings in string
      */
@@ -40,5 +23,21 @@ trait QueryLog
         endforeach;
 
         return $formattedQueries;
+    }
+
+    /**
+     * Start logging queries run through Laravel
+     */
+    public function startLogging(): void
+    {
+        DB::enableQueryLog();
+    }
+
+    /**
+     * Stop logging queries run through Laravel
+     */
+    public function stopLogging(): void
+    {
+        DB::disableQueryLog();
     }
 }

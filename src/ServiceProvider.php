@@ -26,17 +26,6 @@ class ServiceProvider extends LaravelServiceProvider
     }
 
     /**
-     * Register the application services.
-     */
-    #[Override]
-    public function register(): void
-    {
-        $this->app->bind(FilterBuilder::class, static fn($app): FilterBuilder => new FilterBuilder($app->make(Request::class), $app->make(StrategyManager::class)));
-
-        $this->app->alias(FilterBuilder::class, 'Query');
-    }
-
-    /**
      * Get the services provided by the provider.
      *
      * @return array
@@ -46,7 +35,18 @@ class ServiceProvider extends LaravelServiceProvider
     {
         return [
             FilterBuilder::class,
-            'Query'
+            'Query',
         ];
+    }
+
+    /**
+     * Register the application services.
+     */
+    #[Override]
+    public function register(): void
+    {
+        $this->app->bind(FilterBuilder::class, static fn ($app): FilterBuilder => new FilterBuilder($app->make(Request::class), $app->make(StrategyManager::class)));
+
+        $this->app->alias(FilterBuilder::class, 'Query');
     }
 }

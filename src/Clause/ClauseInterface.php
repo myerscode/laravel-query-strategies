@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Builder;
 
 interface ClauseInterface
 {
-
     /**
      * Apply query filters to a builder
      *

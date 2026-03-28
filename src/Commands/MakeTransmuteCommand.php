@@ -8,18 +8,17 @@ use Override;
 
 class MakeTransmuteCommand extends GeneratorCommand
 {
+    /**
+     * {@inheritDoc}
+     */
+    #[Override]
+    protected $description = 'Create a new query property transmute handler.';
 
     /**
      * {@inheritDoc}
      */
     #[Override]
     protected $signature = 'make:transmute {name}';
-
-    /**
-     * {@inheritDoc}
-     */
-    #[Override]
-    protected $description = 'Create a new query property transmute handler.';
 
 
     /**
@@ -34,10 +33,9 @@ class MakeTransmuteCommand extends GeneratorCommand
     /**
      * {@inheritDoc}
      */
-    #[Override]
-    protected function rootNamespace()
+    protected function getStub()
     {
-        return $this->laravel->getNamespace() . 'Queries\\Transmute\\';
+        return __DIR__ . '/../Stubs/Transmute.php';
     }
 
     /**
@@ -57,8 +55,9 @@ class MakeTransmuteCommand extends GeneratorCommand
     /**
      * {@inheritDoc}
      */
-    protected function getStub()
+    #[Override]
+    protected function rootNamespace()
     {
-        return __DIR__ . '/../Stubs/Transmute.php';
+        return $this->laravel->getNamespace() . 'Queries\\Transmute\\';
     }
 }

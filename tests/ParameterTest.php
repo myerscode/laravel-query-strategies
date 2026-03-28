@@ -12,7 +12,6 @@ use PHPUnit\Framework\Attributes\DataProvider;
 #[CoversClass(Parameter::class)]
 final class ParameterTest extends TestCase
 {
-
     public static function dataProvider(): Iterator
     {
         yield [
@@ -22,7 +21,7 @@ final class ParameterTest extends TestCase
                 'filters' => [
                     'does-not-equal' => 'HelloWorld::class',
                 ],
-            ]
+            ],
         ];
         yield [
             [
@@ -32,26 +31,26 @@ final class ParameterTest extends TestCase
                 'disabled' => [
                     'contains',
                 ],
-            ]
+            ],
         ];
         yield [
             [
-                'override' => 'different-mass-name'
-            ]
+                'override' => 'different-mass-name',
+            ],
         ];
         yield [
             [
-                'overrideSuffix' => '--mass-filter'
-            ]
+                'overrideSuffix' => '--mass-filter',
+            ],
         ];
         yield [
             [
-            ]
+            ],
         ];
     }
 
     #[DataProvider('dataProvider')]
-    public function testInstanceCreation(array $config): void
+    public function test_instance_creation(array $config): void
     {
         $parameter = new Parameter('foobar', $config);
         $this->assertSame('foobar', $parameter->name());

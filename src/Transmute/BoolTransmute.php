@@ -6,7 +6,6 @@ use Myerscode\Laravel\QueryStrategies\Strategies\Property;
 
 class BoolTransmute implements TransmuteInterface
 {
-
     public function transmute(Property $property): Property
     {
         if ($this->isTrue($property->getOriginalValue())) {

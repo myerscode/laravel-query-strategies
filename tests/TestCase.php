@@ -17,27 +17,16 @@ use Orchestra\Testbench\TestCase as Orchestra;
 
 class TestCase extends Orchestra
 {
-    protected function getPackageProviders($app)
-    {
-        return [
-            ServiceProvider::class
-        ];
-    }
-
-    public function simpleDatabase(Application $application): void
-    {
-        $application['db']->connection()->getSchemaBuilder()->create('items', static function (Blueprint $blueprint) : void {
-            $blueprint->increments('id');
-            $blueprint->string('name');
-            $blueprint->string('likes');
-            $blueprint->timestamps();
-        });
-    }
-
     public function filter($builderOrModel, string|StrategyInterface|Model $strategyClass, $request = null, $config = []): Filter
     {
         $strategy = $this->strategyManager()->findStrategy($strategyClass);
         return new Filter($builderOrModel, $strategy, $request ?? [], $config);
+    }
+
+    public function getRawSqlFromBuilder(Builder $builder): string
+    {
+        $query = str_replace(['?'], ["'%s'"], $builder->toSql());
+        return vsprintf($query, $builder->getBindings());
     }
 
     public function request(array $replace = [])
@@ -47,14 +36,24 @@ class TestCase extends Orchestra
         return $request;
     }
 
-    public function strategyManager(): StrategyManager
+    public function simpleDatabase(Application $application): void
     {
-        return new StrategyManager;
+        $application['db']->connection()->getSchemaBuilder()->create('items', static function (Blueprint $blueprint): void {
+            $blueprint->increments('id');
+            $blueprint->string('name');
+            $blueprint->string('likes');
+            $blueprint->timestamps();
+        });
     }
 
-    public function getRawSqlFromBuilder(Builder $builder): string
+    public function strategyManager(): StrategyManager
     {
-        $query = str_replace(['?'], ["'%s'"], $builder->toSql());
-        return vsprintf($query, $builder->getBindings());
+        return new StrategyManager();
+    }
+    protected function getPackageProviders($app)
+    {
+        return [
+            ServiceProvider::class,
+        ];
     }
 }

@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Builder;
 
 class GreaterThanClause extends AbstractClause
 {
-
     /**
      * {@inheritdoc}
      */
@@ -14,7 +13,7 @@ class GreaterThanClause extends AbstractClause
     {
         if (!empty($value)) {
             $values = is_array($value) ? $value : [$value];
-            collect($values)->each(static function ($value) use ($column, $builder) : void {
+            collect($values)->each(static function ($value) use ($column, $builder): void {
                 $builder->where($column, '>', $value);
             });
         }

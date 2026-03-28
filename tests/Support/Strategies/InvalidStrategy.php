@@ -4,7 +4,6 @@ namespace Tests\Support\Strategies;
 
 class InvalidStrategy
 {
-
     /**
      * {@inheritDoc}
      */

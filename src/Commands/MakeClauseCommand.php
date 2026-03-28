@@ -8,18 +8,17 @@ use Override;
 
 class MakeClauseCommand extends GeneratorCommand
 {
+    /**
+     * {@inheritDoc}
+     */
+    #[Override]
+    protected $description = 'Create a new query clause';
 
     /**
      * {@inheritDoc}
      */
     #[Override]
     protected $signature = 'make:clause {name}';
-
-    /**
-     * {@inheritDoc}
-     */
-    #[Override]
-    protected $description = 'Create a new query clause';
 
 
     /**
@@ -34,10 +33,9 @@ class MakeClauseCommand extends GeneratorCommand
     /**
      * {@inheritDoc}
      */
-    #[Override]
-    protected function rootNamespace()
+    protected function getStub()
     {
-        return $this->laravel->getNamespace() . 'Queries\\Clause\\';
+        return __DIR__ . '/../Stubs/Clause.php';
     }
 
     /**
@@ -57,8 +55,9 @@ class MakeClauseCommand extends GeneratorCommand
     /**
      * {@inheritDoc}
      */
-    protected function getStub()
+    #[Override]
+    protected function rootNamespace()
     {
-        return __DIR__ . '/../Stubs/Clause.php';
+        return $this->laravel->getNamespace() . 'Queries\\Clause\\';
     }
 }

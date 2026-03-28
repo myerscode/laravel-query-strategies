@@ -8,18 +8,17 @@ use Override;
 
 class MakeStrategyCommand extends GeneratorCommand
 {
+    /**
+     * {@inheritDoc}
+     */
+    #[Override]
+    protected $description = 'Create a new query strategy';
 
     /**
      * {@inheritDoc}
      */
     #[Override]
     protected $signature = 'make:strategy {name}';
-
-    /**
-     * {@inheritDoc}
-     */
-    #[Override]
-    protected $description = 'Create a new query strategy';
 
 
     /**
@@ -34,10 +33,9 @@ class MakeStrategyCommand extends GeneratorCommand
     /**
      * {@inheritDoc}
      */
-    #[Override]
-    protected function rootNamespace()
+    protected function getStub()
     {
-        return $this->laravel->getNamespace() . 'Queries\\Strategies\\';
+        return __DIR__ . '/../Stubs/Strategy.php';
     }
 
     /**
@@ -57,8 +55,9 @@ class MakeStrategyCommand extends GeneratorCommand
     /**
      * {@inheritDoc}
      */
-    protected function getStub()
+    #[Override]
+    protected function rootNamespace()
     {
-        return __DIR__ . '/../Stubs/Strategy.php';
+        return $this->laravel->getNamespace() . 'Queries\\Strategies\\';
     }
 }

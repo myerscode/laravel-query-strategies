@@ -58,9 +58,9 @@ class StrategyManager
      */
     private function getStrategy(string $strategy): StrategyInterface
     {
-        if (class_exists($strategy) && ($strategyClass = new $strategy)) {
+        if (class_exists($strategy) && ($strategyClass = new $strategy())) {
             if ($strategyClass instanceof StrategyInterface) {
-                $this->cache[$strategy] = new $strategyClass;
+                $this->cache[$strategy] = new $strategyClass();
                 return $this->cache[$strategy];
             }
 

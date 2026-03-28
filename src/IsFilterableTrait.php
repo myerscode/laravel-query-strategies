@@ -8,7 +8,6 @@ use Myerscode\Laravel\QueryStrategies\Exceptions\InvalidStrategyException;
 
 trait IsFilterableTrait
 {
-
     /**
      * @throws BuilderNotSetException
      * @throws FilterStrategyNotFoundException

@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Builder;
 
 class IsNotInClause extends AbstractClause
 {
-
     /**
      * {@inheritdoc}
      */
@@ -15,7 +14,7 @@ class IsNotInClause extends AbstractClause
         if (!empty($value)) {
             $values = is_array($value) ? $value : [$value];
             $notIn = [];
-            array_walk($values, static function ($value) use (&$notIn) : void {
+            array_walk($values, static function ($value) use (&$notIn): void {
                 $notIn = [...$notIn, ...array_filter(explode(',', (string) $value))];
             });
             $builder->whereNotIn($column, $notIn);

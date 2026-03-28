@@ -9,14 +9,13 @@ use Tests\Support\Strategies\ComplexConfigQueryStrategy;
 
 final class TransmuteTest extends TestCase
 {
-
     protected function setUp(): void
     {
         parent::setUp();
         $this->simpleDatabase($this->app);
     }
 
-    public function testConfigCanOverrideDefaultMultiClause(): void
+    public function test_config_can_override_default_multi_clause(): void
     {
         $strategy = $this->strategyManager()->findStrategy(ComplexConfigQueryStrategy::class);
         $distill = $this->filter(Item::query(), $strategy, ['transmute_me' => 'no']);

@@ -3,14 +3,14 @@
 namespace Tests\Support\Strategies;
 
 use Myerscode\Laravel\QueryStrategies\Strategies\Strategy;
+use Override;
 
 class BasicConfigQueryStrategy extends Strategy
 {
-
     /**
      * {@inheritDoc}
      */
-    #[\Override]
+    #[Override]
     protected array $config = [
         'foo',
         'bar',

@@ -21,129 +21,128 @@ use Tests\Support\Strategies\ComplexConfigQueryStrategy;
 
 final class ClauseTest extends TestCase
 {
-
-    public function testBeginsWithFilterClause(): void
+    public function test_begins_with_filter_clause(): void
     {
-        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy());
         $filter->applyFilter(BeginsWithClause::class, 'foobar', 'test_column');
 
         $where = [
             [
-                "type" => "Basic",
-                "column" => 'test_column',
-                "operator" => "like",
-                "value" => "foobar%",
-                "boolean" => "and",
+                'type' => 'Basic',
+                'column' => 'test_column',
+                'operator' => 'like',
+                'value' => 'foobar%',
+                'boolean' => 'and',
             ],
         ];
         $this->assertSame($where, $filter->builder()->getQuery()->wheres);
     }
 
-    public function testContainsFilterClause(): void
+    public function test_contains_filter_clause(): void
     {
-        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy());
         $filter->applyFilter(ContainsClause::class, 'foobar', 'test_column');
 
         $where = [
             [
-                "type" => "Basic",
-                "column" => 'test_column',
-                "operator" => "like",
-                "value" => "%foobar%",
-                "boolean" => "and",
+                'type' => 'Basic',
+                'column' => 'test_column',
+                'operator' => 'like',
+                'value' => '%foobar%',
+                'boolean' => 'and',
             ],
         ];
         $this->assertSame($where, $filter->builder()->getQuery()->wheres);
     }
 
-    public function testDoesNotEqualFilterClause(): void
+    public function test_does_not_equal_filter_clause(): void
     {
-        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy());
         $filter->applyFilter(DoesNotEqualClause::class, 'foobar', 'test_column');
 
         $where = [
             [
-                "type" => "Basic",
-                "column" => 'test_column',
-                "operator" => "!=",
-                "value" => "foobar",
-                "boolean" => "and",
+                'type' => 'Basic',
+                'column' => 'test_column',
+                'operator' => '!=',
+                'value' => 'foobar',
+                'boolean' => 'and',
             ],
         ];
         $this->assertSame($where, $filter->builder()->getQuery()->wheres);
     }
 
-    public function testEndsWithFilterClause(): void
+    public function test_ends_with_filter_clause(): void
     {
-        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy());
         $filter->applyFilter(EndsWithClause::class, 'foobar', 'test_column');
 
         $where = [
             [
-                "type" => "Basic",
-                "column" => 'test_column',
-                "operator" => "like",
-                "value" => "%foobar",
-                "boolean" => "and",
+                'type' => 'Basic',
+                'column' => 'test_column',
+                'operator' => 'like',
+                'value' => '%foobar',
+                'boolean' => 'and',
             ],
         ];
         $this->assertSame($where, $filter->builder()->getQuery()->wheres);
     }
 
-    public function testEqualsFilterClause(): void
+    public function test_equals_filter_clause(): void
     {
-        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy());
         $filter->applyFilter(EqualsClause::class, 'foobar', 'test_column');
 
         $where = [
             [
-                "type" => "Basic",
-                "column" => 'test_column',
-                "operator" => "=",
-                "value" => "foobar",
-                "boolean" => "and",
+                'type' => 'Basic',
+                'column' => 'test_column',
+                'operator' => '=',
+                'value' => 'foobar',
+                'boolean' => 'and',
             ],
         ];
         $this->assertSame($where, $filter->builder()->getQuery()->wheres);
     }
 
-    public function testGreaterThanFilterClause(): void
+    public function test_greater_than_filter_clause(): void
     {
-        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy());
         $filter->applyFilter(GreaterThanClause::class, 'foobar', 'test_column');
 
         $where = [
             [
-                "type" => "Basic",
-                "column" => 'test_column',
-                "operator" => ">",
-                "value" => "foobar",
-                "boolean" => "and",
+                'type' => 'Basic',
+                'column' => 'test_column',
+                'operator' => '>',
+                'value' => 'foobar',
+                'boolean' => 'and',
             ],
         ];
         $this->assertSame($where, $filter->builder()->getQuery()->wheres);
     }
 
-    public function testGreaterThanOrEqualsFilterClause(): void
+    public function test_greater_than_or_equals_filter_clause(): void
     {
-        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy());
         $filter->applyFilter(GreaterThanOrEqualsClause::class, 'foobar', 'test_column');
 
         $where = [
             [
-                "type" => "Basic",
-                "column" => 'test_column',
-                "operator" => ">=",
-                "value" => "foobar",
-                "boolean" => "and",
+                'type' => 'Basic',
+                'column' => 'test_column',
+                'operator' => '>=',
+                'value' => 'foobar',
+                'boolean' => 'and',
             ],
         ];
         $this->assertSame($where, $filter->builder()->getQuery()->wheres);
     }
 
-    public function testIsInFilterClause(): void
+    public function test_is_in_filter_clause(): void
     {
-        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy());
         $filter->applyFilter(IsInClause::class, ['foo', 'bar'], 'test_column');
 
         $where = [
@@ -151,15 +150,15 @@ final class ClauseTest extends TestCase
                 'type' => 'In',
                 'column' => 'test_column',
                 'boolean' => 'and',
-                "values" => ['foo', 'bar'],
+                'values' => ['foo', 'bar'],
             ],
         ];
         $this->assertEquals($where, $filter->builder()->getQuery()->wheres);
     }
 
-    public function testIsNotInFilterClause(): void
+    public function test_is_not_in_filter_clause(): void
     {
-        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy());
         $filter->applyFilter(IsNotInClause::class, ['foo', 'bar'], 'test_column');
 
         $where = [
@@ -167,58 +166,58 @@ final class ClauseTest extends TestCase
                 'type' => 'NotIn',
                 'column' => 'test_column',
                 'boolean' => 'and',
-                "values" => ['foo', 'bar'],
+                'values' => ['foo', 'bar'],
             ],
         ];
         $this->assertEquals($where, $filter->builder()->getQuery()->wheres);
     }
 
-    public function testLessThanFilterClause(): void
+    public function test_less_than_filter_clause(): void
     {
-        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy());
         $filter->applyFilter(LessThanClause::class, 'foobar', 'test_column');
 
         $where = [
             [
-                "type" => "Basic",
-                "column" => 'test_column',
-                "operator" => "<",
-                "value" => "foobar",
-                "boolean" => "and",
+                'type' => 'Basic',
+                'column' => 'test_column',
+                'operator' => '<',
+                'value' => 'foobar',
+                'boolean' => 'and',
             ],
         ];
         $this->assertSame($where, $filter->builder()->getQuery()->wheres);
     }
 
-    public function testLessThanOrEqualsFilterClause(): void
+    public function test_less_than_or_equals_filter_clause(): void
     {
-        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy());
         $filter->applyFilter(LessThanOrEqualsClause::class, 'foobar', 'test_column');
 
         $where = [
             [
-                "type" => "Basic",
-                "column" => 'test_column',
-                "operator" => "<=",
-                "value" => "foobar",
-                "boolean" => "and",
+                'type' => 'Basic',
+                'column' => 'test_column',
+                'operator' => '<=',
+                'value' => 'foobar',
+                'boolean' => 'and',
             ],
         ];
         $this->assertSame($where, $filter->builder()->getQuery()->wheres);
     }
 
-    public function testOrEqualsFilterClause(): void
+    public function test_or_equals_filter_clause(): void
     {
-        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy());
         $filter->applyFilter(OrEqualsClause::class, 'foobar', 'test_column');
 
         $where = [
             [
-                "type" => "Basic",
-                "column" => 'test_column',
-                "operator" => "=",
-                "value" => "foobar",
-                "boolean" => "or",
+                'type' => 'Basic',
+                'column' => 'test_column',
+                'operator' => '=',
+                'value' => 'foobar',
+                'boolean' => 'or',
             ],
         ];
         $this->assertSame($where, $filter->builder()->getQuery()->wheres);

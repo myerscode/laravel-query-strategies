@@ -11,5 +11,5 @@ return [
         'with' => 'with',
         'fields' => 'fields',
         'append' => 'append',
-    ]
+    ],
 ];

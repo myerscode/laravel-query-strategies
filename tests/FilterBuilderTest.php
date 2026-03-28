@@ -26,68 +26,7 @@ use function Myerscode\Laravel\QueryStrategies\filter;
  */
 final class FilterBuilderTest extends TestCase
 {
-
-    public function testFilterBuilderInstanceCreation(): void
-    {
-        $filterBuilder = new FilterBuilder(new Request(), new StrategyManager());
-        $this->assertInstanceOf(FilterBuilder::class, $filterBuilder);
-
-        $filterBuilder = $this->app->make(FilterBuilder::class);
-        $this->assertInstanceOf(FilterBuilder::class, $filterBuilder);
-
-        $filterBuilder = new FilterBuilder(new Request(), new StrategyManager());
-        $this->assertInstanceOf(Filter::class, $filterBuilder->filter(Item::class)->with(ComplexConfigQueryStrategy::class));
-
-        $filterBuilder = $this->app->make(FilterBuilder::class);
-        $this->assertInstanceOf(Filter::class, $filterBuilder->filter(Item::class)->with(ComplexConfigQueryStrategy::class));
-    }
-
-    public function testCanFindBuilderFromClass(): void
-    {
-        $filterBuilder = new FilterBuilder( new Request(), new StrategyManager());
-        $this->assertInstanceOf(FilterBuilder::class, $filterBuilder->filter(Item::class));
-        $this->assertInstanceOf(Builder::class, $filterBuilder->builder());
-
-        $filterBuilder = Query::filter(Item::class);
-        $this->assertInstanceOf(FilterBuilder::class, $filterBuilder);
-        $this->assertInstanceOf(Builder::class, $filterBuilder->builder());
-
-        $filterBuilder = filter(Item::class);
-        $this->assertInstanceOf(FilterBuilder::class, $filterBuilder);
-        $this->assertInstanceOf(Builder::class, $filterBuilder->builder());
-    }
-
-    public function testCanFindBuilderFromModel(): void
-    {
-        $filterBuilder = new FilterBuilder( new Request(), new StrategyManager());
-        $this->assertInstanceOf(FilterBuilder::class, $filterBuilder->filter(new Item));
-        $this->assertInstanceOf(Builder::class, $filterBuilder->builder());
-
-        $filterBuilder = Query::filter(new Item);
-        $this->assertInstanceOf(FilterBuilder::class, $filterBuilder);
-        $this->assertInstanceOf(Builder::class, $filterBuilder->builder());
-
-        $filterBuilder = filter(new Item);
-        $this->assertInstanceOf(FilterBuilder::class, $filterBuilder);
-        $this->assertInstanceOf(Builder::class, $filterBuilder->builder());
-    }
-
-    public function testCanFindBuilderFromBuilder(): void
-    {
-        $filterBuilder = new FilterBuilder( new Request(), new StrategyManager());
-        $this->assertInstanceOf(FilterBuilder::class, $filterBuilder->filter(Item::query()));
-        $this->assertInstanceOf(Builder::class, $filterBuilder->builder());
-
-        $filterBuilder = Query::filter(Item::query());
-        $this->assertInstanceOf(FilterBuilder::class, $filterBuilder);
-        $this->assertInstanceOf(Builder::class, $filterBuilder->builder());
-
-        $filterBuilder = filter(Item::query());
-        $this->assertInstanceOf(FilterBuilder::class, $filterBuilder);
-        $this->assertInstanceOf(Builder::class, $filterBuilder->builder());
-    }
-
-    public function testCanFilterUsingModelConfigForStrategy(): void
+    public function test_can_filter_using_model_config_for_strategy(): void
     {
         $this->app['db']->connection()->getSchemaBuilder()->create('records', static function (\Illuminate\Database\Schema\Blueprint $blueprint): void {
             $blueprint->increments('id');
@@ -100,43 +39,103 @@ final class FilterBuilderTest extends TestCase
         $this->assertInstanceOf(LengthAwarePaginator::class, $lengthAwarePaginator);
     }
 
-    public function testFilterWithReturnsInstanceOfFilter(): void
+    public function test_can_find_builder_from_builder(): void
     {
-        $filterBuilder = new FilterBuilder( new Request(), new StrategyManager());
-        $this->assertInstanceOf(Filter::class, $filterBuilder->filter(new Item)->with(ComplexConfigQueryStrategy::class));
+        $filterBuilder = new FilterBuilder(new Request(), new StrategyManager());
+        $this->assertInstanceOf(FilterBuilder::class, $filterBuilder->filter(Item::query()));
+        $this->assertInstanceOf(Builder::class, $filterBuilder->builder());
+
+        $filterBuilder = Query::filter(Item::query());
+        $this->assertInstanceOf(FilterBuilder::class, $filterBuilder);
+        $this->assertInstanceOf(Builder::class, $filterBuilder->builder());
+
+        $filterBuilder = filter(Item::query());
+        $this->assertInstanceOf(FilterBuilder::class, $filterBuilder);
+        $this->assertInstanceOf(Builder::class, $filterBuilder->builder());
     }
 
-    public function testFilteringWithInvalidBuilderOrModelThrowsBuilderNotFoundException(): void
+    public function test_can_find_builder_from_class(): void
+    {
+        $filterBuilder = new FilterBuilder(new Request(), new StrategyManager());
+        $this->assertInstanceOf(FilterBuilder::class, $filterBuilder->filter(Item::class));
+        $this->assertInstanceOf(Builder::class, $filterBuilder->builder());
+
+        $filterBuilder = Query::filter(Item::class);
+        $this->assertInstanceOf(FilterBuilder::class, $filterBuilder);
+        $this->assertInstanceOf(Builder::class, $filterBuilder->builder());
+
+        $filterBuilder = filter(Item::class);
+        $this->assertInstanceOf(FilterBuilder::class, $filterBuilder);
+        $this->assertInstanceOf(Builder::class, $filterBuilder->builder());
+    }
+
+    public function test_can_find_builder_from_model(): void
+    {
+        $filterBuilder = new FilterBuilder(new Request(), new StrategyManager());
+        $this->assertInstanceOf(FilterBuilder::class, $filterBuilder->filter(new Item()));
+        $this->assertInstanceOf(Builder::class, $filterBuilder->builder());
+
+        $filterBuilder = Query::filter(new Item());
+        $this->assertInstanceOf(FilterBuilder::class, $filterBuilder);
+        $this->assertInstanceOf(Builder::class, $filterBuilder->builder());
+
+        $filterBuilder = filter(new Item());
+        $this->assertInstanceOf(FilterBuilder::class, $filterBuilder);
+        $this->assertInstanceOf(Builder::class, $filterBuilder->builder());
+    }
+
+    public function test_filter_builder_instance_creation(): void
+    {
+        $filterBuilder = new FilterBuilder(new Request(), new StrategyManager());
+        $this->assertInstanceOf(FilterBuilder::class, $filterBuilder);
+
+        $filterBuilder = $this->app->make(FilterBuilder::class);
+        $this->assertInstanceOf(FilterBuilder::class, $filterBuilder);
+
+        $filterBuilder = new FilterBuilder(new Request(), new StrategyManager());
+        $this->assertInstanceOf(Filter::class, $filterBuilder->filter(Item::class)->with(ComplexConfigQueryStrategy::class));
+
+        $filterBuilder = $this->app->make(FilterBuilder::class);
+        $this->assertInstanceOf(Filter::class, $filterBuilder->filter(Item::class)->with(ComplexConfigQueryStrategy::class));
+    }
+
+    public function test_filtering_with_invalid_builder_or_model_throws_builder_not_found_exception(): void
     {
         $this->expectException(BuilderNotFoundException::class);
-        $filterBuilder = new FilterBuilder( new Request(), new StrategyManager());
+        $filterBuilder = new FilterBuilder(new Request(), new StrategyManager());
         $filterBuilder->filter('foodbar');
     }
 
-    public function testFilteringWithoutBuilderThrowsBuilderNotSetException(): void
+    public function test_filtering_without_builder_throws_builder_not_set_exception(): void
     {
         $this->expectException(BuilderNotSetException::class);
-        $filterBuilder = new FilterBuilder( new Request(), new StrategyManager());
+        $filterBuilder = new FilterBuilder(new Request(), new StrategyManager());
         $filterBuilder->with(ComplexConfigQueryStrategy::class);
     }
 
-    public function testPassingEmptyBuilderThrowsBuilderNotSetException(): void
+    public function test_filter_with_returns_instance_of_filter(): void
     {
-        $this->expectException(BuilderNotSetException::class);
-        $filterBuilder = new FilterBuilder( new Request(), new StrategyManager());
-        $filterBuilder->filter('');
+        $filterBuilder = new FilterBuilder(new Request(), new StrategyManager());
+        $this->assertInstanceOf(Filter::class, $filterBuilder->filter(new Item())->with(ComplexConfigQueryStrategy::class));
     }
 
-    public function testIsFilterableTrait(): void
+    public function test_is_filterable_trait(): void
     {
         $register = new Register();
         $this->assertInstanceOf(Filter::class, $register->filter());
     }
 
-    public function testIsFilterableTraitThrowsExceptionIfStrategyNotPresent(): void
+    public function test_is_filterable_trait_throws_exception_if_strategy_not_present(): void
     {
         $this->expectException(BuilderNotSetException::class);
         $todoList = new TodoList();
         $this->assertInstanceOf(Filter::class, $todoList->filter());
+    }
+
+    public function test_passing_empty_builder_throws_builder_not_set_exception(): void
+    {
+        $this->expectException(BuilderNotSetException::class);
+        $filterBuilder = new FilterBuilder(new Request(), new StrategyManager());
+        $filterBuilder->filter('');
     }
 }

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests;
 
 use Iterator;
-use Myerscode\Laravel\QueryStrategies\Strategies\Parameter;
 use Myerscode\Laravel\QueryStrategies\Strategies\Strategy;
 use Myerscode\Laravel\QueryStrategies\Strategies\StrategyInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -17,18 +16,17 @@ use Tests\Support\Strategies\BasicConfigQueryStrategy;
 #[CoversClass(Strategy::class)]
 final class StrategyConfigTest extends TestCase
 {
-
     public static function providerOfStrategies(): Iterator
     {
-        yield [new ComplexConfigQueryStrategy];
-        yield [new OverrideQueryStrategy];
-        yield [new BasicConfigQueryStrategy];
+        yield [new ComplexConfigQueryStrategy()];
+        yield [new OverrideQueryStrategy()];
+        yield [new BasicConfigQueryStrategy()];
     }
 
     #[DataProvider('providerOfStrategies')]
-    public function testReturnsProperties(StrategyInterface $strategy): void
+    public function test_returns_properties(StrategyInterface $strategy): void
     {
-        $strategy = new $strategy;
+        $strategy = new $strategy();
         $this->assertIsArray($strategy->defaultMethods());
         $this->assertIsArray($strategy->parameters());
         $this->assertIsInt($strategy->limit());

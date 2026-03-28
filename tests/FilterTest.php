@@ -17,6 +17,75 @@ use Tests\Support\Strategies\OverrideQueryStrategy;
 #[CoversClass(Filter::class)]
 final class FilterTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->simpleDatabase($this->app);
+    }
+
+    public static function providerForApplyOrder(): Iterator
+    {
+        yield 'no sort and order specified' => [
+            'select * from "items"',
+            ComplexConfigQueryStrategy::class,
+            [],
+        ];
+        yield 'order by allowed value' => [
+            'select * from "items" order by "id" asc',
+            ComplexConfigQueryStrategy::class,
+            ['order' => 'id'],
+        ];
+        yield 'sort by allowed value' => [
+            'select * from "items" order by "id" desc',
+            ComplexConfigQueryStrategy::class,
+            ['order' => 'id', 'sort' => 'desc'],
+        ];
+        yield 'invalid sort resorts to default' => [
+            'select * from "items" order by "id" asc',
+            ComplexConfigQueryStrategy::class,
+            ['order' => 'id', 'sort' => 'foobar'],
+        ];
+        yield 'order and sort by value values' => [
+            'select * from "items" order by "name" desc',
+            OverrideQueryStrategy::class,
+            ['order' => 'name', 'sort' => 'desc'],
+        ];
+        yield 'order by multiple values' => [
+            'select * from "items" order by "name" asc, "id" asc',
+            OverrideQueryStrategy::class,
+            ['order' => ['name', 'id'], 'sort' => 'asc'],
+        ];
+        yield 'set sort in order parameter' => [
+            'select * from "items" order by "id" asc, "created" desc',
+            OverrideQueryStrategy::class,
+            ['order' => ['asc' => 'id', 'desc' => 'created',]],
+        ];
+        yield 'different sorts set in order with multiple order bys' => [
+            'select * from "items" order by "id" asc, "name" asc, "created" desc',
+            OverrideQueryStrategy::class,
+            ['order' => ['asc' => ['id', 'name'], 'desc' => ['created']]],
+        ];
+        yield 'set sorts to order in sort parameter' => [
+            'select * from "items" order by "id" desc, "name" asc',
+            OverrideQueryStrategy::class,
+            ['order' => ['id', 'name'], 'sort' => ['id' => 'desc', 'name' => 'asc',]],
+        ];
+        yield 'default sort for none named 1' => [
+            'select * from "items" order by "id" asc, "name" desc',
+            OverrideQueryStrategy::class,
+            ['order' => ['id', 'name'], 'sort' => ['asc', 'name' => 'desc',]],
+        ];
+        yield 'default sort for none named 2' => [
+            'select * from "items" order by "id" desc, "name" asc',
+            OverrideQueryStrategy::class,
+            ['order' => ['id', 'name'], 'sort' => ['name' => 'asc', 'desc',]],
+        ];
+        yield 'mix of where sorting it set' => [
+            'select * from "items" order by "id" desc, "created" desc',
+            OverrideQueryStrategy::class,
+            ['order' => ['id', 'desc' => 'created'], 'sort' => ['name' => 'asc', 'desc',]],
+        ];
+    }
 
     public static function providerForApplyStrategy(): Iterator
     {
@@ -102,67 +171,41 @@ final class FilterTest extends TestCase
         ];
     }
 
-    public static function providerForApplyOrder(): Iterator
+    public static function providerForFieldOperatorApply(): Iterator
     {
-        yield 'no sort and order specified' => [
-            'select * from "items"',
+        yield 'single field--operator' => [
+            'select * from "items" where "foo" like \'%bar%\' limit 50',
             ComplexConfigQueryStrategy::class,
-            [],
+            ['foo--contains' => 'bar'],
         ];
-        yield 'order by allowed value' => [
-            'select * from "items" order by "id" asc',
+        yield 'merge fields with same name' => [
+            'select * from "items" where "foo" = \'bar\' and "foo" like \'%bar%\' limit 50',
             ComplexConfigQueryStrategy::class,
-            ['order' => 'id'],
+            ['foo--contains' => 'bar', 'foo' => 'bar'],
         ];
-        yield 'sort by allowed value' => [
-            'select * from "items" order by "id" desc',
+    }
+
+    public static function providerForGetQueryValues(): Iterator
+    {
+        yield 'example 1' => [
             ComplexConfigQueryStrategy::class,
-            ['order' => 'id', 'sort' => 'desc'],
+            ['foo' => [1, 2, 3, 4], 'bar' => 'test'],
+            ['foo' => [1, 2, 3, 4], 'bar' => ['test']],
         ];
-        yield 'invalid sort resorts to default' => [
-            'select * from "items" order by "id" asc',
+        yield 'ignore none applicable values' => [
             ComplexConfigQueryStrategy::class,
-            ['order' => 'id', 'sort' => 'foobar'],
+            ['foo' => [1, 2, 3, 4], 'foo-bar' => 'should not appear'],
+            ['foo' => [1, 2, 3, 4]],
         ];
-        yield 'order and sort by value values' => [
-            'select * from "items" order by "name" desc',
-            OverrideQueryStrategy::class,
-            ['order' => 'name', 'sort' => 'desc'],
+        yield 'get split values' => [
+            ComplexConfigQueryStrategy::class,
+            ['explodable' => 'foo,bar'],
+            ['explodable' => ['foo', 'bar']],
         ];
-        yield 'order by multiple values' => [
-            'select * from "items" order by "name" asc, "id" asc',
-            OverrideQueryStrategy::class,
-            ['order' => ['name', 'id'], 'sort' => 'asc'],
-        ];
-        yield 'set sort in order parameter' => [
-            'select * from "items" order by "id" asc, "created" desc',
-            OverrideQueryStrategy::class,
-            ['order' => ['asc' => 'id', 'desc' => 'created',]],
-        ];
-        yield 'different sorts set in order with multiple order bys' => [
-            'select * from "items" order by "id" asc, "name" asc, "created" desc',
-            OverrideQueryStrategy::class,
-            ['order' => ['asc' => ['id', 'name'], 'desc' => ['created']]],
-        ];
-        yield 'set sorts to order in sort parameter' => [
-            'select * from "items" order by "id" desc, "name" asc',
-            OverrideQueryStrategy::class,
-            ['order' => ['id', 'name'], 'sort' => ['id' => 'desc', 'name' => 'asc',]],
-        ];
-        yield 'default sort for none named 1' => [
-            'select * from "items" order by "id" asc, "name" desc',
-            OverrideQueryStrategy::class,
-            ['order' => ['id', 'name'], 'sort' => ['asc', 'name' => 'desc',]],
-        ];
-        yield 'default sort for none named 2' => [
-            'select * from "items" order by "id" desc, "name" asc',
-            OverrideQueryStrategy::class,
-            ['order' => ['id', 'name'], 'sort' => ['name' => 'asc', 'desc',]],
-        ];
-        yield 'mix of where sorting it set' => [
-            'select * from "items" order by "id" desc, "created" desc',
-            OverrideQueryStrategy::class,
-            ['order' => ['id', 'desc' => 'created'], 'sort' => ['name' => 'asc', 'desc',]],
+        yield 'get field alias values' => [
+            ComplexConfigQueryStrategy::class,
+            ['bf' => 'test'],
+            ['bf' => ['test']],
         ];
     }
 
@@ -216,88 +259,17 @@ final class FilterTest extends TestCase
         ];
     }
 
-    public static function providerForFieldOperatorApply(): Iterator
+    public function test_apply_filter(): void
     {
-        yield 'single field--operator' => [
-            'select * from "items" where "foo" like \'%bar%\' limit 50',
-            ComplexConfigQueryStrategy::class,
-            ['foo--contains' => 'bar'],
-        ];
-        yield 'merge fields with same name' => [
-            'select * from "items" where "foo" = \'bar\' and "foo" like \'%bar%\' limit 50',
-            ComplexConfigQueryStrategy::class,
-            ['foo--contains' => 'bar', 'foo' => 'bar'],
-        ];
-    }
-
-    public static function providerForGetQueryValues(): Iterator
-    {
-        yield 'example 1' => [
-            ComplexConfigQueryStrategy::class,
-            ['foo' => [1, 2, 3, 4], 'bar' => 'test'],
-            ['foo' => [1, 2, 3, 4], 'bar' => ['test']],
-        ];
-        yield 'ignore none applicable values' => [
-            ComplexConfigQueryStrategy::class,
-            ['foo' => [1, 2, 3, 4], 'foo-bar' => 'should not appear'],
-            ['foo' => [1, 2, 3, 4]],
-        ];
-        yield 'get split values' => [
-            ComplexConfigQueryStrategy::class,
-            ['explodable' => 'foo,bar'],
-            ['explodable' => ['foo', 'bar']],
-        ];
-        yield 'get field alias values' => [
-            ComplexConfigQueryStrategy::class,
-            ['bf' => 'test'],
-            ['bf' => ['test']],
-        ];
-    }
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->simpleDatabase($this->app);
-    }
-
-    public function testCreatesInstanceOfDistill(): void
-    {
-        $strategy = $this->strategyManager()->findStrategy(ComplexConfigQueryStrategy::class);
-        $filter = new Filter(Item::query(), $strategy, []);
-        $this->assertInstanceOf(Filter::class, $filter);
-    }
-
-    public function testCanGetBuilder(): void
-    {
-        $strategy = $this->strategyManager()->findStrategy(ComplexConfigQueryStrategy::class);
-        $filter = $this->filter(Item::query(), $strategy);
-        $this->assertInstanceOf(Builder::class, $filter->builder());
-    }
-
-    #[DataProvider('providerForApplyStrategy')]
-    public function testApplyTheStrategy(mixed $expectedSql, string $strategyClass, array $requestParams): void
-    {
-        $strategy = $this->strategyManager()->findStrategy($strategyClass);
-        $filter = $this->filter(Item::query(), $strategy, $requestParams);
-        $filter->apply();
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy());
+        $filter->applyFilter(EqualsClause::class, 'bar', 'foo');
 
         $builder = $filter->builder();
-        $this->assertEquals($expectedSql, $this->getRawSqlFromBuilder($builder));
-    }
-
-    #[DataProvider('providerForFieldOperatorApply')]
-    public function testFieldOperatorPropertiesFoundAndApplied(mixed $expectedSql, string $strategyClass, array $requestParams): void
-    {
-        $strategy = $this->strategyManager()->findStrategy($strategyClass);
-        $filter = $this->filter(Item::query(), $strategy, $requestParams);
-        $filter->apply();
-
-        $builder = $filter->builder();
-        $this->assertEquals($expectedSql, $this->getRawSqlFromBuilder($builder));
+        $this->assertSame('select * from "items" where "foo" = \'bar\'', $this->getRawSqlFromBuilder($builder));
     }
 
     #[DataProvider('providerForApplyOrder')]
-    public function testApplyOrder(mixed $expectedSql, string $strategyClass, array $requestParams): void
+    public function test_apply_order(mixed $expectedSql, string $strategyClass, array $requestParams): void
     {
         $strategy = $this->strategyManager()->findStrategy($strategyClass);
         $filter = $this->filter(Item::query(), $strategy, $requestParams);
@@ -306,7 +278,7 @@ final class FilterTest extends TestCase
     }
 
     #[DataProvider('providerForPagination')]
-    public function testApplyPagination(mixed $expectedSql, string $strategyClass, array $requestParams): void
+    public function test_apply_pagination(mixed $expectedSql, string $strategyClass, array $requestParams): void
     {
         $strategy = $this->strategyManager()->findStrategy($strategyClass);
         $filter = $this->filter(Item::query(), $strategy, $requestParams);
@@ -316,58 +288,43 @@ final class FilterTest extends TestCase
         $this->assertEquals($expectedSql, $this->getRawSqlFromBuilder($builder));
     }
 
-    #[DataProvider('providerForWith')]
-    public function testApplyWith(mixed $expectedEagerLoads, array $parameters): void
+    #[DataProvider('providerForApplyStrategy')]
+    public function test_apply_the_strategy(mixed $expectedSql, string $strategyClass, array $requestParams): void
     {
-        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy, $parameters);
+        $strategy = $this->strategyManager()->findStrategy($strategyClass);
+        $filter = $this->filter(Item::query(), $strategy, $requestParams);
+        $filter->apply();
+
+        $builder = $filter->builder();
+        $this->assertEquals($expectedSql, $this->getRawSqlFromBuilder($builder));
+    }
+
+    #[DataProvider('providerForWith')]
+    public function test_apply_with(mixed $expectedEagerLoads, array $parameters): void
+    {
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy(), $parameters);
         $builder = $filter->with()->builder();
         $this->assertEquals($expectedEagerLoads, array_keys($builder->getEagerLoads()));
     }
 
-    public function testApplyFilter(): void
+    public function test_can_get_builder(): void
     {
-        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy);
-        $filter->applyFilter(EqualsClause::class, 'bar', 'foo');
-
-        $builder = $filter->builder();
-        $this->assertSame('select * from "items" where "foo" = \'bar\'', $this->getRawSqlFromBuilder($builder));
+        $strategy = $this->strategyManager()->findStrategy(ComplexConfigQueryStrategy::class);
+        $filter = $this->filter(Item::query(), $strategy);
+        $this->assertInstanceOf(Builder::class, $filter->builder());
     }
 
-    public function testConfigChangesLimitKey(): void
+    #[DataProvider('providerForGetQueryValues')]
+    public function test_can_get_get_query_values_that_will_be_applied(string $stategy, array $query, mixed $expect): void
     {
-        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy, ['limit' => '7', 'l' => '49'], ['limit' => 'l']);
-        $filter->limit();
+        $strategy = $this->strategyManager()->findStrategy($stategy);
+        $filter = $this->filter(Item::query(), $strategy, $query);
 
-        $builder = $filter->builder();
-        $this->assertSame('select * from "items" limit 49', $this->getRawSqlFromBuilder($builder));
+        $this->assertEquals($expect, $filter->filterValues());
+        $this->assertEquals($expect, $filter->paginate()->getAppliedFilters());
     }
 
-    public function testConfigChangesOrderKey(): void
-    {
-        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy, ['order' => 'id', 'o' => 'name'], ['order' => 'o']);
-        $filter->order();
-
-        $builder = $filter->builder();
-        $this->assertSame('select * from "items" order by "name" asc', $this->getRawSqlFromBuilder($builder));
-    }
-
-    public function testConfigChangesSortKey(): void
-    {
-        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy, ['order' => 'name', 'sort' => 'asc', 's' => 'desc'], ['sort' => 's']);
-        $filter->order();
-
-        $builder = $filter->builder();
-        $this->assertSame('select * from "items" order by "name" desc', $this->getRawSqlFromBuilder($builder));
-    }
-
-    public function testConfigChangesWithKey(): void
-    {
-        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy, ['with' => ['owner', 'categories'] , 'w' => 'owner'], ['with' => 'w']);
-        $builder = $filter->with()->builder();
-        $this->assertSame(['owner'], array_keys($builder->getEagerLoads()));
-    }
-
-    public function testConfigCanOverrideDefaultMultiClause(): void
+    public function test_config_can_override_default_multi_clause(): void
     {
         $strategy = $this->strategyManager()->findStrategy(ComplexConfigQueryStrategy::class);
         $filter = $this->filter(Item::query(), $strategy, ['multi_override' => [1,2,3,4]]);
@@ -378,7 +335,59 @@ final class FilterTest extends TestCase
         $this->assertSame($expectedSql, $this->getRawSqlFromBuilder($builder));
     }
 
-    public function testMultiOverrideShouldNotHavePrioritiesOnOverrides(): void
+    public function test_config_changes_limit_key(): void
+    {
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy(), ['limit' => '7', 'l' => '49'], ['limit' => 'l']);
+        $filter->limit();
+
+        $builder = $filter->builder();
+        $this->assertSame('select * from "items" limit 49', $this->getRawSqlFromBuilder($builder));
+    }
+
+    public function test_config_changes_order_key(): void
+    {
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy(), ['order' => 'id', 'o' => 'name'], ['order' => 'o']);
+        $filter->order();
+
+        $builder = $filter->builder();
+        $this->assertSame('select * from "items" order by "name" asc', $this->getRawSqlFromBuilder($builder));
+    }
+
+    public function test_config_changes_sort_key(): void
+    {
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy(), ['order' => 'name', 'sort' => 'asc', 's' => 'desc'], ['sort' => 's']);
+        $filter->order();
+
+        $builder = $filter->builder();
+        $this->assertSame('select * from "items" order by "name" desc', $this->getRawSqlFromBuilder($builder));
+    }
+
+    public function test_config_changes_with_key(): void
+    {
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy(), ['with' => ['owner', 'categories'] , 'w' => 'owner'], ['with' => 'w']);
+        $builder = $filter->with()->builder();
+        $this->assertSame(['owner'], array_keys($builder->getEagerLoads()));
+    }
+
+    public function test_creates_instance_of_distill(): void
+    {
+        $strategy = $this->strategyManager()->findStrategy(ComplexConfigQueryStrategy::class);
+        $filter = new Filter(Item::query(), $strategy, []);
+        $this->assertInstanceOf(Filter::class, $filter);
+    }
+
+    #[DataProvider('providerForFieldOperatorApply')]
+    public function test_field_operator_properties_found_and_applied(mixed $expectedSql, string $strategyClass, array $requestParams): void
+    {
+        $strategy = $this->strategyManager()->findStrategy($strategyClass);
+        $filter = $this->filter(Item::query(), $strategy, $requestParams);
+        $filter->apply();
+
+        $builder = $filter->builder();
+        $this->assertEquals($expectedSql, $this->getRawSqlFromBuilder($builder));
+    }
+
+    public function test_multi_override_should_not_have_priorities_on_overrides(): void
     {
         $strategy = $this->strategyManager()->findStrategy(ComplexConfigQueryStrategy::class);
         $filter = $this->filter(Item::query(), $strategy, ['override_this' => ['lookup' => [1,2,3,4]]]);
@@ -387,15 +396,5 @@ final class FilterTest extends TestCase
         $builder = $filter->builder();
         $expectedSql = 'select * from "items" where "override_this" = \'1&2&3&4\' limit 50';
         $this->assertSame($expectedSql, $this->getRawSqlFromBuilder($builder));
-    }
-
-    #[DataProvider('providerForGetQueryValues')]
-    public function testCanGetGetQueryValuesThatWillBeApplied(string $stategy, array $query, mixed $expect): void
-    {
-        $strategy = $this->strategyManager()->findStrategy($stategy);
-        $filter = $this->filter(Item::query(), $strategy, $query);
-
-        $this->assertEquals($expect, $filter->filterValues());
-        $this->assertEquals($expect, $filter->paginate()->getAppliedFilters());
     }
 }

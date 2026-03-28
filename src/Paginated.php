@@ -6,6 +6,13 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class Paginated extends LengthAwarePaginator
 {
+    /**
+     * Get query filters applied to the query
+     */
+    public function getAppliedFilters(): ?array
+    {
+        return $this->appliedFilters;
+    }
 
     /**
      * Get the meta data of the paginated query
@@ -28,14 +35,6 @@ class Paginated extends LengthAwarePaginator
             'perPage' => $this->perPage(),
             'appliedFilters' => $this->getAppliedFilters(),
         ];
-    }
-
-    /**
-     * Get query filters applied to the query
-     */
-    public function getAppliedFilters(): ?array
-    {
-        return $this->appliedFilters;
     }
 
     /**

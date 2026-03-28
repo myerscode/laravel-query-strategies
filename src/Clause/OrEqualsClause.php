@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Builder;
 
 class OrEqualsClause extends AbstractClause
 {
-
     /**
      * {@inheritdoc}
      */
@@ -14,7 +13,7 @@ class OrEqualsClause extends AbstractClause
     {
         if (!empty($value)) {
             $values = is_array($value) ? $value : [$value];
-            collect($values)->each(static function ($value) use ($column, $builder) : void {
+            collect($values)->each(static function ($value) use ($column, $builder): void {
                 $builder->orWhere($column, '=', $value);
             });
         }

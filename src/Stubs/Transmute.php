@@ -7,7 +7,6 @@ use Myerscode\Laravel\QueryStrategies\Transmute\TransmuteInterface;
 
 class DummyClass implements TransmuteInterface
 {
-
     public function transmute(Property $property): Property
     {
         return $property;
