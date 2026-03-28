@@ -35,6 +35,7 @@ composer require myerscode/laravel-query-strategies
 ## Documentation
 
 - [Usage](docs/usage.md) — Getting started, filter methods, query parameter syntax, and pagination
+- [Configuration](docs/configuration.md) — Publishing and customising the config file
 - [Strategies](docs/strategies.md) — Defining strategies, parameter config options, ordering, limiting, and eager loads
 - [Clauses](docs/clauses.md) — Built-in clauses, aliases, and creating custom clauses
 - [Transmutes](docs/transmutes.md) — Value transformation with built-in and custom transmutes
