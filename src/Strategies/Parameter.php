@@ -2,54 +2,67 @@
 
 namespace Myerscode\Laravel\QueryStrategies\Strategies;
 
-class Parameter
+use Closure;
+
+readonly class Parameter
 {
     /**
      * Default value use for exploding query parameters
      */
-    final public const string DEFAULT_EXPLODE_DELIMITER = ',';
+    public const string DEFAULT_EXPLODE_DELIMITER = ',';
 
     /**
      * Default value use for creating the operator override parameter
      */
-    final public const string DEFAULT_OPERATOR_OVERRIDE_SUFFIX = '--operator';
+    public const string DEFAULT_OPERATOR_OVERRIDE_SUFFIX = '--operator';
 
-    private ?string $column = null;
+    private ?string $column;
 
-    private ?\Closure $callback = null;
+    private ?Closure $callback;
 
-    private ?string $default = null;
+    private ?string $default;
 
-    private mixed $defaultValue = null;
+    private mixed $defaultValue;
 
-    private bool $hasDefaultValue = false;
+    private bool $hasDefaultValue;
 
     /** @var array<int|string, string> */
-    private array $disabled = [];
+    private array $disabled;
 
-    private bool $explode = false;
+    private bool $explode;
 
     private string $explodeDelimiter;
 
     /** @var array<int, mixed> */
-    private array $ignoredValues = [];
+    private array $ignoredValues;
 
     /** @var array<string, string> */
-    private array $methods = [];
+    private array $methods;
 
-    private ?string $multi = null;
+    private ?string $multi;
 
     private string $overrideParameter;
 
-    private ?string $transmute = null;
-
+    private ?string $transmute;
 
     /**
      * @param array<string, mixed> $configuration
      */
-    public function __construct(private readonly ?string $name, array $configuration)
+    public function __construct(private ?string $name, array $configuration)
     {
-        $this->bindConfig($configuration);
+        $this->column = $configuration['column'] ?? $this->name;
+        $this->callback = $configuration['callback'] ?? null;
+        $this->default = $configuration['default'] ?? null;
+        $this->hasDefaultValue = array_key_exists('defaultValue', $configuration);
+        $this->defaultValue = $configuration['defaultValue'] ?? null;
+        $this->multi = $configuration['multi'] ?? null;
+        $this->transmute = $configuration['transmute'] ?? null;
+        $this->methods = $configuration['methods'] ?? [];
+        $this->disabled = isset($configuration['disabled']) ? array_filter(is_array($configuration['disabled']) ? $configuration['disabled'] : [$configuration['disabled']]) : [];
+        $this->overrideParameter = $configuration['override'] ?? $this->name . ($configuration['overrideSuffix'] ?? self::DEFAULT_OPERATOR_OVERRIDE_SUFFIX);
+        $this->explode = isset($configuration['explode']) && filter_var($configuration['explode'], FILTER_VALIDATE_BOOLEAN);
+        $this->explodeDelimiter = $configuration['delimiter'] ?? self::DEFAULT_EXPLODE_DELIMITER;
+        $this->ignoredValues = isset($configuration['ignore']) ? (is_array($configuration['ignore']) ? $configuration['ignore'] : [$configuration['ignore']]) : [];
     }
 
     /**
@@ -63,7 +76,7 @@ class Parameter
     /**
      * The callback closure for inline filtering
      */
-    public function callback(): ?\Closure
+    public function callback(): ?Closure
     {
         return $this->callback;
     }
@@ -163,31 +176,10 @@ class Parameter
     }
 
     /**
-     * Default multi method class to use instead of Filter default
+     * The transmute class to transform values
      */
     public function transmuteWith(): ?string
     {
         return $this->transmute;
     }
-
-    /**
-     * @param array<string, mixed> $configuration
-     */
-    private function bindConfig(array $configuration): void
-    {
-        $this->column = $configuration['column'] ?? $this->name;
-        $this->callback = $configuration['callback'] ?? null;
-        $this->default = $configuration['default'] ?? null;
-        $this->hasDefaultValue = array_key_exists('defaultValue', $configuration);
-        $this->defaultValue = $configuration['defaultValue'] ?? null;
-        $this->multi = $configuration['multi'] ?? null;
-        $this->transmute = $configuration['transmute'] ?? null;
-        $this->methods = $configuration['methods'] ?? [];
-        $this->disabled = isset($configuration['disabled']) ? array_filter(is_array($configuration['disabled']) ? $configuration['disabled'] : [$configuration['disabled']]) : [];
-        $this->overrideParameter = $configuration['override'] ?? $this->name . ($configuration['overrideSuffix'] ?? Parameter::DEFAULT_OPERATOR_OVERRIDE_SUFFIX);
-        $this->explode = isset($configuration['explode']) && filter_var($configuration['explode'], FILTER_VALIDATE_BOOLEAN);
-        $this->explodeDelimiter = $configuration['delimiter'] ?? Parameter::DEFAULT_EXPLODE_DELIMITER;
-        $this->ignoredValues = isset($configuration['ignore']) ? (is_array($configuration['ignore']) ? $configuration['ignore'] : [$configuration['ignore']]) : [];
-    }
-
 }
