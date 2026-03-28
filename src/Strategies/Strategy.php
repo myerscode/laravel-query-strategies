@@ -81,6 +81,13 @@ class Strategy implements StrategyInterface
         //
     ];
 
+    /**
+     * Compiled alias-to-class map for default methods
+     *
+     * @var array<string, string>
+     */
+    private array $compiledDefaultMethods = [];
+
     public function __construct()
     {
         $this->compile();
@@ -119,14 +126,15 @@ class Strategy implements StrategyInterface
      */
     public function defaultMethods(): array
     {
-        $defaultMethods = [];
-        foreach ($this->defaultMethods as $class => $aliases) {
-            foreach ($aliases as $alias) {
-                $defaultMethods[$alias] = $class;
+        if ($this->compiledDefaultMethods === []) {
+            foreach ($this->defaultMethods as $class => $aliases) {
+                foreach ($aliases as $alias) {
+                    $this->compiledDefaultMethods[$alias] = $class;
+                }
             }
         }
 
-        return $defaultMethods;
+        return $this->compiledDefaultMethods;
     }
 
     /**
