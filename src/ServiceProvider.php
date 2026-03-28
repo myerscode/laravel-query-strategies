@@ -45,6 +45,8 @@ class ServiceProvider extends LaravelServiceProvider
     #[Override]
     public function register(): void
     {
+        $this->mergeConfigFrom(__DIR__ . '/Stubs/config.php', 'query-strategies');
+
         $this->app->bind(FilterBuilder::class, static fn ($app): FilterBuilder => new FilterBuilder($app->make(Request::class), $app->make(StrategyManager::class)));
 
         $this->app->alias(FilterBuilder::class, 'Query');

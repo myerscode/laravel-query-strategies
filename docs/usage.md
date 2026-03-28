@@ -4,9 +4,11 @@
 
 There are several ways to create a filter and apply a strategy:
 
-### Global Helper
+### Namespaced Helper
 
 ```php
+use function Myerscode\Laravel\QueryStrategies\filter;
+
 filter(Item::class)->with(MyStrategy::class)->apply();
 ```
 
@@ -66,6 +68,8 @@ Once you have a `Filter` instance, you can call these methods:
 Methods are chainable, so you can selectively apply what you need:
 
 ```php
+use function Myerscode\Laravel\QueryStrategies\filter;
+
 $filter = filter(Item::class)->with(MyStrategy::class);
 
 // Only apply filters and ordering, then get the builder

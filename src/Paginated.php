@@ -47,10 +47,8 @@ class Paginated extends LengthAwarePaginator
 
     /**
      * The base path to assign to all URLs.
-     *
-     * @return string
      */
-    public function getPath()
+    public function getPath(): string
     {
         return $this->path;
     }
