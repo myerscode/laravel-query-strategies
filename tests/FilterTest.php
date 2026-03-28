@@ -12,6 +12,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Support\Models\Item;
 use Tests\Support\Strategies\ComplexConfigQueryStrategy;
+use Tests\Support\Strategies\FieldSelectionStrategy;
 use Tests\Support\Strategies\OverrideQueryStrategy;
 use Tests\Support\Strategies\RestrictedWithStrategy;
 
@@ -333,6 +334,61 @@ final class FilterTest extends TestCase
         $strategy = $this->strategyManager()->findStrategy(ComplexConfigQueryStrategy::class);
         $filter = $this->filter(Item::query(), $strategy);
         $this->assertInstanceOf(Builder::class, $filter->builder());
+    }
+
+    #[DataProvider('providerForFields')]
+    public function test_field_selection(string $expectedSql, string $strategyClass, array $requestParams): void
+    {
+        $strategy = $this->strategyManager()->findStrategy($strategyClass);
+        $filter = $this->filter(Item::query(), $strategy, $requestParams);
+        $builder = $filter->fields()->builder();
+        $this->assertEquals($expectedSql, $this->getRawSqlFromBuilder($builder));
+    }
+
+    public static function providerForFields(): Iterator
+    {
+        yield 'no fields requested selects all' => [
+            'select * from "items"',
+            FieldSelectionStrategy::class,
+            [],
+        ];
+        yield 'select allowed fields' => [
+            'select "id", "name" from "items"',
+            FieldSelectionStrategy::class,
+            ['fields' => 'id,name'],
+        ];
+        yield 'disallowed fields are filtered out' => [
+            'select "id" from "items"',
+            FieldSelectionStrategy::class,
+            ['fields' => 'id,secret'],
+        ];
+        yield 'all disallowed fields keeps select star' => [
+            'select * from "items"',
+            FieldSelectionStrategy::class,
+            ['fields' => 'secret,password'],
+        ];
+        yield 'fields via array' => [
+            'select "id", "email" from "items"',
+            FieldSelectionStrategy::class,
+            ['fields' => ['id', 'email']],
+        ];
+        yield 'empty allowedFields allows all requested' => [
+            'select "anything", "goes" from "items"',
+            ComplexConfigQueryStrategy::class,
+            ['fields' => 'anything,goes'],
+        ];
+        yield 'single field' => [
+            'select "name" from "items"',
+            FieldSelectionStrategy::class,
+            ['fields' => 'name'],
+        ];
+    }
+
+    public function test_fields_config_key_override(): void
+    {
+        $filter = $this->filter(Item::query(), new FieldSelectionStrategy(), ['fields' => 'secret', 'f' => 'id,name'], ['fields' => 'f']);
+        $builder = $filter->fields()->builder();
+        $this->assertEquals('select "id", "name" from "items"', $this->getRawSqlFromBuilder($builder));
     }
 
     #[DataProvider('providerForGetQueryValues')]

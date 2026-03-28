@@ -18,6 +18,13 @@ use Myerscode\Laravel\QueryStrategies\Clause\OrEqualsClause;
 class Strategy implements StrategyInterface
 {
     /**
+     * Columns that can be selected via field selection
+     *
+     * @var array<int, string>
+     */
+    protected array $allowedFields = [];
+
+    /**
      * Relationships that can be eager loaded
      *
      * @var array<int, string>
@@ -91,6 +98,14 @@ class Strategy implements StrategyInterface
     public function __construct()
     {
         $this->compile();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function allowedFields(): array
+    {
+        return $this->allowedFields;
     }
 
     /**

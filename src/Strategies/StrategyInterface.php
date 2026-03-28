@@ -5,6 +5,13 @@ namespace Myerscode\Laravel\QueryStrategies\Strategies;
 interface StrategyInterface
 {
     /**
+     * Get the columns that can be selected
+     *
+     * @return array<int, string>
+     */
+    public function allowedFields(): array;
+
+    /**
      * Get the relationships that can be eager loaded
      *
      * @return array<int, string>

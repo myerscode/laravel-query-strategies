@@ -40,6 +40,7 @@ class FilterBuilder
     public function config(): array
     {
         return [
+            'fields' => config('query-strategies.parameters.fields', 'fields'),
             'order' => config('query-strategies.parameters.order', 'order'),
             'sort' => config('query-strategies.parameters.sort', 'sort'),
             'limit' => config('query-strategies.parameters.limit', 'limit'),

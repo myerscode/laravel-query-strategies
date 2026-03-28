@@ -26,6 +26,8 @@ class Filter
      */
     private string $defaultMultiFilter = IsInClause::class;
 
+    private string $fieldsKey = 'fields';
+
     private string $limitKey = 'limit';
 
     private string $orderKey = 'order';
@@ -52,6 +54,7 @@ class Filter
      */
     public function apply(): LengthAwarePaginator
     {
+        $this->fields();
         $this->filter();
         $this->order();
         $this->limit();
@@ -79,6 +82,32 @@ class Filter
     public function builder(): Builder
     {
         return $this->builder;
+    }
+
+    /**
+     * Select specific fields on the query
+     */
+    public function fields(): Filter
+    {
+        $pieces = $this->query[$this->fieldsKey] ?? [];
+
+        $requested = array_filter(explode(',', implode(',', is_array($pieces) ? $pieces : [$pieces])));
+
+        if ($requested === []) {
+            return $this;
+        }
+
+        $allowed = $this->strategy->allowedFields();
+
+        if ($allowed !== []) {
+            $requested = array_intersect($requested, $allowed);
+        }
+
+        if ($requested !== []) {
+            $this->builder->select($requested);
+        }
+
+        return $this;
     }
 
     /**
@@ -476,6 +505,7 @@ class Filter
      */
     private function setConfig(array $config): void
     {
+        $this->fieldsKey = $config['fields'] ?? 'fields';
         $this->orderKey = $config['order'] ?? 'order';
         $this->sortKey = $config['sort'] ?? 'sort';
         $this->limitKey = $config['limit'] ?? 'limit';

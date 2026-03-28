@@ -54,7 +54,8 @@ Once you have a `Filter` instance, you can call these methods:
 
 | Method | Description |
 |---|---|
-| `apply()` | Applies filters, ordering, limiting, eager loads, and returns paginated results |
+| `apply()` | Applies field selection, filters, ordering, limiting, eager loads, and returns paginated results |
+| `fields()` | Applies only field selection (SELECT columns) and returns the Filter |
 | `filter()` | Applies only WHERE clauses and returns the Filter |
 | `order()` | Applies only ORDER BY and returns the Filter |
 | `limit()` | Applies only LIMIT and returns the Filter |
@@ -75,6 +76,14 @@ $paginated = $filter->apply();
 ```
 
 ## Query Parameter Syntax
+
+### Field Selection
+
+```
+?fields=id,name,email       → Select only specific columns
+```
+
+Only columns listed in the strategy's `$allowedFields` array are permitted. If `$allowedFields` is empty, all requested fields are allowed. If all requested fields are disallowed, the default `SELECT *` is used.
 
 ### Filtering
 

@@ -81,6 +81,20 @@ protected array $canOrderBy = [
 
 Default: `['id']`
 
+### `$allowedFields` — Selectable Columns
+
+Whitelist which columns can be selected via the `fields` query parameter:
+
+```php
+protected array $allowedFields = [
+    'id',
+    'name',
+    'email',
+];
+```
+
+Default: `[]` (empty means all requested fields are allowed)
+
 ### `$canWith` — Allowed Eager Loads
 
 Whitelist which relationships can be eager loaded:
