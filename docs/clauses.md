@@ -83,6 +83,28 @@ Usage:
 ?trashed=only    → Only trashed records
 ```
 
+## Callback Filters
+
+For one-off filters that don't warrant a full clause class, use the `callback` config option:
+
+```php
+protected array $config = [
+    'has_posts' => [
+        'callback' => static function ($builder, $value, $column): void {
+            $builder->whereHas('posts');
+        },
+    ],
+    'min_score' => [
+        'callback' => static function ($builder, $value, $column): void {
+            $val = is_array($value) ? $value[0] : $value;
+            $builder->where('score', '>=', $val);
+        },
+    ],
+];
+```
+
+The closure receives `(Builder $builder, mixed $value, string $column)`. When a callback is defined, it takes priority over all other clause resolution.
+
 ## Creating a Custom Clause
 
 Generate a clause using the artisan command:

@@ -16,6 +16,8 @@ class Parameter
 
     private ?string $column = null;
 
+    private ?\Closure $callback = null;
+
     private ?string $default = null;
 
     private mixed $defaultValue = null;
@@ -53,6 +55,14 @@ class Parameter
     public function column(): ?string
     {
         return $this->column;
+    }
+
+    /**
+     * The callback closure for inline filtering
+     */
+    public function callback(): ?\Closure
+    {
+        return $this->callback;
     }
 
     /**
@@ -153,6 +163,7 @@ class Parameter
     private function bindConfig(array $configuration): void
     {
         $this->column = $configuration['column'] ?? $this->name;
+        $this->callback = $configuration['callback'] ?? null;
         $this->default = $configuration['default'] ?? null;
         $this->hasDefaultValue = array_key_exists('defaultValue', $configuration);
         $this->defaultValue = $configuration['defaultValue'] ?? null;

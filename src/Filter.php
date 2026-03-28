@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
+use Myerscode\Laravel\QueryStrategies\Clause\CallbackClause;
 use Myerscode\Laravel\QueryStrategies\Clause\ClauseInterface;
 use Myerscode\Laravel\QueryStrategies\Clause\EqualsClause;
 use Myerscode\Laravel\QueryStrategies\Clause\IsInClause;
@@ -131,6 +132,14 @@ class Filter
             $parameterConf = $this->strategy->parameter($parameter);
 
             if ($parameterConf === null) {
+                continue;
+            }
+
+            // Handle callback filters directly
+            if ($parameterConf->callback() !== null) {
+                $callbackClause = new CallbackClause($parameterConf->callback());
+                $columnName = $parameterConf->column() ?? $parameter;
+                $callbackClause->filter($this->builder, $values, $columnName);
                 continue;
             }
 

@@ -527,6 +527,73 @@ final class FilterTest extends TestCase
         ];
     }
 
+    public function test_callback_filter(): void
+    {
+        $strategy = new class extends \Myerscode\Laravel\QueryStrategies\Strategies\Strategy {
+            protected array $config = [];
+            public function __construct()
+            {
+                $this->config = [
+                    'has_posts' => [
+                        'callback' => static function ($builder, $value, $column): void {
+                            $builder->where('post_count', '>', 0);
+                        },
+                    ],
+                ];
+                parent::__construct();
+            }
+        };
+
+        $filter = new Filter(Item::query(), $strategy, ['has_posts' => '1']);
+        $filter->filter();
+        $this->assertEquals('select * from "items" where "post_count" > \'0\'', $this->getRawSqlFromBuilder($filter->builder()));
+    }
+
+    public function test_callback_filter_receives_value(): void
+    {
+        $strategy = new class extends \Myerscode\Laravel\QueryStrategies\Strategies\Strategy {
+            protected array $config = [];
+            public function __construct()
+            {
+                $this->config = [
+                    'min_score' => [
+                        'callback' => static function ($builder, $value, $column): void {
+                            $val = is_array($value) ? $value[0] : $value;
+                            $builder->where('score', '>=', $val);
+                        },
+                    ],
+                ];
+                parent::__construct();
+            }
+        };
+
+        $filter = new Filter(Item::query(), $strategy, ['min_score' => '42']);
+        $filter->filter();
+        $this->assertEquals('select * from "items" where "score" >= \'42\'', $this->getRawSqlFromBuilder($filter->builder()));
+    }
+
+    public function test_callback_filter_not_applied_when_absent(): void
+    {
+        $strategy = new class extends \Myerscode\Laravel\QueryStrategies\Strategies\Strategy {
+            protected array $config = [];
+            public function __construct()
+            {
+                $this->config = [
+                    'has_posts' => [
+                        'callback' => static function ($builder, $value, $column): void {
+                            $builder->where('post_count', '>', 0);
+                        },
+                    ],
+                ];
+                parent::__construct();
+            }
+        };
+
+        $filter = new Filter(Item::query(), $strategy, []);
+        $filter->filter();
+        $this->assertEquals('select * from "items"', $this->getRawSqlFromBuilder($filter->builder()));
+    }
+
     #[DataProvider('providerForGetQueryValues')]
     public function test_can_get_get_query_values_that_will_be_applied(string $stategy, array $query, mixed $expect): void
     {
