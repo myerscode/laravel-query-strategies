@@ -64,7 +64,7 @@ class Filter
      */
     public function applyFilter(string $class, mixed $value, string $column): Filter
     {
-        if (class_exists($class) && ($filter = app($class)) instanceof ClauseInterface) {
+        if (class_exists($class) && ($filter = new $class()) instanceof ClauseInterface) {
             $filter->filter($this->builder, $value, $column);
         }
 
@@ -379,7 +379,7 @@ class Filter
      */
     protected function transmuteValues(array $values, Parameter $parameter): array
     {
-        if (($transmuteClass = $parameter->transmuteWith()) && (class_exists($transmuteClass) && ($transmute = app($transmuteClass)) instanceof TransmuteInterface)) {
+        if (($transmuteClass = $parameter->transmuteWith()) && (class_exists($transmuteClass) && ($transmute = new $transmuteClass()) instanceof TransmuteInterface)) {
             return array_map(static function ($filerValue) use ($transmute) {
                 $property = new Property($filerValue);
                 $transmute->transmute($property);
