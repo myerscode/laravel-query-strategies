@@ -13,6 +13,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Support\Models\Item;
 use Tests\Support\Strategies\ComplexConfigQueryStrategy;
 use Tests\Support\Strategies\OverrideQueryStrategy;
+use Tests\Support\Strategies\RestrictedWithStrategy;
 
 #[CoversClass(Filter::class)]
 final class FilterTest extends TestCase
@@ -304,6 +305,27 @@ final class FilterTest extends TestCase
         $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy(), $parameters);
         $builder = $filter->with()->builder();
         $this->assertEquals($expectedEagerLoads, array_keys($builder->getEagerLoads()));
+    }
+
+    public function test_with_filters_to_allowed_relationships(): void
+    {
+        $filter = $this->filter(Item::query(), new RestrictedWithStrategy(), ['with' => 'owner,categories']);
+        $builder = $filter->with()->builder();
+        $this->assertEquals(['owner'], array_keys($builder->getEagerLoads()));
+    }
+
+    public function test_with_blocks_all_when_none_allowed(): void
+    {
+        $filter = $this->filter(Item::query(), new RestrictedWithStrategy(), ['with' => 'categories,secret']);
+        $builder = $filter->with()->builder();
+        $this->assertEquals([], array_keys($builder->getEagerLoads()));
+    }
+
+    public function test_with_allows_all_when_canwith_empty(): void
+    {
+        $filter = $this->filter(Item::query(), new ComplexConfigQueryStrategy(), ['with' => 'owner,categories']);
+        $builder = $filter->with()->builder();
+        $this->assertEquals(['owner', 'categories'], array_keys($builder->getEagerLoads()));
     }
 
     public function test_can_get_builder(): void

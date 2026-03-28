@@ -5,6 +5,13 @@ namespace Myerscode\Laravel\QueryStrategies\Strategies;
 interface StrategyInterface
 {
     /**
+     * Get the relationships that can be eager loaded
+     *
+     * @return array<int, string>
+     */
+    public function canWith(): array;
+
+    /**
      * Get the keys that can be used to order the results
      *
      * @return array<int, string>

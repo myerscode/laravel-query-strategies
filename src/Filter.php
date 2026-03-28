@@ -283,6 +283,12 @@ class Filter
 
         $with = array_filter(explode(',', implode(',', is_array($pieces) ? $pieces : [$pieces])));
 
+        $allowed = $this->strategy->canWith();
+
+        if ($allowed !== []) {
+            $with = array_intersect($with, $allowed);
+        }
+
         $this->builder->with($with);
 
         return $this;
