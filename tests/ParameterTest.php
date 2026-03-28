@@ -49,6 +49,20 @@ final class ParameterTest extends TestCase
         ];
     }
 
+    public function test_explode_delimiter_returns_custom(): void
+    {
+        $parameter = new Parameter('test', ['explode' => true, 'delimiter' => '||']);
+        $this->assertSame('||', $parameter->explodeDelimiter());
+        $this->assertTrue($parameter->shouldExplode());
+    }
+
+    public function test_explode_delimiter_returns_default(): void
+    {
+        $parameter = new Parameter('test', []);
+        $this->assertSame(Parameter::DEFAULT_EXPLODE_DELIMITER, $parameter->explodeDelimiter());
+        $this->assertFalse($parameter->shouldExplode());
+    }
+
     #[DataProvider('dataProvider')]
     public function test_instance_creation(array $config): void
     {
@@ -59,5 +73,17 @@ final class ParameterTest extends TestCase
         $this->assertEquals($config['default'] ?? null, $parameter->defaultMethod());
         $this->assertEquals($config['methods'] ?? [], $parameter->methods());
         $this->assertEquals($config['disabled'] ?? [], $parameter->disabled());
+    }
+
+    public function test_multi_method_returns_null_by_default(): void
+    {
+        $parameter = new Parameter('test', []);
+        $this->assertNull($parameter->multiMethod());
+    }
+
+    public function test_transmute_with_returns_null_by_default(): void
+    {
+        $parameter = new Parameter('test', []);
+        $this->assertNull($parameter->transmuteWith());
     }
 }

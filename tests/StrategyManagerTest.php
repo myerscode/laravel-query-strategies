@@ -14,6 +14,7 @@ use Myerscode\Laravel\QueryStrategies\Strategies\StrategyInterface;
 use Myerscode\Laravel\QueryStrategies\StrategyManager;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Tests\Support\Models\Item;
 use Tests\Support\Strategies\OverrideQueryStrategy;
 use Tests\Support\Strategies\ComplexConfigQueryStrategy;
 use Tests\Support\Strategies\InvalidStrategy;
@@ -60,6 +61,12 @@ final class StrategyManagerTest extends TestCase
     {
         $this->expectException(InvalidStrategyException::class);
         $this->strategyManager()->findStrategy($possibleStrategy);
+    }
+
+    public function test_throws_invalid_strategy_for_model(): void
+    {
+        $this->expectException(InvalidStrategyException::class);
+        $this->strategyManager()->findStrategy(new Item());
     }
 
     #[DataProvider('invalidStrategyTypeErrorProvider')]

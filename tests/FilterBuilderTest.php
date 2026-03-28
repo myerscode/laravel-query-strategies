@@ -99,6 +99,12 @@ final class FilterBuilderTest extends TestCase
         $this->assertInstanceOf(Filter::class, $filterBuilder->filter(Item::class)->with(ComplexConfigQueryStrategy::class));
     }
 
+    public function test_filter_with_returns_instance_of_filter(): void
+    {
+        $filterBuilder = new FilterBuilder(new Request(), new StrategyManager());
+        $this->assertInstanceOf(Filter::class, $filterBuilder->filter(new Item())->with(ComplexConfigQueryStrategy::class));
+    }
+
     public function test_filtering_with_invalid_builder_or_model_throws_builder_not_found_exception(): void
     {
         $this->expectException(BuilderNotFoundException::class);
@@ -111,12 +117,6 @@ final class FilterBuilderTest extends TestCase
         $this->expectException(BuilderNotSetException::class);
         $filterBuilder = new FilterBuilder(new Request(), new StrategyManager());
         $filterBuilder->with(ComplexConfigQueryStrategy::class);
-    }
-
-    public function test_filter_with_returns_instance_of_filter(): void
-    {
-        $filterBuilder = new FilterBuilder(new Request(), new StrategyManager());
-        $this->assertInstanceOf(Filter::class, $filterBuilder->filter(new Item())->with(ComplexConfigQueryStrategy::class));
     }
 
     public function test_is_filterable_trait(): void
@@ -137,5 +137,19 @@ final class FilterBuilderTest extends TestCase
         $this->expectException(BuilderNotSetException::class);
         $filterBuilder = new FilterBuilder(new Request(), new StrategyManager());
         $filterBuilder->filter('');
+    }
+
+    public function test_results_throws_exception_when_no_strategy_provided(): void
+    {
+        $this->expectException(BuilderNotSetException::class);
+        $filterBuilder = new FilterBuilder(new Request(), new StrategyManager());
+        $filterBuilder->filter(Item::class)->results();
+    }
+
+    public function test_with_accepts_array_strategy(): void
+    {
+        $filterBuilder = new FilterBuilder(new Request(), new StrategyManager());
+        $filter = $filterBuilder->filter(Item::class)->with(['foo', 'bar']);
+        $this->assertInstanceOf(Filter::class, $filter);
     }
 }

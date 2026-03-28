@@ -38,4 +38,13 @@ final class PaginatedTest extends TestCase
 
         $this->assertEquals($this->metaShape, array_keys($paginated->getMeta()));
     }
+
+    public function test_get_path(): void
+    {
+        $filter = $this->filter(Item::query(), BasicConfigQueryStrategy::class, []);
+
+        $paginated = $filter->paginate();
+
+        $this->assertIsString($paginated->getPath());
+    }
 }

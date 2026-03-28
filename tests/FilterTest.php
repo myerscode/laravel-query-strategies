@@ -387,6 +387,32 @@ final class FilterTest extends TestCase
         $this->assertEquals($expectedSql, $this->getRawSqlFromBuilder($builder));
     }
 
+    public function test_filter_ignores_unknown_parameters(): void
+    {
+        $strategy = $this->strategyManager()->findStrategy(ComplexConfigQueryStrategy::class);
+        $filter = $this->filter(Item::query(), $strategy, ['unknown_param' => 'value']);
+        $filter->filter();
+
+        $this->assertSame('select * from "items"', $this->getRawSqlFromBuilder($filter->builder()));
+    }
+
+    public function test_filter_values_ignores_unknown_parameters(): void
+    {
+        $strategy = $this->strategyManager()->findStrategy(ComplexConfigQueryStrategy::class);
+        $filter = $this->filter(Item::query(), $strategy, ['unknown_param' => 'value']);
+
+        $this->assertEmpty($filter->filterValues());
+    }
+
+    public function test_get_parameter_methods_returns_defaults_for_unknown_parameter(): void
+    {
+        $strategy = $this->strategyManager()->findStrategy(ComplexConfigQueryStrategy::class);
+        $filter = $this->filter(Item::query(), $strategy);
+
+        $methods = $filter->getParameterMethods('nonexistent');
+        $this->assertEquals($strategy->defaultMethods(), $methods);
+    }
+
     public function test_multi_override_should_not_have_priorities_on_overrides(): void
     {
         $strategy = $this->strategyManager()->findStrategy(ComplexConfigQueryStrategy::class);
@@ -396,5 +422,14 @@ final class FilterTest extends TestCase
         $builder = $filter->builder();
         $expectedSql = 'select * from "items" where "override_this" = \'1&2&3&4\' limit 50';
         $this->assertSame($expectedSql, $this->getRawSqlFromBuilder($builder));
+    }
+
+    public function test_triple_dash_parameter_is_ignored(): void
+    {
+        $strategy = $this->strategyManager()->findStrategy(ComplexConfigQueryStrategy::class);
+        $filter = $this->filter(Item::query(), $strategy, ['foo--bar--baz' => 'value']);
+        $filter->filter();
+
+        $this->assertSame('select * from "items"', $this->getRawSqlFromBuilder($filter->builder()));
     }
 }
