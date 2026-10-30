@@ -6,7 +6,7 @@ Build safe, flexible API endpoints by turning URL query parameters into Eloquent
 [![Total Downloads](https://poser.pugx.org/myerscode/laravel-query-strategies/downloads)](https://packagist.org/packages/myerscode/laravel-query-strategies)
 [![PHP Version Require](http://poser.pugx.org/myerscode/laravel-query-strategies/require/php)](https://packagist.org/packages/myerscode/laravel-query-strategies)
 [![License](https://poser.pugx.org/myerscode/laravel-query-strategies/license)](https://github.com/myerscode/laravel-query-strategies/blob/main/LICENSE)
-[![Tests](https://github.com/myerscode/laravel-query-strategies/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/myerscode/laravel-query-strategies/actions/workflows/tests.yml)
+[![Tests](https://github.com/myerscode/laravel-query-strategies/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/myerscode/laravel-query-strategies/actions/workflows/tests.yml)
 [![codecov](https://codecov.io/gh/myerscode/laravel-query-strategies/graph/badge.svg)](https://codecov.io/gh/myerscode/laravel-query-strategies)
 
 ## Requirements
