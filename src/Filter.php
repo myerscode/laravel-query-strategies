@@ -255,8 +255,6 @@ class Filter
     {
         $canOrderBy = $this->strategy->canOrderBy();
 
-        $directions = ['asc', 'desc'];
-
         $defaultDirection = 'asc';
 
         $orderKey = $this->orderKey;
@@ -302,7 +300,7 @@ class Filter
         $allowedOrderBy = array_intersect_key($orderBy, array_flip($canOrderBy));
 
         foreach ($allowedOrderBy as $column => $direction) {
-            $direction = (in_array($direction, $directions)) ? $direction : 'asc';
+            $direction = (strtolower((string) $direction) === 'desc') ? 'desc' : 'asc';
 
             if (str_contains($column, '.')) {
                 $this->orderByRelationship($column, $direction);
@@ -582,6 +580,8 @@ class Filter
      */
     private function orderByRelationship(string $column, string $direction): void
     {
+        $direction = (strtolower($direction) === 'desc') ? 'desc' : 'asc';
+
         $parts = explode('.', $column, 2);
         $relationship = $parts[0];
         $relatedColumn = $parts[1];
