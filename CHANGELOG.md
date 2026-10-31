@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [13.0.1] - 2026-10-31
+### New Features
+- [`9f10158`](https://github.com/myerscode/laravel-query-strategies/commit/9f10158aa690f56a1c7abc1e76689794ce80c5ca) - **ci**: add shared dependabot auto-merge *(PR [#4](https://github.com/myerscode/laravel-query-strategies/pull/4) by [@oniice](https://github.com/oniice))*
+
+
 ## [13.0.0] - 2026-04-12
 ### New Features
 - [`192f0c6`](https://github.com/myerscode/laravel-query-strategies/commit/192f0c693955557ea0d3f0b4a6c78c4480e143bf) - **laravel**: update to Laravel 13 and Testbench 11 *(commit by [@oniice](https://github.com/oniice))*
@@ -46,3 +51,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [`7d36405`](https://github.com/myerscode/laravel-query-strategies/commit/7d3640561ffe6b20b82764cfcc560069c32923cc) - improve test coverage *(commit by [@oniice](https://github.com/oniice))*
 
 [13.0.0]: https://github.com/myerscode/laravel-query-strategies/compare/10.0.0...13.0.0
+[13.0.1]: https://github.com/myerscode/laravel-query-strategies/compare/13.0.0...13.0.1
